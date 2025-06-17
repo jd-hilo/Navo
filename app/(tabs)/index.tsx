@@ -45,7 +45,7 @@ const SEARCH_SUGGESTIONS = [
 const SUGGESTION_CONFIG = {
   // Container spacing - controls overall padding around suggestions
   containerPaddingHorizontal: 20, // Reduced from 28 to 20
-  containerPaddingVertical: 2,    // Reduced from 3 to 2 for minimal spacing
+  containerPaddingVertical: 0,    // No vertical padding for flush appearance
   
   // Individual chip styling - controls each suggestion button
   chipPaddingHorizontal: 16,      // Reduced from 24 to 16 (smaller chips)
@@ -58,7 +58,7 @@ const SUGGESTION_CONFIG = {
   fontWeight: 'Inter-Medium' as const,
   
   // Positioning
-  gapFromSearchBar: 1,            // Reduced from 2 to 1 (almost touching search bar)
+  gapFromSearchBar: -8,            // Negative value to ensure suggestions are flush with search bar
   
   // Animation
   animationDuration: 300,
@@ -76,7 +76,7 @@ export default function HomeScreen() {
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(0)).current;
   const headerOpacity = useRef(new Animated.Value(1)).current;
-  const cardsTranslateY = useRef(new Animated.Value(300)).current;
+  const cardsTranslateY = useRef(new Animated.Value(screenHeight)).current;
   const cardsOpacity = useRef(new Animated.Value(0)).current;
   const suggestionsOpacity = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(0)).current;
@@ -116,10 +116,8 @@ export default function HomeScreen() {
       }
     } else {
       setDebouncedQuery('');
-      if (hasSearched) {
         setHasSearched(false);
         animateToInitialMode();
-      }
     }
   }, [searchQuery, debouncedSearch, hasSearched]);
 
@@ -150,7 +148,7 @@ export default function HomeScreen() {
       Animated.timing(searchBarPosition, {
         toValue: 1,
         duration: 600,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.timing(headerOpacity, {
         toValue: 0,
@@ -182,7 +180,7 @@ export default function HomeScreen() {
       Animated.timing(searchBarPosition, {
         toValue: 0,
         duration: 600,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.timing(headerOpacity, {
         toValue: 1,
@@ -191,11 +189,11 @@ export default function HomeScreen() {
       }),
       Animated.timing(suggestionsOpacity, {
         toValue: 1,
-        duration: 400,
+        duration: SUGGESTION_CONFIG.animationDuration,
         useNativeDriver: true,
       }),
       Animated.timing(cardsTranslateY, {
-        toValue: 300,
+        toValue: screenHeight,
         duration: 400,
         useNativeDriver: true,
       }),
@@ -323,6 +321,7 @@ export default function HomeScreen() {
   const handleClearSearch = () => {
     setSearchQuery('');
     setDebouncedQuery('');
+    animateToInitialMode();
   };
 
   const handleRetry = useCallback(() => {
@@ -337,29 +336,31 @@ export default function HomeScreen() {
   const styles = createStyles(theme);
 
   // Calculate search bar width and positioning
-  const searchBarWidth = Math.min(screenWidth * 0.85, 400); // Max width of 400px
+  const searchBarWidth = Math.min(screenWidth * 0.85, 400); // Search bar is 85% of screen
   const searchBarLeftMargin = (screenWidth - searchBarWidth) / 2;
+  const cardsWidth = Math.min(screenWidth * 0.92, 400); // Cards are 92% of screen
+  const cardsLeftMargin = (screenWidth - cardsWidth) / 2;
 
   // Interpolate search bar position - move to very top
-  const searchBarTop = searchBarPosition.interpolate({
+  const searchBarTranslateY = searchBarPosition.interpolate({
     inputRange: [0, 1],
-    outputRange: [screenHeight * 0.4, Platform.OS === 'web' ? 20 : 60], // Much higher up
+    outputRange: [screenHeight * 0.4, Platform.OS === 'web' ? 20 : 60],
   });
 
   const searchBarScale = searchBarPosition.interpolate({
     inputRange: [0, 1],
-    outputRange: [1.1, 0.95], // Slightly smaller when at top
+    outputRange: [1.1, 0.95],
   });
 
-  // Calculate the results container top position to be right under the search bar
-  const searchBarHeight = Platform.OS === 'ios' ? 48 : 46; // Reduced search bar height
-  const resultsTop = searchBarPosition.interpolate({
+  // Calculate the results container position using transform
+  const searchBarHeight = Platform.OS === 'ios' ? 48 : 46;
+  const resultsTranslateY = searchBarPosition.interpolate({
     inputRange: [0, 1],
-    outputRange: [screenHeight, (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 16], // 16px gap
+    outputRange: [screenHeight, (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2], // Minimal 2px gap
   });
 
-  // Calculate suggestions position - right under search bar
-  const suggestionsTop = searchBarPosition.interpolate({
+  // Calculate suggestions position using transform
+  const suggestionsTranslateY = searchBarPosition.interpolate({
     inputRange: [0, 1],
     outputRange: [
       screenHeight * 0.4 + 80, 
@@ -386,6 +387,15 @@ export default function HomeScreen() {
                   { translateY: i * 30 - 100 },
                 ],
                 opacity: isDark ? 0.03 : 0.02,
+                // Hide pattern lines that would be behind the search bar
+                display:
+                  // Calculate the vertical position of the line
+                  (screenHeight * 0.4 + 20 <
+                    (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2 &&
+                    screenHeight * 0.4 + 80 >
+                    (Platform.OS === 'web' ? 20 : 60))
+                    ? 'none'
+                    : undefined,
               },
             ]}
           />
@@ -413,11 +423,14 @@ export default function HomeScreen() {
             styles.searchContainer,
             {
               position: 'absolute',
-              top: searchBarTop,
               left: searchBarLeftMargin,
               width: searchBarWidth,
-              transform: [{ scale: searchBarScale }],
-              zIndex: 10,
+              transform: [
+                { translateY: searchBarTranslateY },
+                { scale: searchBarScale }
+              ],
+              zIndex: 100,
+              backgroundColor: 'transparent',
             },
           ]}>
           <SearchBar
@@ -434,10 +447,10 @@ export default function HomeScreen() {
             styles.suggestionsContainer,
             {
               position: 'absolute',
-              top: suggestionsTop,
               left: 0,
               right: 0,
               opacity: suggestionsOpacity,
+              transform: [{ translateY: suggestionsTranslateY }],
               zIndex: 5,
             },
           ]}>
@@ -481,63 +494,51 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Results Container - Positioned directly under search bar */}
+        {/* Results Container - Absolutely positioned under search bar */}
         {hasSearched && (
           <Animated.View
-            style={[
-              styles.resultsContainer,
-              {
-                position: 'absolute',
-                top: resultsTop,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                transform: [{ translateY: cardsTranslateY }],
-                opacity: cardsOpacity,
-              },
-            ]}>
+            style={{
+              position: 'absolute',
+              top: (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2, // 2px gap below search bar
+              left: 0,
+              right: 0,
+              zIndex: 1, // Between background (0) and search bar (100)
+              opacity: cardsOpacity,
+              alignItems: 'center',
+              // Ensure it fills the rest of the screen
+              bottom: 0,
+            }}
+          >
             <ScrollView
-              style={styles.scrollView}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: 260, alignItems: 'center' } // Removed paddingTop
+              ]}
               refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  tintColor={theme.colors.textSecondary}
-                />
-              }>
-              
-              {/* Always show cards container */}
-              <View style={styles.cardsContainer}>
-                {/* Loading State - Show loading cards immediately */}
-                {debouncedQuery && isLoading && !searchResults && (
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            >
+              <View style={{ width: cardsWidth, marginTop: 12 }}>
+                {isLoading ? (
                   <>
                     <LoadingCard title="Gemini" />
                     <LoadingCard title="TikTok" />
                     <LoadingCard title="Reddit" />
                   </>
-                )}
-
-                {/* Error State */}
-                {debouncedQuery && error && !searchResults && (
+                ) : error ? (
                   <ErrorCard
                     title="Search Error"
-                    message="Unable to fetch results. Please check your connection and try again."
+                    message={error.message}
                     onRetry={handleRetry}
                   />
-                )}
-
-                {/* Search Results */}
-                {searchResults && (
+                ) : searchResults ? (
                   <>
                     <GeminiSection
                       data={searchResults.gemini}
                       query={debouncedQuery}
                       onRetry={handleRetry}
                       isLoading={isLoading}
-                      cached={searchResults.cached}
-                      cacheAge={searchResults.cacheAge}
                     />
                     <TikTokSection
                       data={searchResults.tiktok}
@@ -545,22 +546,13 @@ export default function HomeScreen() {
                       onRetry={handleRetry}
                     />
                     <RedditSection
-                      data={searchResults.reddit}
+                      data={searchResults?.reddit || { posts: [], success: false, error: 'No Reddit data available' }}
                       query={debouncedQuery}
                       onRetry={handleRetry}
                       isLoading={isLoading}
                     />
                   </>
-                )}
-
-                {/* Show loading cards while waiting for debounced query */}
-                {hasSearched && !debouncedQuery && searchQuery.trim().length > 0 && (
-                  <>
-                    <LoadingCard title="Gemini" />
-                    <LoadingCard title="TikTok" />
-                    <LoadingCard title="Reddit" />
-                  </>
-                )}
+                ) : null}
               </View>
             </ScrollView>
           </Animated.View>
@@ -683,7 +675,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingBottom: 100,
   },
   cardsContainer: {
-    paddingHorizontal: 16,
+    width: '100%',
     paddingTop: 0, // No top padding since we're positioned right under search bar
   },
 });

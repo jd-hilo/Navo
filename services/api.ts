@@ -1,5 +1,4 @@
 import { searchGemini, generateMockGeminiResponse } from './gemini';
-import { searchRedditApify } from './apify';
 import { SearchResultsService } from './database';
 import { supabase } from './database';
 
@@ -57,6 +56,15 @@ const TIKTOK_API_CONFIG = {
   headers: {
     'x-rapidapi-key': '19ffbf4d65mshc2e303da6ae4289p1a9576jsn8520dc154989',
     'x-rapidapi-host': 'tiktok-api23.p.rapidapi.com',
+  },
+};
+
+// Reddit API Configuration (RapidAPI)
+const REDDIT_API_CONFIG = {
+  baseURL: 'https://reddit-com.p.rapidapi.com',
+  headers: {
+    'x-rapidapi-key': '19ffbf4d65mshc2e303da6ae4289p1a9576jsn8520dc154989',
+    'x-rapidapi-host': 'reddit-com.p.rapidapi.com',
   },
 };
 
@@ -320,13 +328,10 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
   // Get TikTok results (real API call)
   const tiktokResults = await searchTikTokAPI(query);
   
-  // Get Reddit results using Apify (real API call)
-  const redditResults = await searchRedditApify(query);
-  
   const results = {
     gemini: geminiResults,
     tiktok: tiktokResults,
-    reddit: redditResults,
+    reddit: await searchRedditRapidAPI(query),
   };
   
   // Save to cache and increment search count if user is authenticated
@@ -366,7 +371,71 @@ export const searchTikTok = async (query: string) => {
 };
 
 export const searchReddit = async (query: string) => {
-  return await searchRedditApify(query);
+  return await searchRedditRapidAPI(query);
+};
+
+// Fetch top 5 Reddit posts for a subreddit or query using RapidAPI
+export const searchRedditRapidAPI = async (query: string) => {
+  try {
+    // Use the correct endpoint for searching Reddit posts
+    const url = `${REDDIT_API_CONFIG.baseURL}/posts/search-posts?query=${encodeURIComponent(query)}&sort=relevance&time=all`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: REDDIT_API_CONFIG.headers,
+    });
+    if (!response.ok) {
+      throw new Error(`Reddit RapidAPI returned status ${response.status}`);
+    }
+    const data = await response.json();
+    const posts = (data.data || []).slice(0, 5).map((item: any, idx: number) => {
+      // Media extraction
+      let mediaUrl = null;
+      if (item.media?.still?.source?.url) {
+        mediaUrl = item.media.still.source.url;
+      } else if (item.url && item.url.match(/\.(jpg|jpeg|png|gif|mp4|webm)$/)) {
+        mediaUrl = item.url;
+      } else if (item.thumbnail?.url) {
+        mediaUrl = item.thumbnail.url;
+      }
+
+      // Text extraction
+      let text = '';
+      if (item.content?.preview) text = item.content.preview;
+      else if (item.content?.markdown) text = item.content.markdown;
+      else if (item.content?.html) text = item.content.html;
+      else text = '';
+
+      // URL
+      let postUrl = item.permalink
+        ? (item.permalink.startsWith('http') ? item.permalink : `https://reddit.com${item.permalink}`)
+        : item.url || '';
+
+      return {
+        id: item.id || `reddit-${Date.now()}-${idx}`,
+        title: item.postTitle || '',
+        text,
+        author: item.authorInfo?.name || '',
+        comments: item.commentCount || 0,
+        upvotes: item.score || 0,
+        url: postUrl,
+        subreddit: item.subreddit?.name || item.subreddit?.prefixedName || query,
+        created: item.createdAt || '',
+        media: mediaUrl,
+        thumbnail: item.thumbnail?.url || null,
+      };
+    });
+    return {
+      posts,
+      success: true,
+    };
+  } catch (error: any) {
+    console.error('❌ Reddit RapidAPI Error:', error);
+    return {
+      posts: [],
+      success: false,
+      error: error.message || 'Failed to fetch Reddit posts from RapidAPI',
+    };
+  }
 };
 
 // Export database service for direct use

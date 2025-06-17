@@ -21,8 +21,11 @@ interface RedditPost {
   awards: number;
   comments: number;
   preview: string;
+  text: string;
   url: string;
   created: string;
+  media?: string | null;
+  thumbnail?: string | null;
 }
 
 interface RedditSectionProps {
@@ -122,7 +125,34 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 
   // Don't render if no posts
   if (!data.posts || data.posts.length === 0) {
-    return null;
+    return (
+      <LinearGradient
+        colors={theme.gradients.reddit}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientBorder}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <MessageCircle size={20} color={theme.colors.text} strokeWidth={2} />
+              <Text style={styles.title}>Reddit</Text>
+              <View style={styles.fallbackIndicator}>
+                <Text style={styles.fallbackText}>No Posts</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>No Reddit posts found for this search.</Text>
+            {onRetry && (
+              <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+                <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
+                <Text style={styles.retryText}>Try Again</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </LinearGradient>
+    );
   }
 
   return (
@@ -174,9 +204,9 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
                 {post.title}
               </Text>
               
-              {post.preview && (
+              {(post.text || post.preview) && (
                 <Text style={styles.postPreview} numberOfLines={3}>
-                  {post.preview}
+                  {post.text || post.preview}
                 </Text>
               )}
               

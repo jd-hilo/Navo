@@ -9,12 +9,15 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { Trash2, Search, ChevronDown, ChevronUp, Calendar, Sparkles, Video, MessageCircle } from 'lucide-react-native';
+import { Trash2, Search, ChevronDown, ChevronUp, Calendar, Sparkles, Video, MessageCircle, MoreVertical } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import GeminiSection from '@/components/GeminiSection';
+import TikTokSection from '@/components/TikTokSection';
+import RedditSection from '@/components/RedditSection';
 
 interface SavedSearch {
   id: string;
@@ -32,6 +35,7 @@ export default function SavedScreen() {
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   // Load saved searches when screen comes into focus
   useFocusEffect(
@@ -226,14 +230,39 @@ export default function SavedScreen() {
 
   const renderSearchItem = ({ item }: { item: SavedSearch }) => {
     const isExpanded = expandedItems.has(item.id);
+    const isMenuOpen = menuOpenId === item.id;
     
     return (
       <LinearGradient
-        colors={theme.gradients.gemini}
+        colors={theme.gradients.gemini as [string, string, string]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
         <View style={styles.searchItem}>
+          {/* Menu button in top right of card */}
+          <View style={styles.menuButtonWrapper}>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={() => setMenuOpenId(isMenuOpen ? null : item.id)}
+              activeOpacity={0.7}
+            >
+              <MoreVertical size={20} color={theme.colors.textSecondary} strokeWidth={2} />
+            </TouchableOpacity>
+            {isMenuOpen && (
+              <View style={styles.menuPopover}>
+                <TouchableOpacity
+                  style={styles.menuDeleteButton}
+                  onPress={() => {
+                    setMenuOpenId(null);
+                    deleteSearch(item.id);
+                  }}
+                >
+                  <Trash2 size={18} color={theme.colors.textSecondary} strokeWidth={2} />
+                  <Text style={styles.menuDeleteText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
           <TouchableOpacity 
             style={styles.searchHeader}
             onPress={() => toggleExpanded(item.id)}
@@ -260,30 +289,47 @@ export default function SavedScreen() {
                   <ChevronDown size={20} color={theme.colors.textSecondary} strokeWidth={2} />
                 )}
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => {
-                  console.log(`🗑️ Delete button tapped for search: "${item.query}" (ID: ${item.id})`);
-                  deleteSearch(item.id);
-                }}
-                activeOpacity={0.7}>
-                <Trash2 size={18} color={theme.colors.error} strokeWidth={2} />
-              </TouchableOpacity>
             </View>
           </TouchableOpacity>
 
-          {/* Expanded Results */}
-          {isExpanded && (
-            <View style={styles.expandedContent}>
-              {item.results ? (
-                renderResultsPreview(item.results)
-              ) : (
-                <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResultsText}>
-                    No detailed results saved for this search
-                  </Text>
+          {/* Expanded Results - show cards exactly as in search */}
+          {isExpanded && item.results && (
+            <View style={styles.expandedCardsWrapper}>
+              <View style={styles.expandedDivider} />
+              {item.results.gemini && (
+                <View style={styles.expandedCardSection}>
+                  <GeminiSection
+                    data={item.results.gemini}
+                    query={item.query}
+                    isLoading={false}
+                    cached={true}
+                  />
                 </View>
               )}
+              {item.results.tiktok && (
+                <View style={styles.expandedCardSection}>
+                  <TikTokSection
+                    data={item.results.tiktok}
+                    query={item.query}
+                  />
+                </View>
+              )}
+              {item.results.reddit && (
+                <View style={styles.expandedCardSection}>
+                  <RedditSection
+                    data={item.results.reddit}
+                    query={item.query}
+                  />
+                </View>
+              )}
+            </View>
+          )}
+          {/* If no results, show message */}
+          {isExpanded && !item.results && (
+            <View style={styles.noResultsContainer}>
+              <Text style={styles.noResultsText}>
+                No detailed results saved for this search
+              </Text>
             </View>
           )}
         </View>
@@ -447,24 +493,59 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 8,
     marginRight: 4,
   },
-  deleteButton: {
-    padding: 12,
+  menuButton: {
+    padding: 8,
+    marginLeft: 0,
+  },
+  menuPopover: {
+    position: 'absolute',
+    top: 12,
+    right: 16,
     backgroundColor: theme.colors.surface,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: theme.colors.error + '30', // 30% opacity
-    shadowColor: theme.colors.error,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 100,
+    minWidth: 110,
+    paddingVertical: 4,
   },
-  expandedContent: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: 16,
+  menuDeleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    borderRadius: 8,
+    backgroundColor: theme.colors.border,
+  },
+  menuDeleteText: {
+    fontSize: 15,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+  },
+  expandedCardsWrapper: {
+    paddingHorizontal: 0,
+    marginHorizontal: 0,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  expandedDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+    marginHorizontal: 0,
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  expandedCardSection: {
+    marginBottom: 8,
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    transform: [{ scale: 0.95 }],
   },
   resultsPreview: {
     gap: 12,
@@ -517,5 +598,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
+  },
+  menuButtonWrapper: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 101,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
   },
 });

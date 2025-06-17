@@ -37,146 +37,68 @@ export async function POST(request: Request) {
       });
     }
 
-    // Apify API Configuration - Use correct actor ID format
-    const APIFY_CONFIG = {
-      baseURL: 'https://api.apify.com/v2',
-      actorId: 'trudax~reddit-scraper',
-      apiToken: apiToken,
-    };
-
-    // Prepare the input for the Reddit scraper with optimized parameters
-    const input = {
-      searchTerms: [query],
-      maxPosts: 15, // Get more posts to filter from
+    // Use Apify Reddit Scraper Lite Actor
+    const APIFY_BASE = 'https://api.apify.com/v2';
+    const ACTOR_ID = 'trudax~reddit-scraper-lite';
+    const input: any = {
+      startUrls: [],
+      maxItems: 5,
+      searchPosts: true,
+      searchComments: false,
+      searchCommunities: false,
+      searchUsers: false,
       sort: 'relevance',
-      timeFilter: 'all',
-      includeComments: false,
-      maxConcurrency: 3,
-      requestDelay: 500,
-      searchInSubreddits: [], // Search all subreddits
-      minUpvotes: 0,
-      maxRetries: 2,
+      includeNSFW: false,
+      debugMode: false,
     };
+    // If query is a URL, use as startUrl, else use as keyword
+    if (query.startsWith('http')) {
+      input.startUrls = [{ url: query }];
+    } else {
+      input.startUrls = [];
+      input.query = query;
+    }
 
-    console.log('📡 Starting Apify Reddit Scraper from server with input:', input);
-    
-    // Start the actor run with timeout
-    const runResponse = await fetch(`${APIFY_CONFIG.baseURL}/acts/${APIFY_CONFIG.actorId}/runs?token=${APIFY_CONFIG.apiToken}`, {
+    // Start the actor
+    const runResponse = await fetch(`${APIFY_BASE}/acts/${ACTOR_ID}/runs?token=${apiToken}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
-      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
-
     if (!runResponse.ok) {
       const errorText = await runResponse.text();
-      console.error('❌ Failed to start Apify actor:', runResponse.status, errorText);
-      
-      // Check for specific error types
-      if (runResponse.status === 401 || runResponse.status === 403) {
-        return Response.json({
-          posts: generateMockRedditPosts(query),
-          success: false,
-          error: 'Invalid Apify API token. Please check your token in the .env file. Showing sample posts.',
-        });
-      }
-      
-      if (runResponse.status === 404) {
-        return Response.json({
-          posts: generateMockRedditPosts(query),
-          success: false,
-          error: 'Apify actor not found. Please verify the actor ID is correct. Showing sample posts.',
-        });
-      }
-      
-      throw new Error(`Failed to start Apify actor: ${runResponse.status}`);
-    }
-
-    const runData = await runResponse.json();
-    const runId = runData.data.id;
-    
-    console.log('🚀 Apify run started with ID:', runId);
-
-    // Poll for completion with optimized timing
-    let attempts = 0;
-    const maxAttempts = 25; // Reduced attempts but with better timing
-    let runStatus = 'RUNNING';
-    
-    while (runStatus === 'RUNNING' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-      
-      try {
-        const statusResponse = await fetch(`${APIFY_CONFIG.baseURL}/actor-runs/${runId}?token=${APIFY_CONFIG.apiToken}`, {
-          signal: AbortSignal.timeout(5000), // 5 second timeout for status checks
-        });
-        
-        if (!statusResponse.ok) {
-          console.warn('⚠️ Failed to check run status, continuing...');
-          attempts++;
-          continue;
-        }
-        
-        const statusData = await statusResponse.json();
-        runStatus = statusData.data.status;
-        
-        attempts++;
-        console.log(`⏳ Run status: ${runStatus} (attempt ${attempts}/${maxAttempts})`);
-        
-        if (runStatus === 'SUCCEEDED' || runStatus === 'FINISHED') {
-          break;
-        }
-        
-        if (runStatus === 'FAILED' || runStatus === 'ABORTED') {
-          console.error('❌ Apify run failed:', statusData.data);
-          throw new Error(`Apify run failed with status: ${runStatus}`);
-        }
-      } catch (error) {
-        console.warn('⚠️ Error checking status:', error);
-        attempts++;
-      }
-    }
-
-    // If still running after max attempts, return fallback
-    if (runStatus === 'RUNNING') {
-      console.warn('⚠️ Apify run timed out, returning fallback data');
       return Response.json({
         posts: generateMockRedditPosts(query),
         success: false,
-        error: 'Reddit search is taking longer than expected. Showing sample posts.',
+        error: `Failed to start Apify actor: ${runResponse.status} ${errorText}`,
       });
+    }
+    const runData = await runResponse.json();
+    const runId = runData.data.id;
+
+    // Poll for completion
+    let status = 'RUNNING';
+    let attempts = 0;
+    while (status === 'RUNNING' && attempts < 30) {
+      await new Promise(res => setTimeout(res, 2000));
+      const statusRes = await fetch(`${APIFY_BASE}/actor-runs/${runId}?token=${apiToken}`);
+      const statusData = await statusRes.json();
+      status = statusData.data.status;
+      if (status === 'SUCCEEDED' || status === 'FINISHED') break;
+      if (status === 'FAILED' || status === 'ABORTED') {
+        return Response.json({
+          posts: generateMockRedditPosts(query),
+          success: false,
+          error: 'Apify run failed',
+        });
+      }
+      attempts++;
     }
 
     // Get results
-    console.log('📥 Fetching results...');
-    const resultsResponse = await fetch(`${APIFY_CONFIG.baseURL}/actor-runs/${runId}/dataset/items?token=${APIFY_CONFIG.apiToken}&format=json&clean=true`, {
-      signal: AbortSignal.timeout(15000), // 15 second timeout for results
-    });
-    
-    if (!resultsResponse.ok) {
-      console.error('❌ Failed to fetch results:', resultsResponse.status);
-      const errorText = await resultsResponse.text();
-      console.error('❌ Results error details:', errorText);
-      throw new Error(`Failed to fetch results: ${resultsResponse.status}`);
-    }
-
-    const results = await resultsResponse.json();
-    console.log('📦 Raw results received:', { 
-      totalItems: results.length,
-      firstItemKeys: results[0] ? Object.keys(results[0]) : [],
-      sampleData: results[0] ? {
-        id: results[0].id,
-        title: results[0].title?.substring(0, 50),
-        subreddit: results[0].subreddit,
-        author: results[0].author,
-        score: results[0].score,
-        num_comments: results[0].num_comments,
-      } : null
-    });
-
+    const resultsRes = await fetch(`${APIFY_BASE}/actor-runs/${runId}/dataset/items?token=${apiToken}&format=json&clean=true`);
+    const results = await resultsRes.json();
     if (!results || results.length === 0) {
-      console.warn('⚠️ No results returned from Apify');
       return Response.json({
         posts: generateMockRedditPosts(query),
         success: false,
@@ -184,107 +106,11 @@ export async function POST(request: Request) {
       });
     }
 
-    // Process results with improved filtering and data extraction
-    const processedPosts = results
-      .filter((item: any) => {
-        // Improved filtering logic
-        const hasValidTitle = item && 
-                             item.title && 
-                             typeof item.title === 'string' &&
-                             item.title.trim().length > 0 &&
-                             !item.title.toLowerCase().includes('[deleted]') &&
-                             !item.title.toLowerCase().includes('[removed]');
-        
-        const hasValidSubreddit = item.subreddit && 
-                                 typeof item.subreddit === 'string' &&
-                                 item.subreddit.trim().length > 0;
-        
-        const hasValidAuthor = item.author && 
-                              typeof item.author === 'string' &&
-                              item.author.trim().length > 0 &&
-                              !item.author.toLowerCase().includes('[deleted]');
-        
-        console.log('🔍 Filtering item:', {
-          id: item.id,
-          title: item.title?.substring(0, 50),
-          hasValidTitle,
-          hasValidSubreddit,
-          hasValidAuthor,
-          passed: hasValidTitle && hasValidSubreddit && hasValidAuthor
-        });
-        
-        return hasValidTitle && hasValidSubreddit && hasValidAuthor;
-      })
-      .slice(0, 8) // Take top 8 posts
-      .map((item: any, index: number) => {
-        // Improved data extraction
-        const postId = item.id || `reddit-${Date.now()}-${index}`;
-        const title = item.title || `${query} discussion`;
-        
-        // Clean subreddit name
-        const subreddit = item.subreddit ? 
-                         item.subreddit.replace(/^r\//, '') : 
-                         'reddit';
-        
-        // Clean author name
-        const author = item.author || 'redditor';
-        
-        // Extract engagement metrics with better fallbacks
-        const upvotes = item.score || item.ups || Math.floor(Math.random() * 1000 + 100);
-        const comments = item.num_comments || Math.floor(Math.random() * 50 + 5);
-        const awards = item.total_awards_received || 0;
-        
-        // Create preview from selftext or generate one
-        let preview = '';
-        if (item.selftext && typeof item.selftext === 'string' && item.selftext.trim()) {
-          preview = cleanText(item.selftext, 150);
-        } else {
-          // Generate a preview based on the title and subreddit
-          preview = `Discussion about ${query} in r/${subreddit}. Join the conversation and share your thoughts.`;
-        }
-        
-        // Construct Reddit URL
-        const url = item.url || `https://reddit.com/r/${subreddit}/comments/${postId}`;
-        
-        // Format creation time
-        let created = '';
-        if (item.created_utc) {
-          created = formatTimeAgo(item.created_utc);
-        } else {
-          created = formatTimeAgo(Date.now() / 1000 - Math.random() * 86400);
-        }
-        
-        const processedPost = {
-          id: String(postId),
-          title: String(title).substring(0, 120).trim(),
-          subreddit: String(subreddit),
-          author: String(author),
-          upvotes: Number(upvotes) || 0,
-          awards: Number(awards) || 0,
-          comments: Number(comments) || 0,
-          preview: String(preview),
-          url: String(url),
-          created: String(created),
-        };
-        
-        console.log('✅ Processed post:', processedPost);
-        return processedPost;
-      });
-
-    console.log(`✅ Successfully processed ${processedPosts.length} Reddit posts from Apify`);
-    
-    if (processedPosts.length === 0) {
-      console.warn('⚠️ No posts survived processing');
-      return Response.json({
-        posts: generateMockRedditPosts(query),
-        success: false,
-        error: `No valid Reddit posts found for "${query}". The search may be too specific. Showing sample posts.`,
-      });
-    }
-    
+    // Return only the first 5 posts
     return Response.json({
-      posts: processedPosts,
+      posts: results.slice(0, 5),
       success: true,
+      error: null,
     });
 
   } catch (error: any) {

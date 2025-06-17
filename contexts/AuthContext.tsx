@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { supabase } from '@/services/database';
 
 interface User {
   id: string;
@@ -109,106 +110,85 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const sendOTP = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log(`📧 Sending OTP to ${email}`);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real app, this would call your backend API to send OTP
-      // For demo purposes, always return success
-      console.log(`✅ OTP sent successfully to ${email}`);
+      const { data, error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        return { success: false, error: error.message };
+      }
       return { success: true };
-    } catch (error) {
-      console.error('❌ Error sending OTP:', error);
-      return { 
-        success: false, 
-        error: 'Failed to send OTP. Please try again.' 
-      };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to send OTP.' };
     }
   };
 
   const resendOTP = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    console.log(`🔄 Resending OTP to ${email}`);
     return await sendOTP(email);
   };
 
   const signIn = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log(`🔐 Attempting sign in for ${email} with OTP: ${otp}`);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real app, this would verify OTP with your backend
-      // For demo: accept 123456, 000000, or any 6-digit code starting with 1
-      const validOTPs = ['123456', '000000'];
-      const isValidOTP = validOTPs.includes(otp) || (otp.length === 6 && otp.startsWith('1'));
-      
-      if (isValidOTP) {
-        const userData: User = {
-          id: generateUUID(),
+      const { data, error } = await supabase.auth.verifyOtp({
           email,
-          name: email.split('@')[0],
+        token: otp,
+        type: 'email',
+      });
+      if (error || !data.user) {
+        return { success: false, error: error?.message || 'Invalid OTP.' };
+      }
+      const userData: User = {
+        id: data.user.id,
+        email: data.user.email ?? email,
+        name: data.user.user_metadata?.name || email.split('@')[0],
         };
-        
         setUser(userData);
         await saveUserToStorage(userData);
-        
-        console.log(`✅ Sign in successful for ${email}`);
-        return { success: true };
-      } else {
-        console.log(`❌ Invalid OTP for ${email}: ${otp}`);
-        return { 
-          success: false, 
-          error: 'Invalid OTP. Please try again. (Demo: use 123456)' 
-        };
-      }
-    } catch (error) {
-      console.error('❌ Sign in error:', error);
-      return { 
-        success: false, 
-        error: 'Sign in failed. Please try again.' 
-      };
+      // Ensure user profile exists
+      await ensureUserProfile(data.user.id);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Sign in failed.' };
     }
   };
 
   const signUp = async (email: string, otp: string, name?: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log(`📝 Attempting sign up for ${email} with OTP: ${otp}`);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // In a real app, this would verify OTP and create account with your backend
-      // For demo: accept 123456, 000000, or any 6-digit code starting with 1
-      const validOTPs = ['123456', '000000'];
-      const isValidOTP = validOTPs.includes(otp) || (otp.length === 6 && otp.startsWith('1'));
-      
-      if (isValidOTP) {
+      // Supabase sign up with OTP is the same as sign in, so we just verify the OTP
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+      if (error || !data.user) {
+        return { success: false, error: error?.message || 'Invalid OTP.' };
+      }
         const userData: User = {
-          id: generateUUID(),
-          email,
-          name: name || email.split('@')[0],
+        id: data.user.id,
+        email: data.user.email ?? email,
+        name: name || data.user.user_metadata?.name || email.split('@')[0],
         };
-        
         setUser(userData);
         await saveUserToStorage(userData);
-        
-        console.log(`✅ Sign up successful for ${email}`);
+      // Ensure user profile exists
+      await ensureUserProfile(data.user.id);
         return { success: true };
-      } else {
-        console.log(`❌ Invalid OTP for ${email}: ${otp}`);
-        return { 
-          success: false, 
-          error: 'Invalid OTP. Please try again. (Demo: use 123456)' 
-        };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Sign up failed.' };
+    }
+  };
+
+  // Helper to ensure user profile exists
+  const ensureUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
+      if (!data) {
+        // Create profile if not exists
+        await supabase.from('user_profiles').insert([{ user_id: userId }]);
       }
     } catch (error) {
-      console.error('❌ Sign up error:', error);
-      return { 
-        success: false, 
-        error: 'Sign up failed. Please try again.' 
-      };
+      // Ignore errors for now
     }
   };
 
