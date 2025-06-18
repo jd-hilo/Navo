@@ -3,10 +3,11 @@ import { Search, Bookmark, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, GestureResponderEvent } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useEffect } from 'react';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -25,6 +26,12 @@ export default function TabLayout() {
   if (isLoading || !isAuthenticated) {
     return null;
   }
+
+  const handleTabPress = () => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const TabIcon = ({ icon: Icon, focused, color }: { icon: any; focused: boolean; color: string }) => (
     <View style={[
@@ -46,15 +53,18 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: 32,
+          left: '50%',
+          marginLeft: 50, // Half of the width (300/2)
+          width: 300,
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          height: 80 + Math.max(insets.bottom, 0),
+          height: 20 + Math.max(insets.bottom, 0),
           paddingBottom: Math.max(insets.bottom, 0),
+          borderRadius: 50,
+          overflow: 'hidden',
         },
         tabBarBackground: () => (
           <BlurView 
@@ -67,9 +77,18 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarShowLabel: false,
         tabBarItemStyle: {
-          paddingTop: 16,
-          paddingBottom: 8,
+          paddingTop: 8,
+          paddingBottom: 10,
         },
+        tabBarButton: (props: any) => (
+          <TouchableOpacity
+            {...props}
+            onPress={(e: GestureResponderEvent) => {
+              handleTabPress();
+              props.onPress?.(e);
+            }}
+          />
+        ),
       }}>
       <Tabs.Screen
         name="index"
@@ -106,14 +125,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    borderRadius: 50,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    transition: 'all 0.2s ease',
   },
   iconContainerFocused: {
     transform: [{ scale: 1.1 }],

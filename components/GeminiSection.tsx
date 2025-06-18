@@ -87,7 +87,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   if (isLoading) {
     return (
       <LinearGradient
-        colors={theme.gradients.gemini}
+        colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -116,7 +116,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   if (!data.success && data.error) {
     return (
       <LinearGradient
-        colors={theme.gradients.gemini}
+        colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -158,7 +158,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 
   return (
     <LinearGradient
-      colors={theme.gradients.gemini}
+      colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBorder}>

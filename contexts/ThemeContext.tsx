@@ -150,7 +150,7 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load theme preference on mount
@@ -163,6 +163,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const savedTheme = await AsyncStorage.getItem('theme');
       if (savedTheme !== null) {
         setIsDark(savedTheme === 'dark');
+      } else {
+        setIsDark(true);
+        saveThemePreference(true);
       }
     } catch (error) {
       console.error('Error loading theme preference:', error);

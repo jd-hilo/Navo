@@ -152,20 +152,75 @@ export class SearchResultsService {
 
   // Increment user's search count
   static async incrementSearchCount(userId: string): Promise<boolean> {
+    console.log('🔄 Starting search count increment for user:', userId);
     try {
-      const { error } = await supabase.rpc('increment_search_count', {
-        p_user_id: userId
-      });
+      // First, get the current profile
+      console.log('📊 Fetching current profile...');
+      const { data: profile, error: fetchError } = await supabase
+        .from('user_profiles')
+        .select('search_count')
+        .eq('user_id', userId)
+        .single();
 
-      if (error) {
-        console.error('Error incrementing search count:', error);
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+          // No profile exists, create new one
+          console.log('ℹ️ No existing profile found, creating new one');
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert([{
+              user_id: userId,
+              search_count: 1,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }]);
+
+          if (insertError) {
+            console.error('❌ Error creating new profile:', insertError);
+            return false;
+          }
+          console.log('✅ Created new profile with count 1');
+          return true;
+        } else {
+          console.error('❌ Error fetching user profile:', fetchError);
+          return false;
+        }
+      }
+
+      // Profile exists, update the count
+      const currentCount = profile?.search_count || 0;
+      const newCount = currentCount + 1;
+      console.log(`📈 Current count: ${currentCount}, New count will be: ${newCount}`);
+
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ 
+          search_count: newCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('❌ Error updating search count:', updateError);
+        console.error('Error details:', {
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details
+        });
         return false;
       }
 
-      console.log(`Incremented search count for user: ${userId}`);
+      console.log(`✅ Successfully incremented search count from ${currentCount} to ${newCount} for user: ${userId}`);
       return true;
     } catch (error) {
-      console.error('Error in incrementSearchCount:', error);
+      console.error('❌ Unexpected error in incrementSearchCount:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
       return false;
     }
   }
@@ -306,6 +361,30 @@ export class SearchResultsService {
     } catch (error) {
       console.error('Error in getCacheStats:', error);
       return { totalCached: 0, oldestCache: null, newestCache: null };
+    }
+  }
+
+  // Update user's search count
+  static async updateSearchCount(userId: string, count: number): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: userId,
+          search_count: count,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating search count:', error);
+        return false;
+      }
+
+      console.log(`Updated search count to ${count} for user: ${userId}`);
+      return true;
+    } catch (error) {
+      console.error('Error in updateSearchCount:', error);
+      return false;
     }
   }
 }

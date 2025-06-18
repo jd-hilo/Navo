@@ -17,7 +17,6 @@ import { SearchResultsService } from '@/services/database';
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
     totalCached: 0,
@@ -46,14 +45,6 @@ export default function SettingsScreen() {
     }
   };
 
-  const showAPIKeyInfo = () => {
-    Alert.alert(
-      'API Configuration',
-      'To use Navo, you need to configure API keys for Gemini, TikTok, and Reddit. This would typically be done in a production app through secure configuration.',
-      [{ text: 'OK' }]
-    );
-  };
-
   const showPrivacyInfo = () => {
     Alert.alert(
       'Privacy Policy',
@@ -67,32 +58,6 @@ export default function SettingsScreen() {
       'About Navo',
       'Navo v1.0.0\n\nA powerful search app that aggregates results from Gemini, TikTok, and Reddit in one place.',
       [{ text: 'OK' }]
-    );
-  };
-
-  const clearCache = async () => {
-    Alert.alert(
-      'Clear Cache',
-      'This will remove all cached search results. Are you sure?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: async () => {
-            if (!user?.id) return;
-            
-            try {
-              // In a real implementation, you'd add a function to clear user's cache
-              await SearchResultsService.cleanupExpiredResults();
-              await loadUserStats(); // Refresh stats
-              Alert.alert('Success', 'Cache cleared successfully');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to clear cache');
-            }
-          },
-        },
-      ]
     );
   };
 
@@ -213,27 +178,6 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>General</Text>
           
           <SettingRow
-            icon={Key}
-            title="API Configuration"
-            subtitle="Configure API keys for services"
-            onPress={showAPIKeyInfo}
-          />
-          
-          <SettingRow
-            icon={Bell}
-            title="Notifications"
-            subtitle="Receive updates and alerts"
-            rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: theme.colors.border, true: theme.colors.text }}
-                thumbColor={theme.colors.surface}
-              />
-            }
-          />
-          
-          <SettingRow
             icon={Moon}
             title="Dark Mode"
             subtitle="Switch to dark theme"
@@ -246,38 +190,6 @@ export default function SettingsScreen() {
               />
             }
           />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data & Storage</Text>
-          
-          <SettingRow
-            icon={Shield}
-            title="Clear Cache"
-            subtitle={`${cacheStats.totalCached} cached search results`}
-            onPress={clearCache}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy & Security</Text>
-          
-          <SettingRow
-            icon={Shield}
-            title="Privacy Policy"
-            subtitle="How we handle your data"
-            onPress={showPrivacyInfo}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
-          
-          <SettingRow
-            icon={HelpCircle}
-            title="Help & FAQ"
-            subtitle="Get help using Navo"
-          />
           
           <SettingRow
             icon={Info}
@@ -285,15 +197,20 @@ export default function SettingsScreen() {
             subtitle="App version and information"
             onPress={showAbout}
           />
-        </View>
-
-        <View style={styles.section}>
+          
+          <SettingRow
+            icon={Shield}
+            title="Privacy Policy"
+            subtitle="Read our privacy policy"
+            onPress={showPrivacyInfo}
+          />
+          
           <SettingRow
             icon={LogOut}
             title="Sign Out"
             subtitle="Sign out of your account"
             onPress={handleSignOut}
-            isDestructive={true}
+            isDestructive
           />
         </View>
       </ScrollView>

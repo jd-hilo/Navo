@@ -58,9 +58,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.searchBar,
-    borderRadius: 14, // Slightly smaller border radius
-    paddingHorizontal: 18, // Reduced padding
-    paddingVertical: Platform.OS === 'ios' ? 12 : 10, // Reduced padding
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: Platform.OS === 'ios' ? 13.2 : 11, // Increased by 10%
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.08,
@@ -70,17 +70,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.searchBarBorder,
   },
   searchIcon: {
-    marginRight: 10, // Reduced margin
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    fontSize: 15, // Slightly smaller font
+    fontSize: 16.5, // Increased by 10%
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
     paddingVertical: 0,
   },
   clearButton: {
     padding: 4,
-    marginLeft: 6, // Reduced margin
+    marginLeft: 6,
   },
 });

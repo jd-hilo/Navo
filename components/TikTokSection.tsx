@@ -47,7 +47,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
   if (!data.success && data.error) {
     return (
       <LinearGradient
-        colors={theme.gradients.tiktok}
+        colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -79,7 +79,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
 
   return (
     <LinearGradient
-      colors={theme.gradients.tiktok}
+      colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBorder}>

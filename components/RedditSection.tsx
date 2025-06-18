@@ -21,7 +21,7 @@ interface RedditPost {
   awards: number;
   comments: number;
   preview: string;
-  text: string;
+  text?: string;
   url: string;
   created: string;
   media?: string | null;
@@ -66,7 +66,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   if (isLoading) {
     return (
       <LinearGradient
-        colors={theme.gradients.reddit}
+        colors={theme.gradients.reddit as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -94,7 +94,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   if (!data.success && data.error) {
     return (
       <LinearGradient
-        colors={theme.gradients.reddit}
+        colors={theme.gradients.reddit as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -127,7 +127,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   if (!data.posts || data.posts.length === 0) {
     return (
       <LinearGradient
-        colors={theme.gradients.reddit}
+        colors={theme.gradients.reddit as unknown as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBorder}>
@@ -157,7 +157,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 
   return (
     <LinearGradient
-      colors={theme.gradients.reddit}
+      colors={theme.gradients.reddit as unknown as readonly [string, string, ...string[]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.gradientBorder}>

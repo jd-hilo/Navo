@@ -18,6 +18,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   sendOTP: (email: string) => Promise<{ success: boolean; error?: string }>;
   resendOTP: (email: string) => Promise<{ success: boolean; error?: string }>;
+  checkEmailExists: (email: string) => Promise<boolean>;
+  signInWithOtp: (email: string) => Promise<{ data: any; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,12 +112,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const sendOTP = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { data, error } = await supabase.auth.signInWithOtp({ email });
+      console.log('Sending OTP to:', email);
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
       if (error) {
+        console.error('Error sending OTP:', error.message);
         return { success: false, error: error.message };
       }
+
+      console.log('OTP sent successfully');
       return { success: true };
     } catch (error: any) {
+      console.error('Unexpected error in sendOTP:', error);
       return { success: false, error: error.message || 'Failed to send OTP.' };
     }
   };
@@ -196,6 +209,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🚪 Starting sign out process...');
       
+      // Sign out from Supabase first
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.warn('⚠️ Supabase sign out error:', signOutError);
+      }
+      
       // Clear user state immediately for better UX
       setUser(null);
       
@@ -231,6 +250,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+        },
+      });
+      
+      if (error) {
+        if (error.message.includes('Email not confirmed')) {
+          return true; // Email exists but not confirmed
+        }
+        if (error.message.includes('Email not found')) {
+          return false; // Email doesn't exist
+        }
+        throw error;
+      }
+      
+      return true; // Email exists and OTP sent successfully
+    } catch (error) {
+      console.error('Error checking email:', error);
+      throw error;
+    }
+  };
+
+  const signInWithOtp = async (email: string): Promise<{ data: any; error: any }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        return { data: null, error: error.message };
+      }
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error: error.message };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -240,6 +297,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
     sendOTP,
     resendOTP,
+    checkEmailExists,
+    signInWithOtp,
   };
 
   return (

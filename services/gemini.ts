@@ -2,7 +2,7 @@
 const GEMINI_API_CONFIG = {
   baseURL: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-1.5-flash',
-  maxTokens: 150, // Reduced from 300 to 150 for much shorter responses
+  maxTokens: 500, // Increased from 150 to 500 for more detailed responses
   temperature: 0.7,
 };
 
@@ -43,22 +43,23 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
     const requestBody = {
       contents: [{
         parts: [{
-          text: `Search the web for current information about "${query}" and provide a very brief summary in exactly 1-2 short paragraphs.
+          text: `Search the web for current information about "${query}" and provide a comprehensive summary.
 
 Requirements:
 - MUST use Google Search to get the latest information
-- Maximum 100 words total
-- Use simple, clear language
-- Focus only on the most essential and current information
-- No complex formatting - just basic text with simple bullet points if needed
-- Be direct and concise
-- Include recent developments or current status
+- Maximum 300 words total
+- Use clear, engaging language
+- Include key details and context
+- Structure the response with:
+  1. Overview and current status (2-3 sentences)
+  2. Key developments or recent changes (3-4 sentences)
+  3. Important context or background (2-3 sentences)
+  4. Current implications or significance (2-3 sentences)
+- Use bullet points for key facts when appropriate
+- Include relevant statistics or data points
+- Focus on the most recent and relevant information
 
-Provide:
-1. What it is and current status (1 sentence)
-2. Latest developments or why it's relevant now (2-3 sentences max)
-
-Keep it extremely short and to the point with the most up-to-date information.`
+Keep the response informative and well-structured while maintaining readability.`
         }]
       }],
       generationConfig: {

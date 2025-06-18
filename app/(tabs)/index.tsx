@@ -27,6 +27,7 @@ import { debounce } from '@/utils/debounce';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { SearchResultsService } from '@/services/database';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -106,6 +107,24 @@ export default function HomeScreen() {
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+
+  // Handle search results and increment count
+  useEffect(() => {
+    if (debouncedQuery && searchResults && user?.id) {
+      console.log('🔍 Search completed, incrementing count...');
+      SearchResultsService.incrementSearchCount(user.id)
+        .then(success => {
+          if (success) {
+            console.log('✅ Search count incremented successfully');
+          } else {
+            console.error('❌ Failed to increment search count');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error incrementing search count:', error);
+        });
+    }
+  }, [debouncedQuery, searchResults, user?.id]);
 
   useEffect(() => {
     if (searchQuery.trim().length > 2) {
@@ -546,7 +565,7 @@ export default function HomeScreen() {
                       onRetry={handleRetry}
                     />
                     <RedditSection
-                      data={searchResults?.reddit || { posts: [], success: false, error: 'No Reddit data available' }}
+                      data={searchResults?.reddit || { posts: [], success: false, error: 'No Reddit data available', text: '' }}
                       query={debouncedQuery}
                       onRetry={handleRetry}
                       isLoading={isLoading}

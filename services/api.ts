@@ -295,8 +295,6 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
     
     if (cachedResults) {
       console.log(`✅ Found cached results for "${query}"`);
-      // Still increment search count for cached results
-      await SearchResultsService.incrementSearchCount(userId);
       return {
         ...cachedResults,
         cached: true,
@@ -334,9 +332,9 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
     reddit: await searchRedditRapidAPI(query),
   };
   
-  // Save to cache and increment search count if user is authenticated
+  // Save to cache if user is authenticated
   if (userId) {
-    console.log('💾 Saving results to cache and incrementing search count...');
+    console.log('💾 Saving results to cache...');
     
     // Save results to cache
     const saved = await SearchResultsService.saveResults(query, results, userId);
@@ -345,14 +343,9 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
     } else {
       console.log(`❌ Failed to cache results for "${query}"`);
     }
-    
+
     // Increment search count
-    const countIncremented = await SearchResultsService.incrementSearchCount(userId);
-    if (countIncremented) {
-      console.log(`✅ Search count incremented for user: ${userId}`);
-    } else {
-      console.log(`❌ Failed to increment search count for user: ${userId}`);
-    }
+    await SearchResultsService.incrementSearchCount(userId);
   }
   
   return {

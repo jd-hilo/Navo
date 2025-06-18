@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Dimensions,
   Image,
   Platform,
+  Animated,
+  Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Sparkles } from 'lucide-react-native';
@@ -18,9 +20,43 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const { theme, isDark } = useTheme();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Fade in animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+
+    // Continuous bounce animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.spring(bounceAnim, {
+          toValue: 1,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.spring(bounceAnim, {
+          toValue: 0,
+          friction: 3,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  const translateY = bounceAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -10], // Move up 10 units when bouncing
+  });
 
   const handleGetStarted = () => {
-    router.push('/(auth)/email');
+    router.push('/(auth)/auth');
   };
 
   const styles = createStyles(theme);
@@ -53,39 +89,21 @@ export default function WelcomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         {/* Logo Section */}
         <View style={styles.logoSection}>
-          <Image
-            source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          
-          <View style={styles.sparkleContainer}>
-            <Sparkles size={24} color={theme.colors.text} strokeWidth={2} />
-          </View>
+          <Animated.View 
+            style={{ 
+              opacity: fadeAnim,
+              transform: [{ translateY }]
+            }}>
+            <Image
+              source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </Animated.View>
         </View>
 
         {/* Content Section */}
         <View style={styles.contentSection}>
-          <Text style={styles.title}>Welcome to Navo</Text>
-          <Text style={styles.subtitle}>
-            Search across Gemini, TikTok, and Reddit all in one place. 
-            Get comprehensive results from multiple sources instantly.
-          </Text>
-
-          <View style={styles.featuresContainer}>
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>AI-powered search with Google Gemini</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>Trending TikTok content discovery</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>Real-time Reddit discussions</Text>
-            </View>
-          </View>
         </View>
 
         {/* CTA Section */}
@@ -138,97 +156,52 @@ const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: 24,
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
   },
   logoSection: {
-    flex: 0.4,
-    justifyContent: 'center',
+    flex: 0.35,
+    justifyContent: 'flex-end',
     alignItems: 'center',
     position: 'relative',
+    marginBottom: 40,
+    paddingTop: 60,
   },
   logo: {
     width: 180,
     height: 72,
     maxWidth: '70%',
   },
-  sparkleContainer: {
-    position: 'absolute',
-    top: '20%',
-    right: '25%',
-    backgroundColor: theme.colors.surface,
-    borderRadius: 20,
-    padding: 8,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
   contentSection: {
-    flex: 0.4,
+    flex: 0.45,
     justifyContent: 'center',
     paddingHorizontal: 8,
-  },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 38,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 32,
-  },
-  featuresContainer: {
-    paddingHorizontal: 16,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  featureDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.text,
-    marginRight: 12,
-  },
-  featureText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
-    flex: 1,
   },
   ctaSection: {
     flex: 0.2,
     justifyContent: 'flex-end',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 40,
+    paddingBottom: Platform.OS === 'ios' ? 32 : 48,
   },
   getStartedButton: {
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 24,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 8,
+    width: '85%',
+    alignSelf: 'center',
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
+    paddingVertical: 20,
     paddingHorizontal: 32,
     borderRadius: 16,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.background,
     marginRight: 8,
