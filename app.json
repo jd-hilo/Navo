@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "buildNumber": "5",
       "supportsTablet": false,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
@@ -16,6 +17,7 @@
       }
     },
     "android": {
+      "versionCode": 5,
       "package": "media.hilo.navo"
     },
     "web": {
