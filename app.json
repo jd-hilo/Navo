@@ -9,15 +9,16 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "buildNumber": "5",
+      "buildNumber": "7",
       "supportsTablet": false,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts."
       }
     },
     "android": {
-      "versionCode": 5,
+      "versionCode": 7,
       "package": "media.hilo.navo"
     },
     "web": {
