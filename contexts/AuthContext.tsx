@@ -20,6 +20,7 @@ interface AuthContextType {
   resendOTP: (email: string) => Promise<{ success: boolean; error?: string }>;
   checkEmailExists: (email: string) => Promise<boolean>;
   signInWithOtp: (email: string) => Promise<{ data: any; error: any }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -288,6 +289,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInWithPassword = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        return { success: false, error: error?.message || 'Invalid email or password.' };
+      }
+      const userData: User = {
+        id: data.user.id,
+        email: data.user.email ?? email,
+        name: data.user.user_metadata?.name || email.split('@')[0],
+      };
+      setUser(userData);
+      await saveUserToStorage(userData);
+      await ensureUserProfile(data.user.id);
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Sign in failed.' };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -299,6 +320,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resendOTP,
     checkEmailExists,
     signInWithOtp,
+    signInWithPassword,
   };
 
   return (

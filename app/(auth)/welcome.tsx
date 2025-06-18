@@ -94,11 +94,11 @@ export default function WelcomeScreen() {
               opacity: fadeAnim,
               transform: [{ translateY }]
             }}>
-            <Image
-              source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+          <Image
+            source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
           </Animated.View>
         </View>
 

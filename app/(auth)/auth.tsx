@@ -50,6 +50,11 @@ export default function AuthScreen() {
   const handleEmailSubmit = async () => {
     if (!validateEmail(email)) return;
     
+    // Special case: route to password screen for apple@test.com
+    if (email.trim().toLowerCase() === 'apple@test.com') {
+      router.push('/(auth)/password');
+      return;
+    }
     setIsLoading(true);
     try {
       console.log('Attempting to send OTP to:', email);
