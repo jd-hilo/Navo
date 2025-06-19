@@ -166,7 +166,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         <View style={styles.header}>
           <View style={styles.titleContainer}>
             <Sparkles size={20} color={theme.colors.text} strokeWidth={2} />
-            <Text style={styles.title}>Gemini</Text>
+            <Text style={styles.title}>Google</Text>
             
             {/* Show cache indicator if data is cached */}
             {cached && cacheAge !== undefined ? (
@@ -180,7 +180,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               /* Always show Google Search indicator since we force search for everything */
               <View style={styles.webSearchIndicator}>
                 <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
-                <Text style={styles.webSearchText}>Google Search</Text>
+                <Text style={styles.webSearchText}>Gemini Flash 1.5</Text>
               </View>
             )}
             
@@ -258,7 +258,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
             
             {showSources && (
               <View style={styles.sourcesList}>
-                {data.sources.slice(0, 3).map((source, index) => (
+                {data.sources.map((source, index) => (
                   <TouchableOpacity
                     key={index}
                     style={styles.sourceItem}

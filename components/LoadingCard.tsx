@@ -13,7 +13,7 @@ export default function LoadingCard({ title }: LoadingCardProps) {
 
   const getIcon = () => {
     switch (title) {
-      case 'Gemini':
+      case 'Google':
         return <Sparkles size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
       case 'TikTok':
         return <Video size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
@@ -26,7 +26,7 @@ export default function LoadingCard({ title }: LoadingCardProps) {
 
   const getGradientColors = () => {
     switch (title) {
-      case 'Gemini':
+      case 'Google':
         return theme.gradients.gemini;
       case 'TikTok':
         return theme.gradients.tiktok;
