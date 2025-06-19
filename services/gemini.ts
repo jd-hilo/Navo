@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 // Google Gemini API Configuration
 const GEMINI_API_CONFIG = {
   baseURL: 'https://generativelanguage.googleapis.com/v1beta',
@@ -24,8 +26,16 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
   try {
     console.log('🔍 Making Google Gemini request with FORCED grounding for:', query);
     
-    // Check if API key is available
-    const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    // Check if API key is available - use Expo Constants to access from app.json
+    const apiKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY || process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+    console.log('🔑 API Key check:', {
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      isDefaultKey: apiKey === 'your_gemini_api_key_here',
+      fromConstants: !!Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY,
+      fromProcessEnv: !!process.env.EXPO_PUBLIC_GEMINI_API_KEY
+    });
+    
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
       console.warn('⚠️ Google Gemini API key not found or not configured');
       return {
@@ -98,6 +108,9 @@ Keep the response informative and well-structured while maintaining readability.
     };
 
     console.log('📡 Making request to Gemini API with FORCED Google Search...');
+    console.log('🔗 Request URL:', `${GEMINI_API_CONFIG.baseURL}/models/${GEMINI_API_CONFIG.model}:generateContent?key=${apiKey.substring(0, 10)}...`);
+    console.log('📦 Request Body:', JSON.stringify(requestBody, null, 2));
+    
     const response = await fetch(`${GEMINI_API_CONFIG.baseURL}/models/${GEMINI_API_CONFIG.model}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
@@ -107,6 +120,7 @@ Keep the response informative and well-structured while maintaining readability.
     });
 
     console.log('✅ Google Gemini API Response Status:', response.status);
+    console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

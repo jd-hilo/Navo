@@ -31,15 +31,38 @@ import { SearchResultsService } from '@/services/database';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
+// Get current date for news suggestions
+const getCurrentDate = () => {
+  const today = new Date();
+  const options: Intl.DateTimeFormatOptions = { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  };
+  return today.toLocaleDateString('en-US', options);
+};
+
 const SEARCH_SUGGESTIONS = [
-  'AI trends 2024',
-  'React Native tips',
-  'Best productivity apps',
-  'Machine learning basics',
-  'Web development',
-  'Mobile design patterns',
-  'Tech news today',
-  'Programming tutorials',
+
+  `Tech News ${getCurrentDate()}`,
+  'How to lose weight fast',
+  'Best movies 2025',
+  'Restaurants near me',
+  'Weather today',
+  'How to make money online',
+  'Best workout routine',
+  'Healthy breakfast ideas',
+  'Travel deals this week',
+  'How to cook pasta',
+  'Best gaming laptops',
+  'How to meditate',
+  'Latest iPhone rumors',
+  'How to save money',
+  'Best dating apps',
+  'How to sleep better',
+  'Latest sports scores',
+  'How to learn guitar',
+  'Best Netflix shows',
 ];
 
 // Configurable suggestion styling constants - EDIT THESE VALUES
@@ -506,9 +529,9 @@ export default function HomeScreen() {
             activeOpacity={0.8}>
             <Bookmark 
               size={24} 
-              color={isBookmarkSaved ? '#FFFFFF' : theme.colors.text} 
+              color={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : theme.colors.text} 
               strokeWidth={2}
-              fill={isBookmarkSaved ? '#FFFFFF' : 'none'}
+              fill={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : 'none'}
             />
           </TouchableOpacity>
         </Animated.View>
