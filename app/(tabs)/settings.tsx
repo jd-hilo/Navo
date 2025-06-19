@@ -9,14 +9,18 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search } from 'lucide-react-native';
+import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search, Crown, CheckCircle } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { SearchResultsService } from '@/services/database';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isPremium } = useSubscription();
+  const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
     totalCached: 0,
@@ -43,6 +47,10 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
+  };
+
+  const handleUpgrade = () => {
+    router.push('/(auth)/upgrade' as any);
   };
 
   const showPrivacyInfo = () => {
@@ -146,6 +154,46 @@ export default function SettingsScreen() {
                 </Text>
               </View>
             </View>
+          </View>
+        </View>
+
+        {/* Subscription Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
+          
+          <View style={styles.subscriptionCard}>
+            <View style={styles.subscriptionHeader}>
+              <View style={styles.subscriptionIcon}>
+                {isPremium ? (
+                  <Crown size={24} color={theme.colors.primary} strokeWidth={2} />
+                ) : (
+                  <Crown size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+                )}
+              </View>
+              <View style={styles.subscriptionText}>
+                <Text style={styles.subscriptionTitle}>
+                  {isPremium ? 'Premium Plan' : 'Free Plan'}
+                </Text>
+                <Text style={styles.subscriptionStatus}>
+                  {isPremium ? 'Active subscription' : 'Upgrade for more features'}
+                </Text>
+              </View>
+              {isPremium && (
+                <View style={styles.premiumBadge}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                </View>
+              )}
+            </View>
+            
+            {!isPremium && (
+              <TouchableOpacity
+                style={styles.upgradeButton}
+                onPress={handleUpgrade}
+                activeOpacity={0.8}>
+                <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
+                <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -289,6 +337,66 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     marginTop: 2,
+  },
+  subscriptionCard: {
+    backgroundColor: theme.colors.surface,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  subscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subscriptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  subscriptionText: {
+    flex: 1,
+  },
+  subscriptionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+  },
+  subscriptionStatus: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  premiumBadge: {
+    backgroundColor: theme.colors.success,
+    borderRadius: 12,
+    padding: 4,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  upgradeButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.surface,
   },
   statsCard: {
     backgroundColor: theme.colors.surface,

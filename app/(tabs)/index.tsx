@@ -564,7 +564,7 @@ export default function HomeScreen() {
               <View style={{ width: cardsWidth, marginTop: 12 }}>
                 {isLoading ? (
                   <>
-                    <LoadingCard title="Gemini" />
+                    <LoadingCard title="Google" />
                     <LoadingCard title="TikTok" />
                     <LoadingCard title="Reddit" />
                   </>

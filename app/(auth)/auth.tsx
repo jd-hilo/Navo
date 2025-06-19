@@ -134,7 +134,12 @@ export default function AuthScreen() {
         : await signUp(email, otpString);
       
       if (result.success) {
-        router.replace('/(tabs)');
+        // Route new users to upgrade screen, existing users to home
+        if (isExistingUser) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(auth)/upgrade');
+        }
       } else {
         Alert.alert('Error', result.error || 'Invalid verification code');
         // Clear OTP on error
