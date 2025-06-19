@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, Star, Zap, Database, Settings, ArrowRight } from 'lucide-react-native';
@@ -15,18 +17,30 @@ import { useRouter } from 'expo-router';
 
 export default function UpgradeScreen() {
   const { theme } = useTheme();
-  const { upgradeToPremium } = useSubscription();
+  const { upgradeToPremium, offerings, isLoading } = useSubscription();
   const router = useRouter();
 
-  const handleUpgrade = () => {
-    // TODO: Implement actual IAP functionality
-    // For now, just mark as premium and route to home
-    upgradeToPremium();
-    router.replace('/(tabs)');
+  const handleUpgrade = async () => {
+    try {
+      await upgradeToPremium();
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      if (!error.userCancelled) {
+        Alert.alert('Error', 'Failed to complete purchase. Please try again.');
+      }
+    }
   };
 
   const handleSkip = () => {
     router.push('/(auth)/refer-friend' as any);
+  };
+
+  const getPrice = () => {
+    if (offerings?.availablePackages.length) {
+      const packageInfo = offerings.availablePackages[0];
+      return packageInfo.product.priceString;
+    }
+    return '$4.99';
   };
 
   const features = [
@@ -90,23 +104,31 @@ export default function UpgradeScreen() {
           {/* Pricing */}
           <View style={styles.pricingContainer}>
             <Text style={styles.pricingTitle}>Premium Plan</Text>
-            <Text style={styles.pricingAmount}>$9.99</Text>
+            <Text style={styles.pricingAmount}>{getPrice()}</Text>
             <Text style={styles.pricingPeriod}>per month</Text>
           </View>
 
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
             <TouchableOpacity
-              style={styles.upgradeButton}
+              style={[styles.upgradeButton, isLoading && styles.upgradeButtonDisabled]}
               onPress={handleUpgrade}
+              disabled={isLoading}
               activeOpacity={0.8}>
-              <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
-              <ArrowRight size={20} color={theme.colors.surface} strokeWidth={2} />
+              {isLoading ? (
+                <ActivityIndicator size="small" color={theme.colors.surface} />
+              ) : (
+                <>
+                  <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
+                  <ArrowRight size={20} color={theme.colors.surface} strokeWidth={2} />
+                </>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.skipButton}
               onPress={handleSkip}
+              disabled={isLoading}
               activeOpacity={0.8}>
               <Text style={styles.skipButtonText}>Maybe Later</Text>
             </TouchableOpacity>
@@ -261,5 +283,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  upgradeButtonDisabled: {
+    backgroundColor: theme.colors.disabled,
   },
 }); 

@@ -3,6 +3,8 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
+import Purchases from 'react-native-purchases';
+import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -30,6 +32,23 @@ export default function RootLayout() {
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
   });
+
+  useEffect(() => {
+    // Initialize RevenueCat
+    const initializeRevenueCat = async () => {
+      try {
+        const apiKey = process.env.REVENUECAT_API_KEY || 'appl_pLYSxabOrylcJikneEUYdElyDUm';
+        await Purchases.configure({
+          apiKey: apiKey,
+        });
+        console.log('RevenueCat initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize RevenueCat:', error);
+      }
+    };
+
+    initializeRevenueCat();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

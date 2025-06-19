@@ -9,7 +9,7 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search, Crown, CheckCircle } from 'lucide-react-native';
+import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search, Crown, CheckCircle, RefreshCw } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const { isPremium } = useSubscription();
+  const { isPremium, restorePurchases, isLoading } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
@@ -51,6 +51,15 @@ export default function SettingsScreen() {
 
   const handleUpgrade = () => {
     router.push('/(auth)/upgrade' as any);
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      await restorePurchases();
+      Alert.alert('Success', 'Purchases restored successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to restore purchases');
+    }
   };
 
   const showPrivacyInfo = () => {
@@ -194,6 +203,17 @@ export default function SettingsScreen() {
                 <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
               </TouchableOpacity>
             )}
+
+            <TouchableOpacity
+              style={styles.restoreButton}
+              onPress={handleRestorePurchases}
+              disabled={isLoading}
+              activeOpacity={0.8}>
+              <RefreshCw size={16} color={theme.colors.textSecondary} strokeWidth={2} />
+              <Text style={styles.restoreButtonText}>
+                {isLoading ? 'Restoring...' : 'Restore Purchases'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -397,6 +417,22 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.surface,
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: theme.colors.background,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
   },
   statsCard: {
     backgroundColor: theme.colors.surface,

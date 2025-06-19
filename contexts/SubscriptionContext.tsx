@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Purchases, { PurchasesOffering, CustomerInfo } from 'react-native-purchases';
+import { useAuth } from './AuthContext';
 
 interface SubscriptionContextType {
   isPremium: boolean;
-  setIsPremium: (isPremium: boolean) => void;
-  upgradeToPremium: () => void;
-  downgradeToFree: () => void;
+  upgradeToPremium: () => Promise<void>;
+  offerings: PurchasesOffering | null;
+  customerInfo: CustomerInfo | null;
+  isLoading: boolean;
+  restorePurchases: () => Promise<void>;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -23,45 +26,100 @@ interface SubscriptionProviderProps {
 }
 
 export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ children }) => {
-  const [isPremium, setIsPremiumState] = useState(false);
+  const { user } = useAuth();
+  const [isPremium, setIsPremium] = useState(false);
+  const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadSubscriptionStatus();
+    loadOfferings();
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      // Set user ID in RevenueCat when user logs in
+      Purchases.logIn(user.id);
+    }
+  }, [user]);
 
   const loadSubscriptionStatus = async () => {
     try {
-      const status = await AsyncStorage.getItem('subscription_status');
-      if (status === 'premium') {
-        setIsPremiumState(true);
-      }
+      const customerInfo = await Purchases.getCustomerInfo();
+      setCustomerInfo(customerInfo);
+      
+      const hasPremium = customerInfo.entitlements.active['premium'] !== undefined;
+      setIsPremium(hasPremium);
+      console.log('Subscription status loaded:', { hasPremium, entitlements: customerInfo.entitlements });
     } catch (error) {
       console.error('Error loading subscription status:', error);
     }
   };
 
-  const setIsPremium = async (premium: boolean) => {
+  const loadOfferings = async () => {
     try {
-      setIsPremiumState(premium);
-      await AsyncStorage.setItem('subscription_status', premium ? 'premium' : 'free');
+      const offerings = await Purchases.getOfferings();
+      setOfferings(offerings.current);
+      console.log('Offerings loaded:', offerings.current);
     } catch (error) {
-      console.error('Error saving subscription status:', error);
+      console.error('Error loading offerings:', error);
     }
   };
 
-  const upgradeToPremium = () => {
-    setIsPremium(true);
+  const upgradeToPremium = async () => {
+    if (!offerings?.availablePackages.length) {
+      console.error('No packages available');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Purchase the first available package (usually monthly)
+      const packageToPurchase = offerings.availablePackages[0];
+      console.log('Purchasing package:', packageToPurchase);
+      
+      const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      
+      setCustomerInfo(customerInfo);
+      const hasPremium = customerInfo.entitlements.active['premium'] !== undefined;
+      setIsPremium(hasPremium);
+      
+      console.log('Purchase completed:', { hasPremium, entitlements: customerInfo.entitlements });
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      if (!error.userCancelled) {
+        throw error;
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const downgradeToFree = () => {
-    setIsPremium(false);
+  const restorePurchases = async () => {
+    setIsLoading(true);
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      setCustomerInfo(customerInfo);
+      const hasPremium = customerInfo.entitlements.active['premium'] !== undefined;
+      setIsPremium(hasPremium);
+      
+      console.log('Purchases restored:', { hasPremium, entitlements: customerInfo.entitlements });
+    } catch (error) {
+      console.error('Restore error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const value = {
     isPremium,
-    setIsPremium,
     upgradeToPremium,
-    downgradeToFree,
+    offerings,
+    customerInfo,
+    isLoading,
+    restorePurchases,
   };
 
   return (
