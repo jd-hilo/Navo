@@ -284,6 +284,7 @@ const generateTikTokVideos = (query: string) => {
 
 export const searchAllSources = async (query: string): Promise<SearchResults> => {
   console.log(`🔍 Starting search for: "${query}"`);
+  const startTime = Date.now();
   
   // Get current user ID for caching and search count
   const userId = await getCurrentUserId();
@@ -309,27 +310,45 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
   // Simulate API delay for better UX
   await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
   
-  // Get real Gemini response
-  let geminiResults;
-  try {
-    geminiResults = await searchGemini(query);
-  } catch (error) {
+  // Start all API calls in parallel
+  const geminiStart = Date.now();
+  const tiktokStart = Date.now();
+  const redditStart = Date.now();
+
+  const geminiPromise = searchGemini(query).then(result => {
+    console.log(`⏱️ Gemini response returned in ${Date.now() - geminiStart}ms`);
+    return result;
+  }).catch(error => {
     console.error('Error calling Google Gemini API:', error);
-    geminiResults = {
+    return {
       response: generateMockGeminiResponse(query),
       success: false,
       error: 'Unable to connect to Google Gemini. Showing sample response.',
       hasWebSearch: false,
     };
-  }
-  
-  // Get TikTok results (real API call)
-  const tiktokResults = await searchTikTokAPI(query);
+  });
+
+  const tiktokPromise = searchTikTokAPI(query).then(result => {
+    console.log(`⏱️ TikTok response returned in ${Date.now() - tiktokStart}ms`);
+    return result;
+  });
+
+  const redditPromise = searchRedditRapidAPI(query).then(result => {
+    console.log(`⏱️ Reddit response returned in ${Date.now() - redditStart}ms`);
+    return result;
+  });
+
+  // Wait for all to finish
+  const [geminiResults, tiktokResults, redditResults] = await Promise.all([
+    geminiPromise,
+    tiktokPromise,
+    redditPromise,
+  ]);
   
   const results = {
     gemini: geminiResults,
     tiktok: tiktokResults,
-    reddit: await searchRedditRapidAPI(query),
+    reddit: redditResults,
   };
   
   // Save to cache if user is authenticated
@@ -407,12 +426,11 @@ export const searchRedditRapidAPI = async (query: string) => {
         id: item.id || `reddit-${Date.now()}-${idx}`,
         title: item.postTitle || '',
         text,
-        author: item.authorInfo?.name || '',
         comments: item.commentCount || 0,
         upvotes: item.score || 0,
         url: postUrl,
         subreddit: item.subreddit?.name || item.subreddit?.prefixedName || query,
-        created: item.createdAt || '',
+        created: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '',
         media: mediaUrl,
         thumbnail: item.thumbnail?.url || null,
       };
@@ -429,6 +447,20 @@ export const searchRedditRapidAPI = async (query: string) => {
       error: error.message || 'Failed to fetch Reddit posts from RapidAPI',
     };
   }
+};
+
+// Fetch Reddit comments for a post by postId
+export const fetchRedditComments = async (postId: string, sort: string = 'confidence') => {
+  const url = `${REDDIT_API_CONFIG.baseURL}/posts/comments?postId=${encodeURIComponent(postId)}&sort=${sort}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: REDDIT_API_CONFIG.headers,
+  });
+  if (!response.ok) {
+    throw new Error(`Reddit comments API returned status ${response.status}`);
+  }
+  const data = await response.json();
+  return data.data || [];
 };
 
 // Export database service for direct use

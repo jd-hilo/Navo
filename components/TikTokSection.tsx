@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,16 @@ import {
   TouchableOpacity,
   Image,
   Linking,
+  Dimensions,
+  Modal,
+  Pressable,
+  ActivityIndicator,
+  ViewStyle,
 } from 'react-native';
 import { Video, ExternalLink, Play, RefreshCw } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
+import { WebView } from 'react-native-webview';
 
 interface TikTokVideo {
   id: string;
@@ -31,16 +37,68 @@ interface TikTokSectionProps {
   onRetry?: () => void;
 }
 
+function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sectionHeight?: number }) {
+  const embedWidth = 320; // Match card width
+  const webViewStyle: ViewStyle = {
+    width: embedWidth,
+    height: sectionHeight,
+    borderRadius: 12,
+    overflow: 'hidden'
+  };
+  
+  const embedHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script async src="https://www.tiktok.com/embed.js"></script>
+        <style>
+          body, html { 
+            margin: 0; 
+            padding: 0; 
+            background: transparent; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+          }
+          .tiktok-embed { 
+            width: ${embedWidth}px !important; 
+            max-width: ${embedWidth}px !important; 
+            min-width: 0 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin: 0 auto !important;
+          }
+          .tiktok-embed iframe {
+            display: block !important;
+            margin: 0 auto !important;
+          }
+        </style>
+      </head>
+      <body>
+        <blockquote class="tiktok-embed" cite="${videoUrl}" data-video-id="${videoUrl.split('/').filter(x => x).pop()}" style="width: ${embedWidth}px; max-width: ${embedWidth}px; min-width: 0; display: flex; justify-content: center; align-items: center;">
+          <section></section>
+        </blockquote>
+      </body>
+    </html>
+  `;
+  return (
+    <WebView
+      originWhitelist={['*']}
+      source={{ html: embedHtml }}
+      style={webViewStyle}
+      javaScriptEnabled
+      domStorageEnabled
+      allowsFullscreenVideo
+      scrollEnabled={false}
+    />
+  );
+}
+
 export default function TikTokSection({ data, query, onRetry }: TikTokSectionProps) {
   const { theme } = useTheme();
-
-  const handleVideoPress = async (url: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch (error) {
-      console.error('Error opening TikTok video:', error);
-    }
-  };
 
   const styles = createStyles(theme);
 
@@ -82,7 +140,8 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
       colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={styles.gradientBorder}>
+      style={[styles.gradientBorder, { flex: 1 }]}
+    >
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
@@ -94,7 +153,14 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => {
+              if (data.videos && data.videos.length > 0) {
+                Linking.openURL(data.videos[0].url);
+              }
+            }}
+          >
             <ExternalLink size={16} color={theme.colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
@@ -105,35 +171,29 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
           </View>
         )}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.videosContainer}>
-          {data.videos.map((video, index) => (
-            <TouchableOpacity
+        {/* TikTok embed cards */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.videosContainer}>
+          {data.videos.map((video, idx) => (
+            <View 
               key={video.id}
-              style={[styles.videoCard, index === 0 && styles.firstVideo]}
-              onPress={() => handleVideoPress(video.url)}>
-              <View style={styles.thumbnailContainer}>
-                <Image 
-                  source={{ uri: video.thumbnail }} 
-                  style={styles.thumbnail}
-                  defaultSource={{ uri: 'https://images.pexels.com/photos/3944091/pexels-photo-3944091.jpeg?auto=compress&cs=tinysrgb&w=400&h=500&fit=crop' }}
-                />
-                <View style={styles.playOverlay}>
-                  <Play size={24} color="#FFFFFF" strokeWidth={2} fill="#FFFFFF" />
-                </View>
-              </View>
+              style={[
+                styles.videoCard, 
+                idx === 0 && styles.firstVideo,
+                idx === data.videos.length - 1 && { marginRight: 20 }
+              ]}
+            >
+              <TikTokEmbed videoUrl={video.url} sectionHeight={400} />
               <View style={styles.videoInfo}>
-                <Text style={styles.videoTitle} numberOfLines={2}>
-                  {video.title}
-                </Text>
-                <Text style={styles.videoAuthor}>@{video.author}</Text>
+                <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
+                <Text style={styles.videoAuthor} numberOfLines={1}>@{video.author}</Text>
                 <Text style={styles.videoViews}>{video.views} views</Text>
               </View>
-            </TouchableOpacity>
+            </View>
           ))}
         </ScrollView>
+        <View style={{ alignItems: 'center', marginTop: 6, marginBottom: 2 }}>
+          <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>scroll →</Text>
+        </View>
       </View>
     </LinearGradient>
   );
@@ -227,37 +287,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginLeft: 6,
   },
   videosContainer: {
-    paddingRight: 16,
+    paddingRight: 80,
   },
   videoCard: {
-    width: 140,
-    marginLeft: 12,
+    width: 320,
+    marginLeft: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: theme.colors.card,
   },
   firstVideo: {
     marginLeft: 0,
   },
-  thumbnailContainer: {
-    position: 'relative',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  thumbnail: {
-    width: 140,
-    height: 180,
-    backgroundColor: theme.colors.loadingLine,
-  },
-  playOverlay: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -12 }, { translateY: -12 }],
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 20,
-    padding: 8,
-  },
   videoInfo: {
-    flex: 1,
+    padding: 12,
   },
   videoTitle: {
     fontSize: 14,

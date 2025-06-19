@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Shield, ArrowRight } from 'lucide-react-native';
@@ -131,7 +132,8 @@ export default function OTPScreen() {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           
           {/* Header */}
           <View style={styles.header}>
@@ -143,79 +145,86 @@ export default function OTPScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            <View style={styles.iconContainer}>
-              <Shield size={32} color={theme.colors.text} strokeWidth={2} />
-            </View>
+          {/* Scrollable Content */}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
+            {/* Content */}
+            <View style={styles.content}>
+              <View style={styles.iconContainer}>
+                <Shield size={32} color={theme.colors.text} strokeWidth={2} />
+              </View>
 
-            <Text style={styles.title}>Verify Your Email</Text>
-            
-            <Text style={styles.subtitle}>
-              We've sent a 6-digit verification code to{'\n'}
-              <Text style={styles.emailText}>{email}</Text>
-            </Text>
-
-            {/* OTP Input */}
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => (inputRefs.current[index] = ref)}
-                  style={[
-                    styles.otpInput,
-                    digit && styles.otpInputFilled,
-                  ]}
-                  value={digit}
-                  onChangeText={(value) => handleOtpChange(value, index)}
-                  onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  selectTextOnFocus
-                  editable={!isLoading}
-                />
-              ))}
-            </View>
-
-            {/* Resend Code */}
-            <View style={styles.resendContainer}>
-              <Text style={styles.resendText}>Didn't receive the code?</Text>
-              <TouchableOpacity 
-                onPress={handleResendOTP}
-                disabled={!canResend || isResending}
-                activeOpacity={0.7}>
-                <Text style={[
-                  styles.resendLink,
-                  (!canResend || isResending) && styles.resendLinkDisabled
-                ]}>
-                  {isResending ? 'Sending...' : canResend ? 'Resend Code' : `Resend in ${countdown}s`}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Demo Helper */}
-            <View style={styles.demoContainer}>
-              <Text style={styles.demoText}>
-                For demo purposes, use: <Text style={styles.demoCode}>123456</Text> or any code starting with <Text style={styles.demoCode}>1</Text>
+              <Text style={styles.title}>Verify Your Email</Text>
+              
+              <Text style={styles.subtitle}>
+                We've sent a 6-digit verification code to{'\n'}
+                <Text style={styles.emailText}>{email}</Text>
               </Text>
-            </View>
-          </View>
 
-          {/* Verify Button */}
+              {/* OTP Input */}
+              <View style={styles.otpContainer}>
+                {otp.map((digit, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(ref) => {
+                      inputRefs.current[index] = ref;
+                    }}
+                    style={[
+                      styles.otpInput,
+                      digit && styles.otpInputFilled,
+                    ]}
+                    value={digit}
+                    onChangeText={(value) => handleOtpChange(value, index)}
+                    onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
+                    keyboardType="number-pad"
+                    maxLength={1}
+                    selectTextOnFocus
+                    editable={!isLoading}
+                  />
+                ))}
+              </View>
+
+              {/* Resend Code */}
+              <View style={styles.resendContainer}>
+                <Text style={styles.resendText}>Didn't receive the code?</Text>
+                <TouchableOpacity 
+                  onPress={handleResendOTP}
+                  disabled={!canResend || isResending}
+                  activeOpacity={0.7}>
+                  <Text style={[
+                    styles.resendLink,
+                    (!canResend || isResending) && styles.resendLinkDisabled
+                  ]}>
+                    {isResending ? 'Sending...' : canResend ? 'Resend Code' : `Resend in ${countdown}s`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Demo Helper */}
+              <View style={styles.demoContainer}>
+                <Text style={styles.demoText}>
+                  For demo purposes, use: <Text style={styles.demoCode}>123456</Text> or any code starting with <Text style={styles.demoCode}>1</Text>
+                </Text>
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Footer Button */}
           <View style={styles.footer}>
             <TouchableOpacity
-              style={[styles.verifyButton, (!isOtpComplete || isLoading) && styles.verifyButtonDisabled]}
+              style={[styles.button, (!isOtpComplete || isLoading) && styles.buttonDisabled]}
               onPress={handleVerify}
               disabled={!isOtpComplete || isLoading}
               activeOpacity={0.8}>
               <LinearGradient
-                colors={
-                  (!isOtpComplete || isLoading)
-                    ? [theme.colors.border, theme.colors.border]
-                    : isDark 
-                      ? ['#FFFFFF', '#F0F0F0'] 
-                      : ['#000000', '#333333']
-                }
+                colors={(!isOtpComplete || isLoading)
+                  ? [theme.colors.border, theme.colors.border]
+                  : isDark 
+                    ? ['#FFFFFF', '#F0F0F0'] 
+                    : ['#000000', '#333333']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}>
@@ -279,6 +288,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   content: {
     flex: 1,
@@ -384,7 +400,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   footer: {
     paddingBottom: Platform.OS === 'ios' ? 20 : 40,
   },
-  verifyButton: {
+  button: {
     borderRadius: 16,
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 8 },
@@ -392,7 +408,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowRadius: 20,
     elevation: 8,
   },
-  verifyButtonDisabled: {
+  buttonDisabled: {
     shadowOpacity: 0.05,
     elevation: 2,
   },

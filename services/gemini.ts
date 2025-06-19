@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const GEMINI_API_CONFIG = {
   baseURL: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-1.5-flash',
-  maxTokens: 500, // Increased from 150 to 500 for more detailed responses
+  maxTokens: 250, // Reduced for faster responses
   temperature: 0.7,
 };
 
@@ -46,17 +46,17 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
       };
     }
 
-    // Add delay to handle rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
-
     // Use Gemini API with FORCED Google Search grounding for ALL queries
     const requestBody = {
       contents: [{
         parts: [{
-          text: `Search the web for current information about "${query}" and provide a comprehensive summary.
+          text: `Search the web for current information about "${query}" and provide an appropriate response.
 
-Requirements:
-- MUST use Google Search to get the latest information
+IMPORTANT: If this is a simple factual question that can be answered concisely (like "who won the 2025 NBA finals" or "what is the capital of the USA"), provide a direct, brief answer in 1-2 sentences. For example:
+- "The Boston Celtics won the 2025 NBA Finals."
+- "Washington, D.C. is the capital of the United States."
+
+For more complex topics or questions requiring explanation, provide a comprehensive summary with:
 - Maximum 300 words total
 - Use clear, engaging language
 - Include key details and context

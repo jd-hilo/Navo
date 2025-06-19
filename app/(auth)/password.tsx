@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Lock, ArrowRight } from 'lucide-react-native';
@@ -21,7 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PasswordScreen() {
   const { theme, isDark } = useTheme();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, signInWithPassword } = useAuth();
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('apple@test.com');
   const [isLoading, setIsLoading] = useState(false);
@@ -38,27 +39,13 @@ export default function PasswordScreen() {
     }
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error || !data.user) {
-        Alert.alert('Error', error?.message || 'Invalid email or password');
+      const result = await signInWithPassword(email, password);
+      if (!result.success) {
+        Alert.alert('Error', result.error || 'Invalid email or password');
         setPassword('');
         return;
       }
-      // Set user state and save to storage (mimic AuthContext signIn)
-      const userData = {
-        id: data.user.id,
-        email: data.user.email ?? email,
-        name: data.user.user_metadata?.name || email.split('@')[0],
-      };
-      if (setUser) setUser(userData);
-      try {
-        await AsyncStorage.setItem('user', JSON.stringify(userData));
-      } catch {}
-      // Route to index page
-      router.replace('/');
+      router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Sign in failed.');
     } finally {
@@ -75,7 +62,8 @@ export default function PasswordScreen() {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
@@ -85,30 +73,39 @@ export default function PasswordScreen() {
               <ArrowLeft size={24} color={theme.colors.text} strokeWidth={2} />
             </TouchableOpacity>
           </View>
-          {/* Content */}
-          <View style={styles.content}>
-            <View style={styles.iconContainer}>
-              <Lock size={32} color={theme.colors.text} strokeWidth={2} />
-            </View>
-            <Text style={styles.title}>Sign In with Password</Text>
-            <Text style={styles.subtitle}>Enter your password for apple@test.com</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter your password"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isLoading}
-                />
+          
+          {/* Scrollable Content */}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
+            {/* Content */}
+            <View style={styles.content}>
+              <View style={styles.iconContainer}>
+                <Lock size={32} color={theme.colors.text} strokeWidth={2} />
+              </View>
+              <Text style={styles.title}>Sign In with Password</Text>
+              <Text style={styles.subtitle}>Enter your password for apple@test.com</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Password</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!isLoading}
+                  />
+                </View>
               </View>
             </View>
-          </View>
+          </ScrollView>
+          
           {/* Footer Button */}
           <View style={styles.footer}>
             <TouchableOpacity
@@ -183,6 +180,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   content: {
     flex: 1,
