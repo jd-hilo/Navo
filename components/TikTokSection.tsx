@@ -43,7 +43,8 @@ function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sect
     width: embedWidth,
     height: sectionHeight,
     borderRadius: 12,
-    overflow: 'hidden'
+    overflow: 'hidden',
+    backgroundColor: 'transparent'
   };
   
   const embedHtml = `
@@ -61,6 +62,7 @@ function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sect
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            overflow: hidden;
           }
           .tiktok-embed { 
             width: ${embedWidth}px !important; 
@@ -70,15 +72,21 @@ function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sect
             justify-content: center !important;
             align-items: center !important;
             margin: 0 auto !important;
+            background: transparent !important;
           }
           .tiktok-embed iframe {
             display: block !important;
             margin: 0 auto !important;
+            border: none !important;
+            outline: none !important;
+          }
+          * {
+            box-sizing: border-box;
           }
         </style>
       </head>
       <body>
-        <blockquote class="tiktok-embed" cite="${videoUrl}" data-video-id="${videoUrl.split('/').filter(x => x).pop()}" style="width: ${embedWidth}px; max-width: ${embedWidth}px; min-width: 0; display: flex; justify-content: center; align-items: center;">
+        <blockquote class="tiktok-embed" cite="${videoUrl}" data-video-id="${videoUrl.split('/').filter(x => x).pop()}" style="width: ${embedWidth}px; max-width: ${embedWidth}px; min-width: 0; display: flex; justify-content: center; align-items: center; background: transparent;">
           <section></section>
         </blockquote>
       </body>
@@ -93,6 +101,8 @@ function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sect
       domStorageEnabled
       allowsFullscreenVideo
       scrollEnabled={false}
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
     />
   );
 }

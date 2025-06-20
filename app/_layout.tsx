@@ -38,10 +38,37 @@ export default function RootLayout() {
     const initializeRevenueCat = async () => {
       try {
         const apiKey = process.env.REVENUECAT_API_KEY || 'appl_pLYSxabOrylcJikneEUYdElyDUm';
+        
+        // Configure RevenueCat with StoreKit configuration for testing
         await Purchases.configure({
           apiKey: apiKey,
+          appUserID: null, // Let RevenueCat generate a user ID
+          useAmazon: false,
+          shouldShowInAppMessagesAutomatically: true,
         });
+        
+        // Force use of StoreKit configuration for testing
+        if (__DEV__) {
+          console.log('Development mode: Using StoreKit configuration');
+          // Enable StoreKit testing mode
+          try {
+            await Purchases.setSimulatesAskToBuyInSandbox(true);
+            console.log('StoreKit testing mode enabled');
+          } catch (error) {
+            console.log('StoreKit testing mode setup error:', error);
+          }
+        }
+        
         console.log('RevenueCat initialized successfully');
+        
+        // Test fetching offerings immediately
+        try {
+          const offerings = await Purchases.getOfferings();
+          console.log('Initial offerings fetch:', offerings);
+        } catch (offeringsError) {
+          console.error('Initial offerings fetch failed:', offeringsError);
+        }
+        
       } catch (error) {
         console.error('Failed to initialize RevenueCat:', error);
       }

@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
-  const { isPremium, restorePurchases, isLoading } = useSubscription();
+  const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
@@ -186,6 +186,11 @@ export default function SettingsScreen() {
                 <Text style={styles.subscriptionStatus}>
                   {isPremium ? 'Active subscription' : 'Upgrade for more features'}
                 </Text>
+                {isPremium && (
+                  <Text style={styles.premiumDetails}>
+                    1000 searches a month • 1000 saved searches • Faster loading times
+                  </Text>
+                )}
               </View>
               {isPremium && (
                 <View style={styles.premiumBadge}>
@@ -203,18 +208,49 @@ export default function SettingsScreen() {
                 <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
               </TouchableOpacity>
             )}
-
+            
+            {isPremium && (
+              <View style={styles.premiumFeatures}>
+                <Text style={styles.premiumFeaturesTitle}>Your Premium Benefits:</Text>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>1000 searches a month</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>1000 saved searches</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Faster loading times</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Custom search settings</Text>
+                </View>
+              </View>
+            )}
+          </View>
+          
+          {!isPremium && (
             <TouchableOpacity
               style={styles.restoreButton}
               onPress={handleRestorePurchases}
-              disabled={isLoading}
-              activeOpacity={0.8}>
-              <RefreshCw size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-              <Text style={styles.restoreButtonText}>
-                {isLoading ? 'Restoring...' : 'Restore Purchases'}
-              </Text>
+              disabled={isLoading}>
+              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             </TouchableOpacity>
-          </View>
+          )}
+          
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={refreshSubscriptionStatus}
+              disabled={isLoading}>
+              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={styles.refreshButtonText}>Refresh Status</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Usage Statistics */}
@@ -434,6 +470,22 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginLeft: 8,
   },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: theme.colors.background,
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+  },
   statsCard: {
     backgroundColor: theme.colors.surface,
     marginHorizontal: 16,
@@ -499,5 +551,31 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     marginTop: 2,
+  },
+  premiumDetails: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+  },
+  premiumFeatures: {
+    marginTop: 16,
+  },
+  premiumFeaturesTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  premiumFeatureText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
   },
 });
