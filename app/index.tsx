@@ -25,13 +25,18 @@ export default function IndexScreen() {
     }
   }, [isAuthenticated, isLoading]);
 
-  const styles = createStyles(theme);
+  // Show loading indicator while auth is initializing
+  if (isLoading) {
+    const styles = createStyles(theme);
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={theme.colors.text} />
+      </View>
+    );
+  }
 
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color={theme.colors.text} />
-    </View>
-  );
+  // This should never be reached, but just in case
+  return null;
 }
 
 const createStyles = (theme: any) => StyleSheet.create({

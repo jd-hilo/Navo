@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
@@ -32,6 +32,8 @@ export default function RootLayout() {
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
   });
+
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Initialize RevenueCat
@@ -71,6 +73,8 @@ export default function RootLayout() {
         
       } catch (error) {
         console.error('Failed to initialize RevenueCat:', error);
+      } finally {
+        setIsInitialized(true);
       }
     };
 
@@ -83,7 +87,12 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  // Don't render anything until fonts are loaded and initialization is complete
   if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  if (!isInitialized) {
     return null;
   }
 
