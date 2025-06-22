@@ -68,7 +68,7 @@ export default function LoadingCard({ title }: LoadingCardProps) {
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 2,
+    padding: 1,
     marginBottom: 16,
   },
   container: {

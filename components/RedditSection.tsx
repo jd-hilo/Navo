@@ -346,7 +346,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 2,
+    padding: 1,
     marginBottom: 16,
   },
   container: {
@@ -498,17 +498,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   postTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.text,
-    lineHeight: 18,
+    lineHeight: 22,
     marginBottom: 6,
   },
   postPreview: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: 22,
     marginBottom: 8,
   },
   postStats: {
@@ -551,7 +551,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 4,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: 'Inter-Bold',
     color: theme.colors.text,
     marginBottom: 8,
@@ -563,7 +563,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 12,
   },
   modalBody: {
-    fontSize: 15,
+    fontSize: 17,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
     marginBottom: 16,
@@ -585,7 +585,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingTop: 12,
   },
   commentsTitle: {
-    fontSize: 15,
+    fontSize: 17,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.text,
     marginBottom: 8,
@@ -640,10 +640,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   commentBody: {
-    fontSize: 15,
+    fontSize: 17,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
-    lineHeight: 20,
+    lineHeight: 24,
   },
   modalHeaderRow: {
     flexDirection: 'row',

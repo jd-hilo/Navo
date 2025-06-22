@@ -80,9 +80,9 @@ const lightTheme: Theme = {
     },
   },
   gradients: {
-    gemini: ['#FFE4E6', '#FFF7ED', '#F3E8FF'],
-    tiktok: ['#FFF7ED', '#F3E8FF', '#FFE4E6'],
-    reddit: ['#F3E8FF', '#FFE4E6', '#FFF7ED'],
+    gemini: ['#FF8FA3', '#FFC285', '#C285FF'],
+    tiktok: ['#FFC285', '#C285FF', '#FF8FA3'],
+    reddit: ['#C285FF', '#FF8FA3', '#FFC285'],
   },
 };
 
@@ -122,9 +122,9 @@ const darkTheme: Theme = {
     },
   },
   gradients: {
-    gemini: ['#2A1810', '#1E1B3A', '#2A1A2E'],
-    tiktok: ['#1E1B3A', '#2A1A2E', '#2A1810'],
-    reddit: ['#2A1A2E', '#2A1810', '#1E1B3A'],
+    gemini: ['#FF6B8A', '#FFA366', '#A366FF'],
+    tiktok: ['#FFA366', '#A366FF', '#FF6B8A'],
+    reddit: ['#A366FF', '#FF6B8A', '#FFA366'],
   },
 };
 

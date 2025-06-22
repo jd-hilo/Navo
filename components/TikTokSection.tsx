@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,15 @@ import {
   Pressable,
   ActivityIndicator,
   ViewStyle,
+  StatusBar,
+  SafeAreaView,
 } from 'react-native';
-import { Video, ExternalLink, Play, RefreshCw } from 'lucide-react-native';
+import { Video, ExternalLink, Play, RefreshCw, X, Heart, MessageCircle, Share2, Music, Volume2, VolumeX } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Video as ExpoVideo, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
+import { getTikTokVideoDetails } from '@/services/api';
 
 interface TikTokVideo {
   id: string;
@@ -37,80 +41,341 @@ interface TikTokSectionProps {
   onRetry?: () => void;
 }
 
-function TikTokEmbed({ videoUrl, sectionHeight = 400 }: { videoUrl: string, sectionHeight?: number }) {
-  const embedWidth = 320; // Match card width
-  const webViewStyle: ViewStyle = {
-    width: embedWidth,
-    height: sectionHeight,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: 'transparent'
+function TikTokVideoModal({ 
+  video, 
+  isVisible, 
+  onClose 
+}: { 
+  video: TikTokVideo; 
+  isVisible: boolean; 
+  onClose: () => void; 
+}) {
+  const { theme } = useTheme();
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
+  const [videoError, setVideoError] = useState<string>('');
+  const videoRef = useRef<any>(null);
+
+  // Get real TikTok video URL when modal opens
+  useEffect(() => {
+    if (isVisible && video.url) {
+      extractTikTokVideoId();
+    }
+  }, [isVisible, video.url]);
+
+  const extractTikTokVideoId = () => {
+    try {
+      setIsLoadingVideo(true);
+      setVideoError('');
+      
+      console.log('🎬 Extracting TikTok video ID from:', video.url);
+      
+      // Extract video ID from TikTok URL
+      const urlParts = video.url.split('/');
+      const videoIndex = urlParts.findIndex(part => part === 'video');
+      
+      if (videoIndex !== -1 && videoIndex + 1 < urlParts.length) {
+        const videoId = urlParts[videoIndex + 1].split('?')[0]; // Remove query parameters
+        console.log('✅ Extracted video ID:', videoId);
+        
+        // Create TikTok embedded player URL
+        const embeddedPlayerUrl = `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&mute=1&music_info=1&description=1&controls=1&progress_bar=1&play_button=1&volume_control=1&fullscreen_button=1&timestamp=1&loop=1`;
+        
+        setVideoUrl(embeddedPlayerUrl);
+        console.log('🎬 Using TikTok embedded player URL:', embeddedPlayerUrl);
+      } else {
+        console.warn('⚠️ Could not extract video ID from URL:', video.url);
+        setVideoError('Invalid TikTok URL format');
+        setVideoUrl('');
+      }
+    } catch (error) {
+      console.error('❌ Error extracting TikTok video ID:', error);
+      setVideoError('Error processing TikTok URL');
+      setVideoUrl('');
+    } finally {
+      setIsLoadingVideo(false);
+    }
   };
-  
-  const embedHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script async src="https://www.tiktok.com/embed.js"></script>
-        <style>
-          body, html { 
-            margin: 0; 
-            padding: 0; 
-            background: transparent; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-          }
-          .tiktok-embed { 
-            width: ${embedWidth}px !important; 
-            max-width: ${embedWidth}px !important; 
-            min-width: 0 !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            margin: 0 auto !important;
-            background: transparent !important;
-          }
-          .tiktok-embed iframe {
-            display: block !important;
-            margin: 0 auto !important;
-            border: none !important;
-            outline: none !important;
-          }
-          * {
-            box-sizing: border-box;
-          }
-        </style>
-      </head>
-      <body>
-        <blockquote class="tiktok-embed" cite="${videoUrl}" data-video-id="${videoUrl.split('/').filter(x => x).pop()}" style="width: ${embedWidth}px; max-width: ${embedWidth}px; min-width: 0; display: flex; justify-content: center; align-items: center; background: transparent;">
-          <section></section>
-        </blockquote>
-      </body>
-    </html>
-  `;
+
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+  };
+
+  const handleShare = () => {
+    Linking.openURL(video.url);
+  };
+
+  const handleMuteToggle = () => {
+    setIsMuted(!isMuted);
+  };
+
+  const handleOpenInBrowser = () => {
+    Linking.openURL(video.url);
+    onClose();
+  };
+
   return (
-    <WebView
-      originWhitelist={['*']}
-      source={{ html: embedHtml }}
-      style={webViewStyle}
-      javaScriptEnabled
-      domStorageEnabled
-      allowsFullscreenVideo
-      scrollEnabled={false}
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-    />
+    <Modal
+      visible={isVisible}
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent
+    >
+      <StatusBar hidden />
+      <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
+        <View style={{ flex: 1 }}>
+          {isLoadingVideo ? (
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              backgroundColor: '#000000' 
+            }}>
+              <ActivityIndicator size="large" color="#FFFFFF" />
+              <Text style={{ 
+                color: '#FFFFFF', 
+                marginTop: 16, 
+                fontSize: 16, 
+                fontFamily: 'Inter-Medium' 
+              }}>
+                Loading TikTok video...
+              </Text>
+              {videoError && (
+                <Text style={{ 
+                  color: '#FF6B6B', 
+                  marginTop: 8, 
+                  fontSize: 14, 
+                  fontFamily: 'Inter-Regular',
+                  textAlign: 'center',
+                  paddingHorizontal: 20
+                }}>
+                  {videoError}
+                </Text>
+              )}
+            </View>
+          ) : !videoUrl ? (
+            // Fallback when video URL is not available - show error
+            <View style={{ 
+              flex: 1, 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              backgroundColor: '#000000' 
+            }}>
+              <Image 
+                source={{ uri: video.thumbnail || 'https://via.placeholder.com/400x600/000000/FFFFFF?text=TikTok' }} 
+                style={{ 
+                  width: '80%', 
+                  height: '60%', 
+                  borderRadius: 12,
+                  marginBottom: 20
+                }}
+                resizeMode="cover"
+              />
+              <Text style={{ 
+                color: '#FFFFFF', 
+                fontSize: 18, 
+                fontFamily: 'Inter-SemiBold',
+                textAlign: 'center',
+                marginBottom: 8
+              }}>
+                Video Preview
+              </Text>
+              <Text style={{ 
+                color: '#CCCCCC', 
+                fontSize: 14, 
+                fontFamily: 'Inter-Regular',
+                textAlign: 'center',
+                paddingHorizontal: 40,
+                lineHeight: 20
+              }}>
+                Tap "Open in TikTok" to watch the full video
+              </Text>
+            </View>
+          ) : (
+            // Use TikTok's official embedded player
+            <WebView
+              source={{ uri: videoUrl }}
+              style={{ flex: 1 }}
+              javaScriptEnabled
+              domStorageEnabled
+              allowsFullscreenVideo
+              scrollEnabled={false}
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              onLoad={() => console.log('TikTok embedded player loaded')}
+              onError={(error) => console.log('TikTok player error:', error)}
+              renderLoading={() => (
+                <View style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  bottom: 0, 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  backgroundColor: '#000000' 
+                }}>
+                  <ActivityIndicator size="large" color="#FFFFFF" />
+                  <Text style={{ 
+                    color: '#FFFFFF', 
+                    marginTop: 16, 
+                    fontSize: 16, 
+                    fontFamily: 'Inter-Medium' 
+                  }}>
+                    Loading TikTok video...
+                  </Text>
+                </View>
+              )}
+              startInLoadingState
+            />
+          )}
+          
+          {/* Overlay UI */}
+          <View style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            zIndex: 1,
+            pointerEvents: 'box-none'
+          }}>
+            {/* Top bar */}
+            <View style={{ 
+              flexDirection: 'row', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              padding: 16,
+              paddingTop: 60,
+              zIndex: 2,
+              pointerEvents: 'auto'
+            }}>
+              <TouchableOpacity onPress={onClose} style={{ padding: 8, zIndex: 3 }}>
+                <X size={24} color="#FFFFFF" strokeWidth={2} />
+              </TouchableOpacity>
+              
+              {/* Open in TikTok button */}
+              <TouchableOpacity 
+                onPress={handleOpenInBrowser}
+                style={{ 
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)', 
+                  paddingHorizontal: 12, 
+                  paddingVertical: 6, 
+                  borderRadius: 16,
+                  zIndex: 3
+                }}
+              >
+                <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '500' }}>
+                  Open in TikTok
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+function TikTokVideoCard({ 
+  video, 
+  onPress 
+}: { 
+  video: TikTokVideo; 
+  onPress: () => void; 
+}) {
+  const { theme } = useTheme();
+  
+  return (
+    <TouchableOpacity 
+      style={{ 
+        width: 320, 
+        height: 400, 
+        borderRadius: 12, 
+        overflow: 'hidden', 
+        backgroundColor: theme.colors.card 
+      }} 
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      <View style={{ flex: 1, position: 'relative' }}>
+        <Image 
+          source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x400/000000/FFFFFF?text=TikTok' }} 
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        />
+        <View style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          justifyContent: 'center', 
+          alignItems: 'center' 
+        }}>
+          <Play size={24} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+        </View>
+      </View>
+      
+      <View style={{ padding: 12 }}>
+        <Text style={{ 
+          fontSize: 14, 
+          fontFamily: 'Inter-Medium', 
+          color: theme.colors.text, 
+          lineHeight: 18, 
+          marginBottom: 4 
+        }} numberOfLines={2}>
+          {video.title}
+        </Text>
+        <Text style={{ 
+          fontSize: 12, 
+          fontFamily: 'Inter-Regular', 
+          color: theme.colors.textSecondary, 
+          marginBottom: 2 
+        }} numberOfLines={1}>
+          @{video.author}
+        </Text>
+        <Text style={{ 
+          fontSize: 12, 
+          fontFamily: 'Inter-Regular', 
+          color: theme.colors.textSecondary 
+        }}>
+          {video.views} views
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
 export default function TikTokSection({ data, query, onRetry }: TikTokSectionProps) {
   const { theme } = useTheme();
+  const [selectedVideo, setSelectedVideo] = useState<TikTokVideo | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const styles = createStyles(theme);
+
+  const handleVideoPress = (video: TikTokVideo) => {
+    setSelectedVideo(video);
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedVideo(null);
+    // Reload the TikTok section when modal is closed
+    setReloadKey(prev => prev + 1);
+    // Optionally trigger a retry to refresh the data
+    if (onRetry) {
+      setTimeout(() => {
+        onRetry();
+      }, 100);
+    }
+  };
 
   if (!data.success && data.error) {
     return (
@@ -146,7 +411,9 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
   }
 
   return (
+    <>
     <LinearGradient
+        key={reloadKey}
       colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
@@ -181,38 +448,46 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
           </View>
         )}
 
-        {/* TikTok embed cards */}
+          {/* TikTok video cards */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.videosContainer}>
           {data.videos.map((video, idx) => (
             <View 
-              key={video.id}
+                key={`${video.id}-${reloadKey}`}
               style={[
-                styles.videoCard, 
+                  styles.videoCardWrapper, 
                 idx === 0 && styles.firstVideo,
                 idx === data.videos.length - 1 && { marginRight: 20 }
               ]}
             >
-              <TikTokEmbed videoUrl={video.url} sectionHeight={400} />
-              <View style={styles.videoInfo}>
-                <Text style={styles.videoTitle} numberOfLines={2}>{video.title}</Text>
-                <Text style={styles.videoAuthor} numberOfLines={1}>@{video.author}</Text>
-                <Text style={styles.videoViews}>{video.views} views</Text>
-              </View>
+                <TikTokVideoCard 
+                  video={video} 
+                  onPress={() => handleVideoPress(video)}
+                />
             </View>
           ))}
         </ScrollView>
         <View style={{ alignItems: 'center', marginTop: 6, marginBottom: 2 }}>
-          <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>scroll →</Text>
+            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>tap to play →</Text>
         </View>
       </View>
     </LinearGradient>
+
+      {/* Video Modal */}
+      {selectedVideo && (
+        <TikTokVideoModal
+          video={selectedVideo}
+          isVisible={isModalVisible}
+          onClose={handleCloseModal}
+        />
+      )}
+    </>
   );
 }
 
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 2,
+    padding: 1,
     marginBottom: 16,
   },
   container: {
@@ -299,7 +574,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   videosContainer: {
     paddingRight: 80,
   },
-  videoCard: {
+  videoCardWrapper: {
     width: 320,
     marginLeft: 20,
     borderRadius: 12,
@@ -329,5 +604,105 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  videoContainer: {
+    flex: 1,
+  },
+  video: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    marginLeft: 6,
+  },
+  bottomInfo: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 12,
+  },
+  authorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  authorText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+  },
+  captionText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  musicInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  musicText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    marginLeft: 4,
+  },
+  followButton: {
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    borderRadius: 4,
+  },
+  followText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+  },
+  playOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
+    borderRadius: 20,
+  },
+  thumbnailContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  thumbnail: {
+    flex: 1,
+  },
+  playIconOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

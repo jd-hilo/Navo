@@ -332,7 +332,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 2,
+    padding: 1,
     marginBottom: 16,
   },
   container: {
