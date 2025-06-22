@@ -50,26 +50,11 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
     const requestBody = {
       contents: [{
         parts: [{
-          text: `Search the web for current information about "${query}" and provide an appropriate response.
+          text: `Search the web for current information about "${query}" and provide a response with a one-sentence summary between single quotes like this:
 
-IMPORTANT: If this is a simple factual question that can be answered concisely (like "who won the 2025 NBA finals" or "what is the capital of the USA"), provide a direct, brief answer in 1-2 sentences. For example:
-- "The Boston Celtics won the 2025 NBA Finals."
-- "Washington, D.C. is the capital of the United States."
+' [Your summary here] '
 
-For more complex topics or questions requiring explanation, provide a comprehensive summary with:
-- Maximum 300 words total
-- Use clear, engaging language
-- Include key details and context
-- Structure the response with:
-  1. Overview and current status (2-3 sentences)
-  2. Key developments or recent changes (3-4 sentences)
-  3. Important context or background (2-3 sentences)
-  4. Current implications or significance (2-3 sentences)
-- Use bullet points for key facts when appropriate
-- Include relevant statistics or data points
-- Focus on the most recent and relevant information
-
-Keep the response informative and well-structured while maintaining readability.`
+Then provide the detailed information after the quotes.`
         }]
       }],
       generationConfig: {
@@ -206,6 +191,7 @@ Keep the response informative and well-structured while maintaining readability.
     }
 
     console.log('✅ Successfully received Google Gemini response with content length:', content.length);
+    console.log('📝 Raw response content:', content.substring(0, 200) + '...');
 
     // Extract grounding information and sources
     const groundingMetadata = candidate.groundingMetadata;
@@ -342,17 +328,14 @@ const extractSourcesFromResponse = (text: string): string[] => {
 // Generate mock Gemini response for fallback - EXTREMELY SHORT
 export const generateMockGeminiResponse = (query: string): string => {
   const responses = [
-    `**${query}** is a significant topic with growing importance across multiple sectors. Recent developments show strong market fundamentals, high adoption rates, and active investment from major stakeholders.
+    `' ${query} is a significant topic with growing importance across multiple sectors and recent developments show strong market fundamentals. '
+Recent developments show strong market fundamentals, high adoption rates, and active investment from major stakeholders. This creates opportunities for innovation, competitive advantage, and market expansion through technology integration and strategic positioning.`,
 
-This creates opportunities for innovation, competitive advantage, and market expansion through technology integration and strategic positioning.`,
+    `' ${query} represents an important and rapidly evolving field with substantial implications for industry participants and current trends indicate robust performance metrics. '
+Current trends indicate robust performance metrics, significant investment activity, and expanding market reach. The combination of strong fundamentals and emerging technologies suggests continued momentum and strategic value for stakeholders.`,
 
-    `**${query}** represents an important and rapidly evolving field with substantial implications for industry participants. Current trends indicate robust performance metrics, significant investment activity, and expanding market reach.
-
-The combination of strong fundamentals and emerging technologies suggests continued momentum and strategic value for stakeholders.`,
-
-    `**${query}** is a well-established area with strong market presence and consistent growth trajectory. Key highlights include robust user engagement, technology innovation, and expanding adoption rates.
-
-This represents strategic opportunities for leveraging emerging trends, building competitive advantages, and capturing market value through innovation.`,
+    `' ${query} is a well-established area with strong market presence and consistent growth trajectory with key highlights including robust user engagement. '
+Key highlights include robust user engagement, technology innovation, and expanding adoption rates. This represents strategic opportunities for leveraging emerging trends, building competitive advantages, and capturing market value through innovation.`,
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];

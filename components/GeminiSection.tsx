@@ -37,9 +37,42 @@ interface GeminiSectionProps {
 
 export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge }: GeminiSectionProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
   const [copyLoading, setCopyLoading] = useState(false);
   const [showSources, setShowSources] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Parse the response to extract summary and details
+  const parseResponse = (response: string) => {
+    console.log('🔍 Parsing response:', response);
+    
+    // Find the first two single quotes
+    const firstQuoteIndex = response.indexOf("'");
+    const secondQuoteIndex = response.indexOf("'", firstQuoteIndex + 1);
+    
+    console.log('🔍 Quote indices:', { firstQuoteIndex, secondQuoteIndex });
+    
+    if (firstQuoteIndex !== -1 && secondQuoteIndex !== -1) {
+      const summary = response.substring(firstQuoteIndex + 1, secondQuoteIndex).trim();
+      // Remove the entire quoted section (including the quotes)
+      const beforeQuotes = response.substring(0, firstQuoteIndex).trim();
+      const afterQuotes = response.substring(secondQuoteIndex + 1).trim();
+      const details = (beforeQuotes + ' ' + afterQuotes).trim();
+      
+      console.log('🔍 Summary:', summary);
+      console.log('🔍 Details:', details);
+      
+      return { summary, details };
+    }
+    
+    // Fallback if no quotes found
+    console.log('🔍 No quotes found, using fallback');
+    return { 
+      summary: response.substring(0, 100) + '...', 
+      details: response 
+    };
+  };
+
+  const { summary, details } = parseResponse(data.response || '');
 
   const handleCopy = async () => {
     if (data.response) {
@@ -53,10 +86,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         setCopyLoading(false);
       }
     }
-  };
-
-  const toggleExpanded = () => {
-    setIsExpanded(!isExpanded);
   };
 
   const handleSourcePress = async (url: string) => {
@@ -82,6 +111,10 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 
   const styles = createStyles(theme);
   const markdownStyles = createMarkdownStyles(theme);
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   // Show loading state
   if (isLoading) {
@@ -150,12 +183,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     return null;
   }
 
-  // Reduced truncation threshold for shorter responses
-  const shouldTruncate = data.response.length > 200;
-  const displayText = shouldTruncate && !isExpanded 
-    ? data.response.substring(0, 200) + '...'
-    : data.response;
-
   return (
     <LinearGradient
       colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
@@ -203,7 +230,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               )}
             </TouchableOpacity>
             
-            {shouldTruncate && (
+            {details && details.length > 0 && (
               <TouchableOpacity style={styles.actionButton} onPress={toggleExpanded}>
                 {isExpanded ? (
                   <ChevronUp size={16} color={theme.colors.textSecondary} strokeWidth={2} />
@@ -222,18 +249,32 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         )}
         
         <View style={styles.content}>
-          <MarkdownDisplay style={markdownStyles}>
-            {displayText}
-          </MarkdownDisplay>
+          {/* Summary in bold and large font */}
+          <Text style={styles.summaryText}>
+            {summary}
+          </Text>
+          
+          {/* Details with expand/collapse */}
+          {details && details.length > 0 && (
+            <>
+              {isExpanded ? (
+                <MarkdownDisplay style={markdownStyles}>
+                  {details}
+                </MarkdownDisplay>
+              ) : (
+                <Text style={styles.detailsPreview} numberOfLines={2}>
+                  {details}
+                </Text>
+              )}
+              
+              <TouchableOpacity style={styles.expandButton} onPress={toggleExpanded}>
+                <Text style={styles.expandText}>
+                  {isExpanded ? 'Show Less' : 'Show More'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
-
-        {shouldTruncate && (
-          <TouchableOpacity style={styles.expandButton} onPress={toggleExpanded}>
-            <Text style={styles.expandText}>
-              {isExpanded ? 'Show Less' : 'Show More'}
-            </Text>
-          </TouchableOpacity>
-        )}
 
         {/* Google Search sources - show when available */}
         {data.success && data.sources && data.sources.length > 0 && (
@@ -459,7 +500,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   expandText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: theme.colors.text,
+    color: theme.colors.primary,
+    textAlign: 'right',
   },
   sourcesContainer: {
     marginTop: 12,
@@ -515,6 +557,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'right',
+  },
+  summaryText: {
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    lineHeight: 24,
+    marginBottom: 12,
+  },
+  detailsPreview: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
   },
 });
 
