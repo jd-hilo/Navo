@@ -9,13 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "buildNumber": "7",
       "supportsTablet": false,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts."
-      }
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "versionCode": 7,
@@ -29,16 +29,18 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "eas": {
-        "projectId": "439d9c39-e83b-47b7-8094-65cff057c5e4"
+        "projectId": "e033667a-2828-432a-b429-71a8c2fd4bfe"
       },
-      "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCTChqF-pc0LSoXhKnDFC5gBxNcRvHzi9s"
+      "EXPO_PUBLIC_GEMINI_API_KEY": "AIzaSyCTChqF-pc0LSoXhKnDFC5gBxNcRvHzi9s",
+      "router": {}
     }
   }
 }

@@ -6,7 +6,10 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-
+android
+ios
+yarn.lock
+package-lock.json
 # native
 *.orig.*
 *.jks
