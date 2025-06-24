@@ -32,7 +32,7 @@ export default function UpgradeScreen() {
   };
 
   const handleSkip = () => {
-    router.push('/(auth)/refer-friend' as any);
+    router.push('/(tabs)' as any);
   };
 
   const getPrice = () => {
@@ -138,6 +138,26 @@ export default function UpgradeScreen() {
           <Text style={styles.termsText}>
             Cancel anytime. Terms and conditions apply.
           </Text>
+
+          {/* Subscription Disclosure */}
+          <View style={styles.disclosureContainer}>
+            <Text style={styles.disclosureTitle}>Subscription Information</Text>
+            <View style={styles.disclosureItem}>
+              <Text style={styles.disclosureLabel}>Plan Name:</Text>
+              <Text style={styles.disclosureValue}>Navo Premium Monthly</Text>
+            </View>
+            <View style={styles.disclosureItem}>
+              <Text style={styles.disclosureLabel}>Subscription Length:</Text>
+              <Text style={styles.disclosureValue}>Monthly auto-renewing subscription</Text>
+            </View>
+            <View style={styles.disclosureItem}>
+              <Text style={styles.disclosureLabel}>Price:</Text>
+              <Text style={styles.disclosureValue}>{getPrice()} per month, billed monthly</Text>
+            </View>
+            <Text style={styles.disclosureNote}>
+              Your subscription will automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period. You can manage your subscription and turn off auto-renewal in your App Store account settings.
+            </Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -282,6 +302,46 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 16,
+    marginBottom: 24,
+  },
+  disclosureContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  disclosureTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  disclosureItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    paddingVertical: 4,
+  },
+  disclosureLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+  },
+  disclosureValue: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: 16,
+  },
+  disclosureNote: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginTop: 12,
     lineHeight: 16,
   },
   upgradeButtonDisabled: {

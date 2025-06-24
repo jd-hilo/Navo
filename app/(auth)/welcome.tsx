@@ -10,6 +10,7 @@ import {
   Platform,
   Animated,
   Easing,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight, Sparkles } from 'lucide-react-native';
@@ -57,6 +58,10 @@ export default function WelcomeScreen() {
 
   const handleGetStarted = () => {
     router.push('/(auth)/auth');
+  };
+
+  const handleTermsPress = () => {
+    Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-for-Navo-21c2cec59ddf8021a5d5da8c483c267a?source=copy_link');
   };
 
   const styles = createStyles(theme);
@@ -127,7 +132,12 @@ export default function WelcomeScreen() {
           </TouchableOpacity>
 
           <Text style={styles.termsText}>
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By clicking Get Started, you agree to our{' '}
+            <TouchableOpacity onPress={handleTermsPress} activeOpacity={0.7}>
+              <Text style={styles.termsLink}>
+                Terms of Service
+              </Text>
+            </TouchableOpacity>
           </Text>
         </View>
       </SafeAreaView>
@@ -213,5 +223,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
+    fontFamily: 'Inter-Medium',
+    fontSize: 12,
   },
 });
