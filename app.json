@@ -8,8 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": {
-      "buildNumber": "12",
+    "ios": { 
       "supportsTablet": false,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
