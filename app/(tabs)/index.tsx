@@ -522,7 +522,7 @@ export default function HomeScreen() {
           />
           {user && (
             <Text style={styles.welcomeText}>
-              Welcome back, {user.name || user.email.split('@')[0]}!
+              search, but better
             </Text>
           )}
         </Animated.View>

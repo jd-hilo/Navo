@@ -31,9 +31,9 @@ export default function ReferFriendScreen() {
 
   return (
     <LinearGradient
-      colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
+      colors={['#4A0F17', '#4A2810', '#2A104A']}
       style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>

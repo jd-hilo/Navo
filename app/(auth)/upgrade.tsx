@@ -70,16 +70,16 @@ export default function UpgradeScreen() {
 
   return (
     <LinearGradient
-      colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
+      colors={['#4A0F17', '#4A2810', '#2A104A']}
       style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Upgrade to Premium</Text>
+            <Text style={styles.title}>Upgrade to Navo Premium</Text>
             <Text style={styles.subtitle}>
               Unlock the full potential of your search experience
             </Text>
