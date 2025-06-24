@@ -44,6 +44,7 @@ export default function SearchBar({
   const [isTyping, setIsTyping] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
   
   const cursorOpacity = useRef(new Animated.Value(1)).current;
   
@@ -54,7 +55,7 @@ export default function SearchBar({
 
   // Cursor blinking animation
   useEffect(() => {
-    if (value.length > 0) return;
+    if (value.length > 0 || isFocused) return;
     
     const blinkCursor = () => {
       Animated.sequence([
@@ -72,11 +73,11 @@ export default function SearchBar({
     };
     
     blinkCursor();
-  }, [value, cursorOpacity]);
+  }, [value, cursorOpacity, isFocused]);
 
   useEffect(() => {
-    if (value.length > 0) {
-      // If user is typing, stop the animation
+    if (value.length > 0 || isFocused) {
+      // If user is typing or focused, stop the animation
       setCurrentPlaceholder('');
       setIsTyping(false);
       setIsDeleting(false);
@@ -94,7 +95,7 @@ export default function SearchBar({
       setCurrentPlaceholder('');
       
       for (let i = 0; i <= currentText.length; i++) {
-        if (value.length > 0) return; // Stop if user starts typing
+        if (value.length > 0 || isFocused) return; // Stop if user starts typing or focuses
         setCurrentPlaceholder(currentText.substring(0, i));
         await new Promise(resolve => {
           timeoutId = setTimeout(resolve, typingSpeed);
@@ -106,21 +107,21 @@ export default function SearchBar({
         timeoutId = setTimeout(resolve, pauseTime);
       });
       
-      if (value.length > 0) return; // Check again after pause
+      if (value.length > 0 || isFocused) return; // Check again after pause
       
       // Delete the text
       setIsTyping(false);
       setIsDeleting(true);
       
       for (let i = currentText.length; i >= 0; i--) {
-        if (value.length > 0) return; // Stop if user starts typing
+        if (value.length > 0 || isFocused) return; // Stop if user starts typing or focuses
         setCurrentPlaceholder(currentText.substring(0, i));
         await new Promise(resolve => {
           timeoutId = setTimeout(resolve, deletingSpeed);
         });
       }
       
-      if (value.length > 0) return; // Check again after deletion
+      if (value.length > 0 || isFocused) return; // Check again after deletion
       
       // Move to next placeholder
       setCurrentPlaceholderIndex((prev) => (prev + 1) % ANIMATED_PLACEHOLDERS.length);
@@ -133,7 +134,7 @@ export default function SearchBar({
         clearTimeout(timeoutId);
       }
     };
-  }, [currentPlaceholderIndex, value]);
+  }, [currentPlaceholderIndex, value, isFocused]);
 
   const displayPlaceholder = value.length > 0 ? placeholder : currentPlaceholder;
 
@@ -152,8 +153,10 @@ export default function SearchBar({
             autoCorrect={false}
             returnKeyType="search"
             clearButtonMode="never"
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
-          {value.length === 0 && (
+          {value.length === 0 && !isFocused && (
             <Animated.View 
               style={[
                 styles.cursor,

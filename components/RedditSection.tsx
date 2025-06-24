@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,18 @@ import {
   Linking,
   ScrollView,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { MessageCircle, ArrowUp, Award, ExternalLink, RefreshCw } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
+import { fetchRedditComments } from '@/services/api';
 
 interface RedditPost {
   id: string;
   title: string;
   subreddit: string;
-  author: string;
   upvotes: number;
   awards: number;
   comments: number;
@@ -41,13 +43,45 @@ interface RedditSectionProps {
 
 export default function RedditSection({ data, query, onRetry, isLoading }: RedditSectionProps) {
   const { theme } = useTheme();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<RedditPost | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [modalAnimation, setModalAnimation] = useState<'fade' | 'none'>('fade');
 
-  const handlePostPress = async (url: string) => {
+  const handlePostPress = async (post: RedditPost) => {
+    setModalAnimation('fade');
+    setSelectedPost(post);
+    setModalVisible(true);
+    setComments([]);
+    setCommentsError(null);
+    setCommentsLoading(true);
     try {
-      await Linking.openURL(url);
-    } catch (error) {
-      console.error('Error opening Reddit post:', error);
+      // post.id is like 't3_178zwq0'
+      const apiResponse = await fetchRedditComments(post.id);
+      // Extract comments from commentForest.trees[].node
+      let extractedComments: any[] = [];
+      if (apiResponse && apiResponse.commentForest && Array.isArray(apiResponse.commentForest.trees)) {
+        extractedComments = apiResponse.commentForest.trees
+          .filter((tree: any) => tree.node && tree.node.__typename === 'Comment')
+          .map((tree: any) => tree.node);
+      }
+      setComments(extractedComments);
+    } catch (err: any) {
+      setCommentsError('Failed to load comments.');
+    } finally {
+      setCommentsLoading(false);
     }
+  };
+
+  const closeModal = () => {
+    setModalAnimation('none');
+    setModalVisible(false);
+    setSelectedPost(null);
+    setComments([]);
+    setCommentsError(null);
+    setCommentsLoading(false);
   };
 
   const formatNumber = (num: number): string => {
@@ -58,6 +92,13 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
       return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();
+  };
+
+  const formatDateOnly = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // fallback to raw string if invalid
+    return date.toLocaleDateString();
   };
 
   const styles = createStyles(theme);
@@ -177,7 +218,14 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
               </View>
             )}
           </View>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={() => {
+              if (data.posts && data.posts.length > 0) {
+                Linking.openURL(data.posts[0].url);
+              }
+            }}
+          >
             <ExternalLink size={16} color={theme.colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
@@ -193,11 +241,10 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             <TouchableOpacity
               key={post.id}
               style={[styles.postCard, index === data.posts.length - 1 && styles.lastPost]}
-              onPress={() => handlePostPress(post.url)}>
+              onPress={() => handlePostPress(post)}>
               <View style={styles.postHeader}>
                 <Text style={styles.subreddit}>r/{post.subreddit}</Text>
-                <Text style={styles.author}>u/{post.author}</Text>
-                <Text style={styles.time}>{post.created}</Text>
+                <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
               </View>
               
               <Text style={styles.postTitle} numberOfLines={2}>
@@ -231,6 +278,66 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             </TouchableOpacity>
           ))}
         </ScrollView>
+        {/* Modal for full post and comments */}
+        <Modal
+          visible={modalVisible}
+          animationType={modalAnimation}
+          transparent={true}
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <ScrollView>
+                <View style={styles.modalHeaderRow}>
+                  <TouchableOpacity
+                    style={styles.modalLinkButton}
+                    onPress={() => selectedPost && Linking.openURL(selectedPost.url)}
+                    accessibilityLabel="Open in Reddit"
+                  >
+                    <ExternalLink size={22} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                </View>
+                {selectedPost && (
+                  <>
+                    <Text style={styles.modalSubreddit}>r/{selectedPost.subreddit}</Text>
+                    <Text style={styles.modalTitle}>{selectedPost.title}</Text>
+                    <Text style={styles.modalDate}>{formatDateOnly(selectedPost.created)}</Text>
+                    {selectedPost.text || selectedPost.preview ? (
+                      <Text style={styles.modalBody}>{selectedPost.text || selectedPost.preview}</Text>
+                    ) : null}
+                    <View style={styles.modalStats}>
+                      <Text style={styles.modalStat}>{formatNumber(selectedPost.upvotes)} upvotes</Text>
+                      <Text style={styles.modalStat}>{formatNumber(selectedPost.comments)} comments</Text>
+                    </View>
+                    {/* Comments section */}
+                    <View style={styles.commentsSection}>
+                      <Text style={styles.commentsTitle}>Comments</Text>
+                      {commentsLoading && <ActivityIndicator size="small" color={theme.colors.textSecondary} />}
+                      {commentsError && <Text style={styles.commentsPlaceholder}>{commentsError}</Text>}
+                      {!commentsLoading && !commentsError && comments.length === 0 && (
+                        <Text style={styles.commentsPlaceholder}>No comments found.</Text>
+                      )}
+                      {!commentsLoading && !commentsError && comments.length > 0 && (
+                        comments.slice(0, 10).map((comment, idx) => (
+                          <View key={comment.id || idx} style={styles.commentItem}>
+                            <View style={styles.commentHeaderRow}>
+                              <Text style={styles.commentScore}>{comment.score} points</Text>
+                              <Text style={styles.commentTime}>• {formatDateOnly(comment.createdAt)}</Text>
+                            </View>
+                            <Text style={styles.commentBody}>{comment.content?.markdown || ''}</Text>
+                          </View>
+                        ))
+                      )}
+                    </View>
+                  </>
+                )}
+              </ScrollView>
+              <Pressable style={styles.closeButton} onPress={closeModal}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
       </View>
     </LinearGradient>
   );
@@ -239,7 +346,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 2,
+    padding: 1,
     marginBottom: 16,
   },
   container: {
@@ -391,17 +498,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   postTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: theme.colors.text,
-    lineHeight: 18,
+    lineHeight: 22,
     marginBottom: 6,
   },
   postPreview: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: 22,
     marginBottom: 8,
   },
   postStats: {
@@ -418,5 +525,134 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     marginLeft: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.card,
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  modalSubreddit: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.textSecondary,
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  modalDate: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginBottom: 12,
+  },
+  modalBody: {
+    fontSize: 17,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.text,
+    marginBottom: 16,
+  },
+  modalStats: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  modalStat: {
+    fontSize: 13,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginRight: 16,
+  },
+  commentsSection: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: 12,
+  },
+  commentsTitle: {
+    fontSize: 17,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  commentsPlaceholder: {
+    fontSize: 13,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+  },
+  closeButton: {
+    marginTop: 16,
+    alignSelf: 'center',
+    backgroundColor: theme.colors.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+  },
+  closeButtonText: {
+    color: theme.colors.background,
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 16,
+  },
+  commentItem: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  commentHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    flexWrap: 'wrap',
+  },
+  commentAuthor: {
+    fontSize: 13,
+    fontFamily: 'Inter-SemiBold',
+    color: '#0079d3', // Reddit blue
+    marginRight: 8,
+  },
+  commentScore: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginRight: 8,
+  },
+  commentTime: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+  },
+  commentBody: {
+    fontSize: 17,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.text,
+    lineHeight: 24,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  modalLinkButton: {
+    marginRight: 8,
+    padding: 4,
   },
 });

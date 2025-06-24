@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Mail, ArrowRight } from 'lucide-react-native';
@@ -74,7 +75,8 @@ export default function EmailScreen() {
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView 
           style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           
           {/* Header */}
           <View style={styles.header}>
@@ -86,56 +88,63 @@ export default function EmailScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            <View style={styles.iconContainer}>
-              <Mail size={32} color={theme.colors.text} strokeWidth={2} />
-            </View>
+          {/* Scrollable Content */}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
+            {/* Content */}
+            <View style={styles.content}>
+              <View style={styles.iconContainer}>
+                <Mail size={32} color={theme.colors.text} strokeWidth={2} />
+              </View>
 
-            <Text style={styles.title}>
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </Text>
-            
-            <Text style={styles.subtitle}>
-              {isSignUp 
-                ? 'Enter your email to get started with Navo' 
-                : 'Enter your email to sign in to your account'
-              }
-            </Text>
+              <Text style={styles.title}>
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </Text>
+              
+              <Text style={styles.subtitle}>
+                {isSignUp 
+                  ? 'Enter your email to get started with Navo' 
+                  : 'Enter your email to sign in to your account'
+                }
+              </Text>
 
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                  editable={!isLoading}
-                />
+              {/* Email Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Email Address</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput
+                    style={styles.input}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Enter your email"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    editable={!isLoading}
+                  />
+                </View>
+              </View>
+
+              {/* Toggle Sign Up / Sign In */}
+              <View style={styles.toggleContainer}>
+                <Text style={styles.toggleText}>
+                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+                </Text>
+                <TouchableOpacity 
+                  onPress={() => setIsSignUp(!isSignUp)}
+                  activeOpacity={0.7}>
+                  <Text style={styles.toggleLink}>
+                    {isSignUp ? 'Sign In' : 'Sign Up'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
-
-            {/* Toggle Sign Up / Sign In */}
-            <View style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-              </Text>
-              <TouchableOpacity 
-                onPress={() => setIsSignUp(!isSignUp)}
-                activeOpacity={0.7}>
-                <Text style={styles.toggleLink}>
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </ScrollView>
 
           {/* Continue Button */}
           <View style={styles.footer}>
@@ -215,6 +224,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   content: {
     flex: 1,

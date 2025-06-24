@@ -6,23 +6,36 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "env": {
+        "REVENUECAT_API_KEY": "appl_pLYSxabOrylcJikneEUYdElyDUm"
+      }
     },
     "developmentSim": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "REVENUECAT_API_KEY": "appl_pLYSxabOrylcJikneEUYdElyDUm"
       }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "REVENUECAT_API_KEY": "appl_pLYSxabOrylcJikneEUYdElyDUm"
+      }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://rfcrolxtbdmtosxreioy.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmY3JvbHh0YmRtdG9zeHJlaW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzU0NDksImV4cCI6MjA2NTc1MTQ0OX0.lJu5RYF-mwl4zIV4PLSM5ntahn1oQDVRKtWGSddIyV0"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmY3JvbHh0YmRtdG9zeHJlaW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAxNzU0NDksImV4cCI6MjA2NTc1MTQ0OX0.lJu5RYF-mwl4zIV4PLSM5ntahn1oQDVRKtWGSddIyV0",
+        "REVENUECAT_API_KEY": "appl_pLYSxabOrylcJikneEUYdElyDUm"
       }
     }
   },

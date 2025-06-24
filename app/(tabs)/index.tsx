@@ -15,7 +15,8 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bookmark } from 'lucide-react-native';
+import { Bookmark, Crown } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import SearchBar from '@/components/SearchBar';
 import GeminiSection from '@/components/GeminiSection';
 import TikTokSection from '@/components/TikTokSection';
@@ -27,7 +28,9 @@ import { debounce } from '@/utils/debounce';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { SearchResultsService } from '@/services/database';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { SearchResultsService, GeneralSearchesService } from '@/services/database';
+import { useRouter } from 'expo-router';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -91,11 +94,14 @@ const SUGGESTION_CONFIG = {
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [isBookmarkSaved, setIsBookmarkSaved] = useState(false);
+  const [searchCount, setSearchCount] = useState(0);
+  const router = useRouter();
 
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(0)).current;
@@ -135,6 +141,12 @@ export default function HomeScreen() {
   useEffect(() => {
     if (debouncedQuery && searchResults && user?.id) {
       console.log('🔍 Search completed, incrementing count...');
+      
+      // Trigger haptic feedback when results are loaded
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
       SearchResultsService.incrementSearchCount(user.id)
         .then(success => {
           if (success) {
@@ -146,8 +158,40 @@ export default function HomeScreen() {
         .catch(error => {
           console.error('❌ Error incrementing search count:', error);
         });
+
+      // Track general search
+      GeneralSearchesService.trackSearch(user.id, debouncedQuery)
+        .then(success => {
+          if (success) {
+            console.log('✅ General search tracked successfully');
+          } else {
+            console.error('❌ Failed to track general search');
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error tracking general search:', error);
+        });
     }
   }, [debouncedQuery, searchResults, user?.id]);
+
+  // Check search limits for free users
+  useEffect(() => {
+    if (!isPremium && searchCount >= 10 && debouncedQuery) {
+      Alert.alert(
+        'Search Limit Reached',
+        'You\'ve reached your monthly search limit. Upgrade to Premium for unlimited searches!',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Upgrade', 
+            onPress: () => router.push('/(auth)/upgrade' as any)
+          }
+        ]
+      );
+      setSearchQuery('');
+      setDebouncedQuery('');
+    }
+  }, [searchCount, isPremium, debouncedQuery]);
 
   useEffect(() => {
     if (searchQuery.trim().length > 2) {
@@ -166,6 +210,7 @@ export default function HomeScreen() {
   // Load recent searches on mount
   useEffect(() => {
     loadRecentSearches();
+    loadSearchCount();
   }, []);
 
   // Show bookmark when search results are available
@@ -287,6 +332,17 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Error loading recent searches:', error);
+    }
+  };
+
+  const loadSearchCount = async () => {
+    if (user?.id) {
+      try {
+        const count = await SearchResultsService.getSearchCount(user.id);
+        setSearchCount(count);
+      } catch (error) {
+        console.error('Error loading search count:', error);
+      }
     }
   };
 
@@ -447,6 +503,18 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         {/* Animated Header with Logo */}
         <Animated.View style={[styles.headerContainer, { opacity: headerOpacity }]}>
+          <View style={styles.headerTop}>
+            {isPremium && (
+              <Text style={styles.premiumText}>PREMIUM</Text>
+            )}
+            {!isPremium && (
+              <View style={styles.searchCounter}>
+                <Text style={styles.searchCounterText}>
+                  {Math.max(0, 10 - searchCount)} searches left
+                </Text>
+              </View>
+            )}
+          </View>
           <Image
             source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
             style={styles.logo}
@@ -454,7 +522,7 @@ export default function HomeScreen() {
           />
           {user && (
             <Text style={styles.welcomeText}>
-              Welcome back, {user.name || user.email.split('@')[0]}!
+              search, but better
             </Text>
           )}
         </Animated.View>
@@ -564,7 +632,7 @@ export default function HomeScreen() {
               <View style={{ width: cardsWidth, marginTop: 12 }}>
                 {isLoading ? (
                   <>
-                    <LoadingCard title="Gemini" />
+                    <LoadingCard title="Google" />
                     <LoadingCard title="TikTok" />
                     <LoadingCard title="Reddit" />
                   </>
@@ -629,6 +697,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     paddingTop: Platform.OS === 'web' ? 80 : 60,
     paddingHorizontal: 32,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  premiumText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
   },
   logo: {
     width: 200,
@@ -719,5 +796,17 @@ const createStyles = (theme: any) => StyleSheet.create({
   cardsContainer: {
     width: '100%',
     paddingTop: 0, // No top padding since we're positioned right under search bar
+  },
+  searchCounter: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  searchCounterText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
   },
 });

@@ -86,6 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await removeUserFromStorage();
       setUser(null);
     } finally {
+      // Always set loading to false, even if there was an error
       setIsLoading(false);
     }
   };

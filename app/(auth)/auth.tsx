@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Mail, Shield, ArrowRight } from 'lucide-react-native';
@@ -136,7 +137,12 @@ export default function AuthScreen() {
         : await signUp(email, otpString);
 
       if (result.success) {
-        router.replace('/(tabs)');
+        // Route new users to upgrade screen, existing users to home
+        if (isExistingUser) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(auth)/upgrade');
+        }
       } else {
         Alert.alert('Error', result.error || 'Invalid verification code');
         // Clear OTP on error
@@ -196,6 +202,7 @@ export default function AuthScreen() {
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           {/* Header */}
           <View style={styles.header}>
@@ -208,92 +215,97 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
-          <View style={styles.content}>
-            <View style={styles.iconContainer}>
+          {/* Scrollable Content */}
+          <ScrollView 
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled">
+            <View style={styles.content}>
+              <View style={styles.iconContainer}>
+                {showOtp ? (
+                  <Shield size={32} color={theme.colors.text} strokeWidth={2} />
+                ) : (
+                  <Mail size={32} color={theme.colors.text} strokeWidth={2} />
+                )}
+              </View>
+
               {showOtp ? (
-                <Shield size={32} color={theme.colors.text} strokeWidth={2} />
-              ) : (
-                <Mail size={32} color={theme.colors.text} strokeWidth={2} />
-              )}
-            </View>
+                <>
+                  <Text style={styles.title}>Verify Your Email</Text>
+  
+                  <Text style={styles.subtitle}>
+                    We've sent a 6-digit verification code to{'\n'}
+                    <Text style={styles.emailText}>{email}</Text>
+                  </Text>
 
-            {showOtp ? (
-              <>
-                <Text style={styles.title}>Verify Your Email</Text>
-
-                <Text style={styles.subtitle}>
-                  We've sent a 6-digit verification code to{'\n'}
-                  <Text style={styles.emailText}>{email}</Text>
-                </Text>
-
-                {/* OTP Input */}
-                <View style={styles.otpContainer}>
-                  {otp.map((digit, index) => (
-                    <TextInput
-                      key={index}
-                      ref={(ref) => {
-                        inputRefs.current[index] = ref;
-                      }}
-                      style={[
-                        styles.otpInput,
-                        {
-                          backgroundColor: theme.colors.card,
-                          borderColor: theme.colors.border,
-                          color: theme.colors.text,
-                        },
-                      ]}
-                      value={digit}
-                      onChangeText={(text) => handleOtpChange(text, index)}
-                      onKeyPress={({ nativeEvent }) =>
+                  {/* OTP Input */}
+                  <View style={styles.otpContainer}>
+                    {otp.map((digit, index) => (
+                      <TextInput
+                        key={index}
+                        ref={(ref) => {
+                          inputRefs.current[index] = ref;
+                        }}
+                        style={[
+                          styles.otpInput,
+                          {
+                            backgroundColor: theme.colors.card,
+                            borderColor: theme.colors.border,
+                            color: theme.colors.text,
+                          },
+                        ]}
+                        value={digit}
+                        onChangeText={(text) => handleOtpChange(text, index)}
+                        onKeyPress={({ nativeEvent }) =>
                         handleKeyPress(nativeEvent.key, index)
                       }
-                      keyboardType="number-pad"
-                      maxLength={1}
-                      selectTextOnFocus
-                    />
-                  ))}
-                </View>
+                        keyboardType="number-pad"
+                        maxLength={1}
+                        selectTextOnFocus
+                      />
+                    ))}
+                  </View>
 
-                {/* Resend Code */}
-                <View style={styles.resendContainer}>
-                  <Text style={styles.resendText}>
+                  {/* Resend Code */}
+                  <View style={styles.resendContainer}>
+                    <Text style={styles.resendText}>
                     Didn't receive the code?
                   </Text>
-                  <TouchableOpacity
-                    onPress={handleResendOTP}
-                    disabled={!canResend || isResending}
-                    activeOpacity={0.7}
+                    <TouchableOpacity
+                      onPress={handleResendOTP}
+                      disabled={!canResend || isResending}
+                      activeOpacity={0.7}
                   >
-                    <Text
+                      <Text
                       style={[
-                        styles.resendLink,
-                        (!canResend || isResending) &&
+                          styles.resendLink,
+                          (!canResend || isResending) &&
                           styles.resendLinkDisabled,
-                      ]}
+                        ]}
                     >
-                      {isResending
+                        {isResending
                         ? 'Sending...'
                         : canResend
                         ? 'Resend Code'
                         : `Resend in ${countdown}s`}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
 
-                {/* Demo Helper */}
-                <View style={styles.demoContainer}>
-                  <Text style={styles.demoText}>
-                    For demo purposes, use:{' '}
+                  {/* Demo Helper */}
+                  <View style={styles.demoContainer}>
+                    <Text style={styles.demoText}>
+                      For demo purposes, use:{' '}
                     <Text style={styles.demoCode}>123456</Text> or any code
                     starting with <Text style={styles.demoCode}>1</Text>
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.title}>Welcome to Navo</Text>
-                <AppleAuthentication.AppleAuthenticationButton
+                    </Text>
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.title}>Welcome to Navo</Text>
+                  <AppleAuthentication.AppleAuthenticationButton
                   buttonType={
                     AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
                   }
@@ -332,31 +344,32 @@ export default function AuthScreen() {
                     }
                   }}
                 />
-                <Text style={styles.subtitle}>
-                  Enter your email to get started
-                </Text>
+                  <Text style={styles.subtitle}>
+                    Enter your email to get started
+                  </Text>
 
-                {/* Email Input */}
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Email Address</Text>
-                  <View style={styles.inputWrapper}>
-                    <TextInput
-                      style={styles.input}
-                      value={email}
-                      onChangeText={setEmail}
-                      placeholder="Enter your email"
-                      placeholderTextColor={theme.colors.textSecondary}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      autoComplete="email"
-                      editable={!isLoading}
-                    />
+                  {/* Email Input */}
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Email Address</Text>
+                    <View style={styles.inputWrapper}>
+                      <TextInput
+                        style={styles.input}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Enter your email"
+                        placeholderTextColor={theme.colors.textSecondary}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="email"
+                        editable={!isLoading}
+                      />
+                    </View>
                   </View>
-                </View>
-              </>
-            )}
-          </View>
+                </>
+              )}
+            </View>
+          </ScrollView>
 
           {/* Footer Button */}
           <View style={styles.footer}>
@@ -464,6 +477,13 @@ const createStyles = (theme: any) =>
       shadowRadius: 8,
       elevation: 2,
     },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 24,
+  },
     content: {
       flex: 1,
       paddingTop: 32,

@@ -391,3 +391,143 @@ export class SearchResultsService {
     }
   }
 }
+
+// General Searches Service
+export const GeneralSearchesService = {
+  // Track a new search or increment existing search count
+  async trackSearch(userId: string, query: string): Promise<boolean> {
+    try {
+      const normalizedQuery = query.trim().toLowerCase();
+      
+      // First, try to find existing search
+      const { data: existingData, error: selectError } = await supabase
+        .from('general_searches')
+        .select('id, search_count')
+        .eq('user_id', userId)
+        .eq('query', normalizedQuery)
+        .single();
+
+      if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error checking existing search:', selectError);
+        return false;
+      }
+
+      if (existingData) {
+        // Update existing search count
+        const { error: updateError } = await supabase
+          .from('general_searches')
+          .update({ 
+            search_count: existingData.search_count + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingData.id);
+
+        if (updateError) {
+          console.error('Error updating search count:', updateError);
+          return false;
+        }
+      } else {
+        // Insert new search
+        const { error: insertError } = await supabase
+          .from('general_searches')
+          .insert({ 
+            user_id: userId,
+            query: normalizedQuery,
+            search_count: 1
+          });
+
+        if (insertError) {
+          console.error('Error inserting new search:', insertError);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in trackSearch:', error);
+      return false;
+    }
+  },
+
+  // Get search statistics for a user
+  async getUserSearchStats(userId: string): Promise<{
+    totalSearches: number;
+    uniqueQueries: number;
+    mostSearched: string[];
+    recentSearches: string[];
+  }> {
+    try {
+      const { data, error } = await supabase
+        .from('general_searches')
+        .select('query, search_count, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error getting user search stats:', error);
+        return {
+          totalSearches: 0,
+          uniqueQueries: 0,
+          mostSearched: [],
+          recentSearches: []
+        };
+      }
+
+      const totalSearches = data?.reduce((sum, item) => sum + item.search_count, 0) || 0;
+      const uniqueQueries = data?.length || 0;
+      const mostSearched = data
+        ?.sort((a, b) => b.search_count - a.search_count)
+        .slice(0, 5)
+        .map(item => item.query) || [];
+      const recentSearches = data
+        ?.slice(0, 10)
+        .map(item => item.query) || [];
+
+      return {
+        totalSearches,
+        uniqueQueries,
+        mostSearched,
+        recentSearches
+      };
+    } catch (error) {
+      console.error('Error in getUserSearchStats:', error);
+      return {
+        totalSearches: 0,
+        uniqueQueries: 0,
+        mostSearched: [],
+        recentSearches: []
+      };
+    }
+  },
+
+  // Get popular searches across all users (for admin)
+  async getPopularSearches(limit: number = 20): Promise<Array<{ query: string; total_count: number }>> {
+    try {
+      const { data, error } = await supabase
+        .from('general_searches')
+        .select('query, search_count')
+        .order('search_count', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error getting popular searches:', error);
+        return [];
+      }
+
+      // Group by query and sum search counts
+      const queryMap = new Map<string, number>();
+      data?.forEach(item => {
+        const current = queryMap.get(item.query) || 0;
+        queryMap.set(item.query, current + item.search_count);
+      });
+
+      return Array.from(queryMap.entries())
+        .map(([query, total_count]) => ({ query, total_count }))
+        .sort((a, b) => b.total_count - a.total_count)
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error in getPopularSearches:', error);
+      return [];
+    }
+  }
+};

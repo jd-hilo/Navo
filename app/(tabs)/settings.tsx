@@ -9,14 +9,18 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search } from 'lucide-react-native';
+import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search, Crown, CheckCircle, RefreshCw } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { SearchResultsService } from '@/services/database';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } = useSubscription();
+  const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
     totalCached: 0,
@@ -42,6 +46,19 @@ export default function SettingsScreen() {
       setCacheStats(stats);
     } catch (error) {
       console.error('Error loading user stats:', error);
+    }
+  };
+
+  const handleUpgrade = () => {
+    router.push('/(auth)/upgrade' as any);
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      await restorePurchases();
+      Alert.alert('Success', 'Purchases restored successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to restore purchases');
     }
   };
 
@@ -147,6 +164,93 @@ export default function SettingsScreen() {
               </View>
             </View>
           </View>
+        </View>
+
+        {/* Subscription Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
+          
+          <View style={styles.subscriptionCard}>
+            <View style={styles.subscriptionHeader}>
+              <View style={styles.subscriptionIcon}>
+                {isPremium ? (
+                  <Crown size={24} color={theme.colors.primary} strokeWidth={2} />
+                ) : (
+                  <Crown size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+                )}
+              </View>
+              <View style={styles.subscriptionText}>
+                <Text style={styles.subscriptionTitle}>
+                  {isPremium ? 'Premium Plan' : 'Free Plan'}
+                </Text>
+                <Text style={styles.subscriptionStatus}>
+                  {isPremium ? 'Active subscription' : 'Upgrade for more features'}
+                </Text>
+                {isPremium && (
+                  <Text style={styles.premiumDetails}>
+                    1000 searches a month • 1000 saved searches • Faster loading times
+                  </Text>
+                )}
+              </View>
+              {isPremium && (
+                <View style={styles.premiumBadge}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                </View>
+              )}
+            </View>
+            
+            {!isPremium && (
+              <TouchableOpacity
+                style={styles.upgradeButton}
+                onPress={handleUpgrade}
+                activeOpacity={0.8}>
+                <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
+                <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
+              </TouchableOpacity>
+            )}
+            
+            {isPremium && (
+              <View style={styles.premiumFeatures}>
+                <Text style={styles.premiumFeaturesTitle}>Your Premium Benefits:</Text>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>1000 searches a month</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>1000 saved searches</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Faster loading times</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Custom search settings</Text>
+                </View>
+              </View>
+            )}
+          </View>
+          
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.restoreButton}
+              onPress={handleRestorePurchases}
+              disabled={isLoading}>
+              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+            </TouchableOpacity>
+          )}
+          
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={refreshSubscriptionStatus}
+              disabled={isLoading}>
+              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={styles.refreshButtonText}>Refresh Status</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Usage Statistics */}
@@ -290,6 +394,98 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: 2,
   },
+  subscriptionCard: {
+    backgroundColor: theme.colors.surface,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  subscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subscriptionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  subscriptionText: {
+    flex: 1,
+  },
+  subscriptionTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+  },
+  subscriptionStatus: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  premiumBadge: {
+    backgroundColor: theme.colors.success,
+    borderRadius: 12,
+    padding: 4,
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  upgradeButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  upgradeButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.surface,
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: theme.colors.background,
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 8,
+    backgroundColor: theme.colors.background,
+  },
+  refreshButtonText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
+  },
   statsCard: {
     backgroundColor: theme.colors.surface,
     marginHorizontal: 16,
@@ -355,5 +551,31 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     marginTop: 2,
+  },
+  premiumDetails: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+  },
+  premiumFeatures: {
+    marginTop: 16,
+  },
+  premiumFeaturesTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  premiumFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  premiumFeatureText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginLeft: 8,
   },
 });
