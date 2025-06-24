@@ -21,6 +21,7 @@ interface AuthContextType {
   checkEmailExists: (email: string) => Promise<boolean>;
   signInWithOtp: (email: string) => Promise<{ data: any; error: any }>;
   signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithApple: (user: any) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -138,6 +139,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resendOTP = async (email: string): Promise<{ success: boolean; error?: string }> => {
     return await sendOTP(email);
   };
+  const signInWithApple = async (user: any): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const userData: User = {
+        id: user.id,
+        email:  user.email  ,
+        name:  user.name || user.email.split('@')[0],
+        };
+        setUser(userData);
+        await saveUserToStorage(userData);
+      // Ensure user profile exists
+      await ensureUserProfile(user.id);
+      return { success: true };
+      
+    } catch (error) {
+      console.error('Error signing in with Apple:', error);
+      return { success: false, error: error as string || 'Sign in failed.' };
+    }
+   
+  }
 
   const signIn = async (email: string, otp: string): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -322,6 +342,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkEmailExists,
     signInWithOtp,
     signInWithPassword,
+    signInWithApple,
   };
 
   return (

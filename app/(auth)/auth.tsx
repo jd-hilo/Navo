@@ -22,7 +22,7 @@ import { supabase } from '@/services/database';
 
 export default function AuthScreen() {
   const { theme, isDark } = useTheme();
-  const { sendOTP, signIn, signUp, checkEmailExists, signInWithOtp } =
+  const { sendOTP, signIn, signUp, checkEmailExists, signInWithOtp ,signInWithApple} =
     useAuth();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
@@ -334,7 +334,12 @@ export default function AuthScreen() {
                         });
                         console.log(JSON.stringify({ error, user }, null, 2));
                         if (!error) {
-                          // User is signed in.
+                           const result = await signInWithApple(user);
+                           if (result.success) {
+                            router.replace('/(tabs)');
+                           } else {
+                            Alert.alert('Error', result.error || 'Failed to sign in with Apple');
+                           }
                         }
                       } else {
                         throw new Error('No identityToken.');
