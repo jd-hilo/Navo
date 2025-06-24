@@ -305,50 +305,7 @@ export default function AuthScreen() {
               ) : (
                 <>
                   <Text style={styles.title}>Welcome to Navo</Text>
-                  <AppleAuthentication.AppleAuthenticationButton
-                  buttonType={
-                    AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
-                  }
-                  buttonStyle={
-                    AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                  }
-                  cornerRadius={5}
-                  style={{ width: '80%', height: 46, alignSelf: 'center',marginVertical:10 }}
-                  onPress={async () => {
-                    try {
-                      const credential = await AppleAuthentication.signInAsync({
-                        requestedScopes: [
-                          AppleAuthentication.AppleAuthenticationScope
-                            .FULL_NAME,
-                          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-                        ],
-                      });
-                      // Sign in via Supabase Auth.
-                      if (credential.identityToken) {
-                        const {
-                          error,
-                          data: { user },
-                        } = await supabase.auth.signInWithIdToken({
-                          provider: 'apple',
-                          token: credential.identityToken,
-                        });
-                        console.log(JSON.stringify({ error, user }, null, 2));
-                        if (!error) {
-                           const result = await signInWithApple(user);
-                           if (result.success) {
-                            router.replace('/(tabs)');
-                           } else {
-                            Alert.alert('Error', result.error || 'Failed to sign in with Apple');
-                           }
-                        }
-                      } else {
-                        throw new Error('No identityToken.');
-                      }
-                    } catch (e) {
-                      console.log("error :",e)
-                    }
-                  }}
-                />
+                  
                   <Text style={styles.subtitle}>
                     Enter your email to get started
                   </Text>
@@ -378,6 +335,51 @@ export default function AuthScreen() {
 
           {/* Footer Button */}
           <View style={styles.footer}>
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={
+                AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
+              }
+              buttonStyle={
+                AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+              }
+              cornerRadius={16}
+              style={styles.appleButton}
+              onPress={async () => {
+                try {
+                  const credential = await AppleAuthentication.signInAsync({
+                    requestedScopes: [
+                      AppleAuthentication.AppleAuthenticationScope
+                        .FULL_NAME,
+                      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+                    ],
+                  });
+                  // Sign in via Supabase Auth.
+                  if (credential.identityToken) {
+                    const {
+                      error,
+                      data: { user },
+                    } = await supabase.auth.signInWithIdToken({
+                      provider: 'apple',
+                      token: credential.identityToken,
+                    });
+                    console.log(JSON.stringify({ error, user }, null, 2));
+                    if (!error) {
+                       const result = await signInWithApple(user);
+                       if (result.success) {
+                        router.replace('/(tabs)');
+                       } else {
+                        Alert.alert('Error', result.error || 'Failed to sign in with Apple');
+                       }
+                    }
+                  } else {
+                    throw new Error('No identityToken.');
+                  }
+                } catch (e) {
+                  console.log("error :",e)
+                }
+              }}
+            />
+
             <TouchableOpacity
               style={[
                 styles.button,
@@ -606,7 +608,7 @@ const createStyles = (theme: any) =>
       color: theme.colors.text,
     },
     footer: {
-      paddingBottom: Platform.OS === 'ios' ? 32 : 48,
+      paddingBottom: Platform.OS === 'ios' ? 20 : 40,
     },
     button: {
       borderRadius: 16,
@@ -635,5 +637,10 @@ const createStyles = (theme: any) =>
     },
     buttonTextDisabled: {
       color: theme.colors.textSecondary,
+    },
+    appleButton: {
+      width: '100%',
+      height: 50,
+      marginBottom: 12,
     },
   });
