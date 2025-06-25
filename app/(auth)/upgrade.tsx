@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, Star, Zap, Database, Settings, ArrowRight } from 'lucide-react-native';
@@ -16,7 +17,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useRouter } from 'expo-router';
 
 export default function UpgradeScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { upgradeToPremium, offerings, isLoading } = useSubscription();
   const router = useRouter();
 
@@ -33,6 +34,14 @@ export default function UpgradeScreen() {
 
   const handleSkip = () => {
     router.push('/(tabs)' as any);
+  };
+
+  const handlePrivacyPress = () => {
+    Linking.openURL('https://pastoral-supply-662.notion.site/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f');
+  };
+
+  const handleTermsPress = () => {
+    Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-Navo-e0c8a2c1c8c94c0c9c0c8a2c1c8c94c0');
   };
 
   const getPrice = () => {
@@ -70,7 +79,9 @@ export default function UpgradeScreen() {
 
   return (
     <LinearGradient
-      colors={['#4A0F17', '#4A2810', '#2A104A']}
+      colors={isDark 
+        ? ['#4A0F17', '#4A2810', '#2A104A']  // Dark mode colors
+        : ['#F7E8EA', '#F7EDE8', '#EEE8F7']}  // Light mode colors - much lighter versions
       style={styles.container}>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView 
@@ -136,7 +147,14 @@ export default function UpgradeScreen() {
 
           {/* Terms */}
           <Text style={styles.termsText}>
-            Cancel anytime. Terms and conditions apply.
+            By clicking Upgrade Now, you agree to our{' '}
+            <Text style={styles.link} onPress={handleTermsPress}>
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text style={styles.link} onPress={handlePrivacyPress}>
+              Privacy Policy
+            </Text>
           </Text>
 
           {/* Subscription Disclosure */}
@@ -302,7 +320,6 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 16,
     marginBottom: 24,
   },
   disclosureContainer: {
@@ -346,5 +363,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   upgradeButtonDisabled: {
     backgroundColor: theme.colors.disabled,
+  },
+  link: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
   },
 }); 

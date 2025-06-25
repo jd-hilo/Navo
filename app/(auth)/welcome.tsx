@@ -64,6 +64,10 @@ export default function WelcomeScreen() {
     Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-for-Navo-21c2cec59ddf8021a5d5da8c483c267a?source=copy_link');
   };
 
+  const handlePrivacyPress = () => {
+    Linking.openURL('https://pastoral-supply-662.notion.site/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f?source=copy_link');
+  };
+
   const styles = createStyles(theme);
 
   return (
@@ -133,11 +137,13 @@ export default function WelcomeScreen() {
 
           <Text style={styles.termsText}>
             By clicking Get Started, you agree to our{' '}
-            <TouchableOpacity onPress={handleTermsPress} activeOpacity={0.7}>
-              <Text style={styles.termsLink}>
-                Terms of Service
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.termsLink} onPress={handleTermsPress}>
+              Terms of Service
+            </Text>
+            {' '}and{' '}
+            <Text style={styles.termsLink} onPress={handlePrivacyPress}>
+              Privacy Policy
+            </Text>
           </Text>
         </View>
       </SafeAreaView>
@@ -221,16 +227,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 16,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    lineHeight: 18,
   },
   termsLink: {
     color: theme.colors.primary,
     textDecorationLine: 'underline',
-    fontFamily: 'Inter-Medium',
-    fontSize: 12,
+    fontFamily: 'Inter-Regular',
   },
 });
