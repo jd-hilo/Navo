@@ -10,10 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
+      "requireFullScreen": true,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts."
+        "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts.",
+        "UIRequiresFullScreen": true
       },
       "associatedDomains": ["applinks:app.adjust.com"],
       "usesAppleSignIn": true,
