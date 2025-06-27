@@ -8,14 +8,16 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "ios": { 
+    "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "media.hilo.navo",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts."
       },
-      "usesAppleSignIn": true
+      "associatedDomains": ["applinks:app.adjust.com"],
+      "usesAppleSignIn": true,
+      "appleTeamId": "N8SACG5845"
     },
     "android": {
       "versionCode": 7,
@@ -30,7 +32,8 @@
       "expo-router",
       "expo-font",
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "@config-plugins/react-native-adjust"
     ],
     "experiments": {
       "typedRoutes": true

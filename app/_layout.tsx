@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import Purchases from 'react-native-purchases';
 import { Platform } from 'react-native';
@@ -9,6 +15,12 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
+import { Adjust, AdjustConfig } from 'react-native-adjust';
+
+const adjustConfig = new AdjustConfig(
+  'fw7q3vvpgtts',
+  __DEV__ ? AdjustConfig.EnvironmentSandbox : AdjustConfig.EnvironmentProduction
+);
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -34,13 +46,23 @@ export default function RootLayout() {
   });
 
   const [isInitialized, setIsInitialized] = useState(false);
-
+  const setUpAdjust = () => {
+    try {
+      adjustConfig.setLogLevel(AdjustConfig.LogLevelVerbose);
+      const adjust = Adjust.initSdk(adjustConfig);
+      console.log('Adjust initialized:', adjust);
+    } catch (error) {
+      console.error('Failed to initialize Adjust:', error);
+    }
+  };
   useEffect(() => {
+    setUpAdjust();
     // Initialize RevenueCat
     const initializeRevenueCat = async () => {
       try {
-        const apiKey = process.env.REVENUECAT_API_KEY || 'appl_pLYSxabOrylcJikneEUYdElyDUm';
-        
+        const apiKey =
+          process.env.REVENUECAT_API_KEY || 'appl_pLYSxabOrylcJikneEUYdElyDUm';
+
         // Configure RevenueCat with StoreKit configuration for testing
         await Purchases.configure({
           apiKey: apiKey,
@@ -48,7 +70,7 @@ export default function RootLayout() {
           useAmazon: false,
           shouldShowInAppMessagesAutomatically: true,
         });
-        
+
         // Force use of StoreKit configuration for testing
         if (__DEV__) {
           console.log('Development mode: Using StoreKit configuration');
@@ -60,9 +82,9 @@ export default function RootLayout() {
             console.log('StoreKit testing mode setup error:', error);
           }
         }
-        
+
         console.log('RevenueCat initialized successfully');
-        
+
         // Test fetching offerings immediately
         try {
           const offerings = await Purchases.getOfferings();
@@ -70,7 +92,6 @@ export default function RootLayout() {
         } catch (offeringsError) {
           console.error('Initial offerings fetch failed:', offeringsError);
         }
-        
       } catch (error) {
         console.error('Failed to initialize RevenueCat:', error);
       } finally {
