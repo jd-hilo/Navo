@@ -18,7 +18,7 @@ import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
@@ -88,6 +88,26 @@ export default function SettingsScreen() {
           text: 'Sign Out', 
           style: 'destructive',
           onPress: () => signOut()
+        }
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete Account', 
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await deleteAccount();
+            if (error) {
+              Alert.alert('Error', error);
+            }
+          }
         }
       ]
     );
@@ -167,7 +187,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Subscription Section */}
-        <View style={styles.section}>
+        <View style={[styles.section, { marginBottom: 40 }]}>
           <Text style={styles.sectionTitle}>Subscription</Text>
           
           <View style={styles.subscriptionCard}>
@@ -253,69 +273,38 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        {/* Usage Statistics */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Usage Statistics</Text>
-          
-          <View style={styles.statsCard}>
-            <View style={styles.statItem}>
-              <Search size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-              <View style={styles.statText}>
-                <Text style={styles.statValue}>{searchCount}</Text>
-                <Text style={styles.statLabel}>Total Searches</Text>
-              </View>
-            </View>
-            
-            <View style={styles.statDivider} />
-            
-            <View style={styles.statItem}>
-              <Shield size={20} color={theme.colors.textSecondary} strokeWidth={2} />
-              <View style={styles.statText}>
-                <Text style={styles.statValue}>{cacheStats.totalCached}</Text>
-                <Text style={styles.statLabel}>Cached Results</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General</Text>
-          
-          <SettingRow
-            icon={Moon}
-            title="Dark Mode"
-            subtitle="Switch to dark theme"
-            rightElement={
-              <Switch
-                value={isDark}
-                onValueChange={toggleTheme}
-                trackColor={{ false: theme.colors.border, true: theme.colors.text }}
-                thumbColor={theme.colors.surface}
-              />
-            }
-          />
-          
-          <SettingRow
-            icon={Info}
-            title="About"
-            subtitle="App version and information"
-            onPress={showAbout}
-          />
-          
+        {/* Privacy Section */}
+        <View style={[styles.section, { marginBottom: 40 }]}>
+          <Text style={styles.sectionTitle}>Privacy & Security</Text>
           <SettingRow
             icon={Shield}
             title="Privacy Policy"
-            subtitle="Read our privacy policy"
             onPress={showPrivacyInfo}
           />
-          
+          <SettingRow
+            icon={Info}
+            title="About Navo"
+            onPress={showAbout}
+          />
+        </View>
+
+        {/* Account Actions */}
+        <View style={[styles.section, { marginBottom: 40 }]}>
+          <Text style={styles.sectionTitle}>Account Actions</Text>
           <SettingRow
             icon={LogOut}
             title="Sign Out"
-            subtitle="Sign out of your account"
             onPress={handleSignOut}
             isDestructive
           />
+          <SettingRow
+            icon={User}
+            title="Delete Account"
+            subtitle="Permanently delete your account and all data"
+            onPress={handleDeleteAccount}
+            isDestructive
+          />
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -328,33 +317,34 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 16,
+    paddingBottom: 8,
   },
   title: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
+    fontSize: 28,
+    fontWeight: '700',
     color: theme.colors.text,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
+    fontSize: 16,
     color: theme.colors.textSecondary,
-    marginTop: 2,
   },
   content: {
     flex: 1,
+    paddingHorizontal: 20,
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    paddingHorizontal: 16,
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
     marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   accountCard: {
     backgroundColor: theme.colors.surface,

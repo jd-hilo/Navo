@@ -292,15 +292,6 @@ export default function AuthScreen() {
                       </Text>
                     </TouchableOpacity>
                   </View>
-
-                  {/* Demo Helper */}
-                  <View style={styles.demoContainer}>
-                    <Text style={styles.demoText}>
-                      For demo purposes, use:{' '}
-                    <Text style={styles.demoCode}>123456</Text> or any code
-                    starting with <Text style={styles.demoCode}>1</Text>
-                    </Text>
-                  </View>
                 </>
               ) : (
                 <>

@@ -138,8 +138,8 @@ export default function WelcomeScreen() {
           <Text style={styles.termsText}>
             By clicking Get Started, you agree to our{' '}
             <Text style={styles.termsLink} onPress={handleTermsPress}>
-              Terms of Service
-            </Text>
+                Terms of Service
+              </Text>
             {' '}and{' '}
             <Text style={styles.termsLink} onPress={handlePrivacyPress}>
               Privacy Policy
