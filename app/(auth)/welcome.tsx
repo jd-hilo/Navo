@@ -109,6 +109,15 @@ export default function WelcomeScreen() {
       </View>
 
       <SafeAreaView style={styles.safeArea}>
+        {/* BWB Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('@/assets/images/bwb.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
         {/* Onboarding Carousel Section */}
         <View style={styles.carouselSection}>
           <FlatList
@@ -269,5 +278,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.primary,
     textDecorationLine: 'underline',
     fontFamily: 'Inter-Regular',
+  },
+  logoContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 20,
+    zIndex: 1,
+  },
+  logo: {
+    width: 40,
+    height: 40,
   },
 });
