@@ -10,27 +10,27 @@ import {
   ScrollView,
 } from 'react-native';
 import { Search, ChevronDown, ChevronUp, Bookmark } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import GeminiSection from '@/components/GeminiSection';
 import TikTokSection from '@/components/TikTokSection';
 import RedditSection from '@/components/RedditSection';
+import { SavedSearchesService } from '@/services/database';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SavedSearch {
   id: string;
   query: string;
-  timestamp: number;
-  results?: {
-    gemini?: any;
-    tiktok?: any;
-    reddit?: any;
-  };
+  created_at: string;
+  gemini_data: any;
+  tiktok_data: any;
+  reddit_data: any;
 }
 
 export default function SavedScreen() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -38,26 +38,55 @@ export default function SavedScreen() {
   // Load saved searches when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      loadSavedSearches();
-    }, [])
+      if (user?.id) {
+        loadSavedSearches();
+      }
+    }, [user?.id])
   );
 
   const loadSavedSearches = async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
-      const saved = await AsyncStorage.getItem('savedSearches');
-      if (saved) {
-        const searches = JSON.parse(saved);
-        setSavedSearches(searches);
-      } else {
-        setSavedSearches([]);
-      }
+      const searches = await SavedSearchesService.getSavedSearches(user.id);
+      setSavedSearches(searches);
     } catch (error) {
       console.error('Error loading saved searches:', error);
       setSavedSearches([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async (searchId: string) => {
+    if (!user?.id) return;
+
+    Alert.alert(
+      'Delete Saved Search',
+      'Are you sure you want to delete this saved search?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const success = await SavedSearchesService.deleteSavedSearch(user.id, searchId);
+              if (success) {
+                setSavedSearches(prev => prev.filter(search => search.id !== searchId));
+              }
+            } catch (error) {
+              console.error('Error deleting saved search:', error);
+              Alert.alert('Error', 'Failed to delete saved search');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const toggleExpanded = (id: string) => {
@@ -70,7 +99,7 @@ export default function SavedScreen() {
     setExpandedItems(newExpanded);
   };
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
@@ -104,7 +133,7 @@ export default function SavedScreen() {
                 {item.query}
               </Text>
               <Text style={styles.timestamp}>
-                {formatDate(item.timestamp)}
+                {formatDate(item.created_at)}
               </Text>
             </View>
             <View style={styles.bookmarkContainer}>
@@ -126,40 +155,30 @@ export default function SavedScreen() {
         {/* Expanded Results */}
         {isExpanded && (
           <View style={styles.expandedContent}>
-            {item.results ? (
-              <>
-                {item.results.gemini && (
-                  <View style={styles.expandedSection}>
-                    <GeminiSection
-                      data={item.results.gemini}
-                      query={item.query}
-                      isLoading={false}
-                      cached={true}
-                    />
-                  </View>
-                )}
-                {item.results.tiktok && (
-                  <View style={styles.expandedSection}>
-                    <TikTokSection
-                      data={item.results.tiktok}
-                      query={item.query}
-                    />
-                  </View>
-                )}
-                {item.results.reddit && (
-                  <View style={styles.expandedSection}>
-                    <RedditSection
-                      data={item.results.reddit}
-                      query={item.query}
-                    />
-                  </View>
-                )}
-              </>
-            ) : (
-              <View style={styles.noResultsContainer}>
-                <Text style={styles.noResultsText}>
-                  No detailed results saved for this search
-                </Text>
+            {item.gemini_data && (
+              <View style={styles.expandedSection}>
+                <GeminiSection
+                  data={item.gemini_data}
+                  query={item.query}
+                  isLoading={false}
+                  cached={true}
+                />
+              </View>
+            )}
+            {item.tiktok_data && (
+              <View style={styles.expandedSection}>
+                <TikTokSection
+                  data={item.tiktok_data}
+                  query={item.query}
+                />
+              </View>
+            )}
+            {item.reddit_data && (
+              <View style={styles.expandedSection}>
+                <RedditSection
+                  data={item.reddit_data}
+                  query={item.query}
+                />
               </View>
             )}
           </View>
@@ -174,13 +193,23 @@ export default function SavedScreen() {
         <Text style={styles.title}>Saved searches</Text>
         <Text style={styles.count}>{savedSearches.length}</Text>
       </View>
-      <FlatList
-        data={savedSearches}
-        renderItem={renderSearchItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading saved searches...</Text>
+        </View>
+      ) : savedSearches.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No saved searches yet</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={savedSearches}
+          renderItem={renderSearchItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -260,13 +289,22 @@ const styles = StyleSheet.create({
   expandedSection: {
     marginBottom: 12,
   },
-  noResultsContainer: {
-    padding: 16,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  noResultsText: {
-    fontSize: 14,
+  loadingText: {
+    fontSize: 16,
     color: '#666666',
-    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666666',
   },
 });
