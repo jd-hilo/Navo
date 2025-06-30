@@ -2,7 +2,7 @@
   "expo": {
     "name": "Navo",
     "slug": "Navo",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -27,7 +27,7 @@
       "appleTeamId": "N8SACG5845"
     },
     "android": {
-      "versionCode": 7,
+      "versionCode": 8,
       "package": "media.hilo.navo"
     },
     "web": {
