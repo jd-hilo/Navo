@@ -161,7 +161,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Customize your Navo experience</Text>
+        <Text style={[styles.subtitle, { marginBottom: 16 }]}>Customize your Navo experience</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

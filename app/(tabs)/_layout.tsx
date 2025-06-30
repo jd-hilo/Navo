@@ -76,8 +76,10 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarShowLabel: false,
         tabBarItemStyle: {
-          paddingTop: 8,
-          paddingBottom: 10,
+          height: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingTop: 5,
         },
         tabBarButton: (props: any) => (
           <TouchableOpacity

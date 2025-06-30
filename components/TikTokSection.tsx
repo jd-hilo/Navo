@@ -531,7 +531,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
           ))}
         </ScrollView>
         <View style={{ alignItems: 'center', marginTop: 6, marginBottom: 2 }}>
-            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>tap to play →</Text>
+            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>swipe for more →</Text>
         </View>
       </View>
     </LinearGradient>

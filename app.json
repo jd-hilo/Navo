@@ -13,7 +13,7 @@
       "backgroundColor": "#000000"
     },
     "newArchEnabled": true,
-    "ios": {
+    "ios": { 
       "supportsTablet": false,
       "requireFullScreen": true,
       "bundleIdentifier": "media.hilo.navo",
