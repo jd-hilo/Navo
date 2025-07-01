@@ -16,6 +16,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { Adjust, AdjustConfig } from 'react-native-adjust';
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+import adjustService from '@/adjustService';
 
 const adjustConfig = new AdjustConfig(
   'fw7q3vvpgtts',
@@ -46,18 +48,15 @@ export default function RootLayout() {
   });
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const setUpAdjust = () => {
-    try {
-      adjustConfig.setLogLevel(AdjustConfig.LogLevelVerbose);
-      const adjust = Adjust.initSdk(adjustConfig);
-      console.log('Adjust initialized:', adjust);
-    } catch (error) {
-      console.error('Failed to initialize Adjust:', error);
-    }
-  };
+
   useEffect(() => {
-    setUpAdjust();
-    // Initialize RevenueCat
+    (async () => {
+      const { status } = await requestTrackingPermissionsAsync();
+      if (status === 'granted') {
+        console.log('Yay! I have user permission to track data');
+        adjustService.initialize();
+      }
+    })();
     const initializeRevenueCat = async () => {
       try {
         const apiKey =

@@ -9,7 +9,22 @@ import {
   Switch,
   Alert,
 } from 'react-native';
-import { Key, Shield, Bell, Moon, CircleHelp as HelpCircle, Info, ChevronRight, LogOut, User, Search, Crown, CheckCircle, RefreshCw } from 'lucide-react-native';
+import {
+  Key,
+  Shield,
+  Share,
+  Bell,
+  Moon,
+  CircleHelp as HelpCircle,
+  Info,
+  ChevronRight,
+  LogOut,
+  User,
+  Search,
+  Crown,
+  CheckCircle,
+  RefreshCw,
+} from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
@@ -19,7 +34,8 @@ import { useRouter } from 'expo-router';
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut, deleteAccount } = useAuth();
-  const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } = useSubscription();
+  const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } =
+    useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
@@ -79,18 +95,14 @@ export default function SettingsScreen() {
   };
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive',
-          onPress: () => signOut()
-        }
-      ]
-    );
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: () => signOut(),
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
@@ -99,16 +111,16 @@ export default function SettingsScreen() {
       'Are you sure you want to delete your account? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete Account', 
+        {
+          text: 'Delete Account',
           style: 'destructive',
           onPress: async () => {
             const { error } = await deleteAccount();
             if (error) {
               Alert.alert('Error', error);
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -130,26 +142,32 @@ export default function SettingsScreen() {
   }) => (
     <TouchableOpacity style={styles.settingRow} onPress={onPress}>
       <View style={styles.settingLeft}>
-        <Icon 
-          size={24} 
-          color={isDestructive ? theme.colors.error : theme.colors.textSecondary} 
-          strokeWidth={2} 
+        <Icon
+          size={24}
+          color={
+            isDestructive ? theme.colors.error : theme.colors.textSecondary
+          }
+          strokeWidth={2}
         />
         <View style={styles.settingText}>
-          <Text style={[
-            styles.settingTitle,
-            isDestructive && { color: theme.colors.error }
-          ]}>
+          <Text
+            style={[
+              styles.settingTitle,
+              isDestructive && { color: theme.colors.error },
+            ]}
+          >
             {title}
           </Text>
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
         </View>
       </View>
       {rightElement || (
-        <ChevronRight 
-          size={20} 
-          color={isDestructive ? theme.colors.error : theme.colors.textSecondary} 
-          strokeWidth={2} 
+        <ChevronRight
+          size={20}
+          color={
+            isDestructive ? theme.colors.error : theme.colors.textSecondary
+          }
+          strokeWidth={2}
         />
       )}
     </TouchableOpacity>
@@ -161,26 +179,24 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={[styles.subtitle, { marginBottom: 16 }]}>Customize your Navo experience</Text>
+        <Text style={[styles.subtitle, { marginBottom: 16 }]}>
+          Customize your Navo experience
+        </Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          
+
           <View style={styles.accountCard}>
             <View style={styles.accountInfo}>
               <View style={styles.avatarContainer}>
                 <User size={24} color={theme.colors.text} strokeWidth={2} />
               </View>
               <View style={styles.accountText}>
-                <Text style={styles.accountName}>
-                  {user?.name || 'User'}
-                </Text>
-                <Text style={styles.accountEmail}>
-                  {user?.email}
-                </Text>
+                <Text style={styles.accountName}>{user?.name || 'User'}</Text>
+                <Text style={styles.accountEmail}>{user?.email}</Text>
               </View>
             </View>
           </View>
@@ -189,14 +205,22 @@ export default function SettingsScreen() {
         {/* Subscription Section */}
         <View style={[styles.section, { marginBottom: 40 }]}>
           <Text style={styles.sectionTitle}>Subscription</Text>
-          
+
           <View style={styles.subscriptionCard}>
             <View style={styles.subscriptionHeader}>
               <View style={styles.subscriptionIcon}>
                 {isPremium ? (
-                  <Crown size={24} color={theme.colors.primary} strokeWidth={2} />
+                  <Crown
+                    size={24}
+                    color={theme.colors.primary}
+                    strokeWidth={2}
+                  />
                 ) : (
-                  <Crown size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+                  <Crown
+                    size={24}
+                    color={theme.colors.textSecondary}
+                    strokeWidth={2}
+                  />
                 )}
               </View>
               <View style={styles.subscriptionText}>
@@ -204,70 +228,118 @@ export default function SettingsScreen() {
                   {isPremium ? 'Premium Plan' : 'Free Plan'}
                 </Text>
                 <Text style={styles.subscriptionStatus}>
-                  {isPremium ? 'Active subscription' : 'Upgrade for more features'}
+                  {isPremium
+                    ? 'Active subscription'
+                    : 'Upgrade for more features'}
                 </Text>
                 {isPremium && (
                   <Text style={styles.premiumDetails}>
-                    1000 searches a month • 1000 saved searches • Faster loading times
+                    1000 searches a month • 1000 saved searches • Faster loading
+                    times
                   </Text>
                 )}
               </View>
               {isPremium && (
                 <View style={styles.premiumBadge}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
                 </View>
               )}
             </View>
-            
+
             {!isPremium && (
               <TouchableOpacity
                 style={styles.upgradeButton}
                 onPress={handleUpgrade}
-                activeOpacity={0.8}>
+                activeOpacity={0.8}
+              >
                 <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
-                <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
+                <ChevronRight
+                  size={20}
+                  color={theme.colors.surface}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
             )}
-            
+
             {isPremium && (
               <View style={styles.premiumFeatures}>
-                <Text style={styles.premiumFeaturesTitle}>Your Premium Benefits:</Text>
+                <Text style={styles.premiumFeaturesTitle}>
+                  Your Premium Benefits:
+                </Text>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>1000 searches a month</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    1000 searches a month
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>1000 saved searches</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    1000 saved searches
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Faster loading times</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    Faster loading times
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Custom search settings</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    Custom search settings
+                  </Text>
                 </View>
               </View>
             )}
           </View>
-          
+
           {!isPremium && (
             <TouchableOpacity
               style={styles.restoreButton}
               onPress={handleRestorePurchases}
-              disabled={isLoading}>
-              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              disabled={isLoading}
+            >
+              <RefreshCw
+                size={16}
+                color={theme.colors.primary}
+                strokeWidth={2}
+              />
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             </TouchableOpacity>
           )}
-          
+
           {!isPremium && (
             <TouchableOpacity
               style={styles.refreshButton}
               onPress={refreshSubscriptionStatus}
-              disabled={isLoading}>
-              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              disabled={isLoading}
+            >
+              <RefreshCw
+                size={16}
+                color={theme.colors.primary}
+                strokeWidth={2}
+              />
               <Text style={styles.refreshButtonText}>Refresh Status</Text>
             </TouchableOpacity>
           )}
@@ -281,16 +353,18 @@ export default function SettingsScreen() {
             title="Privacy Policy"
             onPress={showPrivacyInfo}
           />
-          <SettingRow
-            icon={Info}
-            title="About Navo"
-            onPress={showAbout}
-          />
+
+          <SettingRow icon={Info} title="About Navo" onPress={showAbout} />
         </View>
 
         {/* Account Actions */}
         <View style={[styles.section, { marginBottom: 40 }]}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
+          <SettingRow
+            icon={Share}
+            title="Refer To a friend"
+            onPress={() => router.push('/(auth)/refer-friend')}
+          />
           <SettingRow
             icon={LogOut}
             title="Sign Out"
@@ -311,261 +385,262 @@ export default function SettingsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-    marginBottom: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  accountCard: {
-    backgroundColor: theme.colors.surface,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  accountInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  accountText: {
-    flex: 1,
-  },
-  accountName: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-  },
-  accountEmail: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  subscriptionCard: {
-    backgroundColor: theme.colors.surface,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  subscriptionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subscriptionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  subscriptionText: {
-    flex: 1,
-  },
-  subscriptionTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-  },
-  subscriptionStatus: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  premiumBadge: {
-    backgroundColor: theme.colors.success,
-    borderRadius: 12,
-    padding: 4,
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  upgradeButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  upgradeButtonText: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.surface,
-  },
-  restoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: theme.colors.background,
-  },
-  restoreButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
-    marginLeft: 8,
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 8,
-    backgroundColor: theme.colors.background,
-  },
-  refreshButtonText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
-    marginLeft: 8,
-  },
-  statsCard: {
-    backgroundColor: theme.colors.surface,
-    marginHorizontal: 16,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  statItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statText: {
-    marginLeft: 12,
-  },
-  statValue: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.text,
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: theme.colors.border,
-    marginHorizontal: 16,
-  },
-  settingRow: {
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  settingLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  settingText: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  settingTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.text,
-  },
-  settingSubtitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 2,
-  },
-  premiumDetails: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 4,
-  },
-  premiumFeatures: {
-    marginTop: 16,
-  },
-  premiumFeaturesTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    marginBottom: 8,
-  },
-  premiumFeatureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  premiumFeatureText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginLeft: 8,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: '700',
+      color: theme.colors.text,
+      marginBottom: 4,
+    },
+    subtitle: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 20,
+    },
+    section: {
+      marginBottom: 32,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      marginBottom: 12,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    accountCard: {
+      backgroundColor: theme.colors.surface,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    accountInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    accountText: {
+      flex: 1,
+    },
+    accountName: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: theme.colors.text,
+    },
+    accountEmail: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    subscriptionCard: {
+      backgroundColor: theme.colors.surface,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      padding: 16,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    subscriptionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    subscriptionIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    subscriptionText: {
+      flex: 1,
+    },
+    subscriptionTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: theme.colors.text,
+    },
+    subscriptionStatus: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    premiumBadge: {
+      backgroundColor: theme.colors.success,
+      borderRadius: 12,
+      padding: 4,
+      position: 'absolute',
+      top: 8,
+      right: 8,
+    },
+    upgradeButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 16,
+    },
+    upgradeButtonText: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: theme.colors.surface,
+    },
+    restoreButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginTop: 12,
+      borderRadius: 8,
+      backgroundColor: theme.colors.background,
+    },
+    restoreButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.textSecondary,
+      marginLeft: 8,
+    },
+    refreshButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginTop: 12,
+      borderRadius: 8,
+      backgroundColor: theme.colors.background,
+    },
+    refreshButtonText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.textSecondary,
+      marginLeft: 8,
+    },
+    statsCard: {
+      backgroundColor: theme.colors.surface,
+      marginHorizontal: 16,
+      borderRadius: 12,
+      padding: 16,
+      flexDirection: 'row',
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    statItem: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    statText: {
+      marginLeft: 12,
+    },
+    statValue: {
+      fontSize: 20,
+      fontFamily: 'Inter-Bold',
+      color: theme.colors.text,
+    },
+    statLabel: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: theme.colors.border,
+      marginHorizontal: 16,
+    },
+    settingRow: {
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    settingLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    settingText: {
+      marginLeft: 16,
+      flex: 1,
+    },
+    settingTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.text,
+    },
+    settingSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    premiumDetails: {
+      fontSize: 12,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 4,
+    },
+    premiumFeatures: {
+      marginTop: 16,
+    },
+    premiumFeaturesTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-SemiBold',
+      color: theme.colors.text,
+      marginBottom: 8,
+    },
+    premiumFeatureItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    premiumFeatureText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginLeft: 8,
+    },
+  });
