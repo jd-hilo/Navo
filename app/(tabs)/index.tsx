@@ -29,7 +29,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { SearchResultsService, GeneralSearchesService } from '@/services/database';
+import { SearchResultsService, GeneralSearchesService, SavedSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
@@ -229,6 +229,26 @@ export default function HomeScreen() {
     }
   }, [debouncedQuery, searchResults]);
 
+  // Check if current search is saved
+  useEffect(() => {
+    const checkIfSaved = async () => {
+      if (!user?.id || !debouncedQuery) {
+        setIsBookmarkSaved(false);
+        return;
+      }
+
+      try {
+        const isSaved = await SavedSearchesService.isSearchSaved(user.id, debouncedQuery);
+        setIsBookmarkSaved(isSaved);
+      } catch (error) {
+        console.error('Error checking if search is saved:', error);
+        setIsBookmarkSaved(false);
+      }
+    };
+
+    checkIfSaved();
+  }, [debouncedQuery, user?.id]);
+
   const animateToSearchMode = () => {
     // Animate search bar to top and show cards immediately
     Animated.parallel([
@@ -358,53 +378,39 @@ export default function HomeScreen() {
   };
 
   const saveBookmark = async () => {
-    if (!searchResults || !debouncedQuery) return;
+    if (!searchResults || !debouncedQuery || !user?.id) return;
 
     try {
-      const savedSearches = await AsyncStorage.getItem('savedSearches');
-      const searches = savedSearches ? JSON.parse(savedSearches) : [];
-      
-      const searchData = {
-        id: `search_${Date.now()}`,
-        query: debouncedQuery,
-        timestamp: Date.now(),
-        results: searchResults,
-      };
+      const success = await SavedSearchesService.saveSearch(user.id, debouncedQuery, {
+        gemini: searchResults.gemini,
+        tiktok: searchResults.tiktok,
+        reddit: searchResults.reddit,
+      });
 
-      // Check if this query is already saved
-      const existingIndex = searches.findIndex((s: any) => s.query === debouncedQuery);
-      if (existingIndex >= 0) {
-        // Update existing search
-        searches[existingIndex] = searchData;
+      if (success) {
+        setIsBookmarkSaved(true);
+
+        // Animate bookmark to show it's saved
+        Animated.sequence([
+          Animated.spring(bookmarkScale, {
+            toValue: 1.2,
+            tension: 150,
+            friction: 6,
+            useNativeDriver: true,
+          }),
+          Animated.spring(bookmarkScale, {
+            toValue: 1,
+            tension: 150,
+            friction: 6,
+            useNativeDriver: true,
+          }),
+        ]).start();
       } else {
-        // Add new search at the beginning
-        searches.unshift(searchData);
+        Alert.alert('Error', 'Failed to save search');
       }
-
-      // Keep only the last 50 saved searches
-      const limitedSearches = searches.slice(0, 50);
-      
-      await AsyncStorage.setItem('savedSearches', JSON.stringify(limitedSearches));
-      setIsBookmarkSaved(true);
-
-      // Animate bookmark to show it's saved
-      Animated.sequence([
-        Animated.spring(bookmarkScale, {
-          toValue: 1.2,
-          tension: 150,
-          friction: 6,
-          useNativeDriver: true,
-        }),
-        Animated.spring(bookmarkScale, {
-          toValue: 1,
-          tension: 150,
-          friction: 6,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
     } catch (error) {
       console.error('Error saving bookmark:', error);
+      Alert.alert('Error', 'Failed to save search');
     }
   };
 

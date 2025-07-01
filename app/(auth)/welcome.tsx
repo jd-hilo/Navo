@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,52 +9,35 @@ import {
   Image,
   Platform,
   Animated,
-  Easing,
+  FlatList,
   Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Sparkles } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
+
+const onboardingImages = [
+  require('@/assets/images/OB 7.png'),
+  require('@/assets/images/OB 8.png'),
+  require('@/assets/images/OB 9.png'),
+];
 
 export default function WelcomeScreen() {
   const { theme, isDark } = useTheme();
+  const [activeIndex, setActiveIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    // Fade in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 1000,
       useNativeDriver: true,
     }).start();
-
-    // Continuous bounce animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.spring(bounceAnim, {
-          toValue: 1,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-        Animated.spring(bounceAnim, {
-          toValue: 0,
-          friction: 3,
-          tension: 40,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
   }, []);
-
-  const translateY = bounceAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -10], // Move up 10 units when bouncing
-  });
 
   const handleGetStarted = () => {
     router.push('/(auth)/auth');
@@ -64,11 +47,45 @@ export default function WelcomeScreen() {
     Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-for-Navo-21c2cec59ddf8021a5d5da8c483c267a?source=copy_link');
   };
 
+  const handlePrivacyPress = () => {
+    Linking.openURL('https://pastoral-supply-662.notion.site/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f?source=copy_link');
+  };
+
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset;
+    const index = Math.round(contentOffset.x / screenWidth);
+    setActiveIndex(index);
+  };
+
+  const renderOnboardingItem = ({ item }: { item: any }) => (
+    <View style={styles.onboardingSlide}>
+      <Image
+        source={item}
+        style={styles.onboardingImage}
+        resizeMode="contain"
+      />
+    </View>
+  );
+
+  const renderPaginationDots = () => (
+    <View style={styles.paginationContainer}>
+      {onboardingImages.map((_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.paginationDot,
+            { backgroundColor: index === activeIndex ? theme.colors.text : theme.colors.textSecondary }
+          ]}
+        />
+      ))}
+    </View>
+  );
+
   const styles = createStyles(theme);
 
   return (
     <LinearGradient
-      colors={isDark ? ['#0F0F0F', '#1A1A1A', '#0F0F0F'] : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
+      colors={['#0F0F0F', '#0F0F0F', '#0F0F0F']}
       style={styles.container}>
       
       {/* Background Pattern */}
@@ -92,53 +109,66 @@ export default function WelcomeScreen() {
       </View>
 
       <SafeAreaView style={styles.safeArea}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <Animated.View 
-            style={{ 
-              opacity: fadeAnim,
-              transform: [{ translateY }]
-            }}>
+        {/* BWB Logo */}
+        <View style={styles.logoContainer}>
           <Image
-            source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
+            source={require('@/assets/images/bwb.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-          </Animated.View>
         </View>
 
-        {/* Content Section */}
-        <View style={styles.contentSection}>
+        {/* Onboarding Carousel Section */}
+        <View style={styles.carouselSection}>
+          <FlatList
+            ref={flatListRef}
+            data={onboardingImages}
+            renderItem={renderOnboardingItem}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            style={styles.carousel}
+          />
+          {renderPaginationDots()}
         </View>
 
-        {/* CTA Section */}
-        <View style={styles.ctaSection}>
-          <TouchableOpacity
-            style={styles.getStartedButton}
-            onPress={handleGetStarted}
-            activeOpacity={0.8}>
-            <LinearGradient
-              colors={isDark ? ['#FFFFFF', '#F0F0F0'] : ['#000000', '#333333']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.buttonGradient}>
-              <Text style={styles.buttonText}>Get Started</Text>
-              <ArrowRight 
-                size={20} 
-                color={isDark ? '#000000' : '#FFFFFF'} 
-                strokeWidth={2} 
-              />
-            </LinearGradient>
-          </TouchableOpacity>
+        {/* Content and CTA Sections with padding */}
+        <View style={styles.contentWrapper}>
+          <View style={styles.contentSection}>
+          </View>
 
-          <Text style={styles.termsText}>
-            By clicking Get Started, you agree to our{' '}
-            <TouchableOpacity onPress={handleTermsPress} activeOpacity={0.7}>
-              <Text style={styles.termsLink}>
-                Terms of Service
-              </Text>
+          <View style={styles.ctaSection}>
+            <TouchableOpacity
+              style={styles.getStartedButton}
+              onPress={handleGetStarted}
+              activeOpacity={0.8}>
+              <LinearGradient
+                colors={isDark ? ['#FFFFFF', '#F0F0F0'] : ['#000000', '#333333']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.buttonGradient}>
+                <Text style={styles.buttonText}>Get Started</Text>
+                <ArrowRight 
+                  size={20} 
+                  color={isDark ? '#000000' : '#FFFFFF'} 
+                  strokeWidth={2} 
+                />
+              </LinearGradient>
             </TouchableOpacity>
-          </Text>
+
+            <Text style={styles.termsText}>
+              By clicking Get Started, you agree to our{' '}
+              <Text style={styles.termsLink} onPress={handleTermsPress}>
+                  Terms of Service
+                </Text>
+              {' '}and{' '}
+              <Text style={styles.termsLink} onPress={handlePrivacyPress}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     </LinearGradient>
@@ -165,29 +195,48 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  carouselSection: {
+    height: screenWidth * 1.3, // Increased height
+    backgroundColor: theme.colors.background,
+  },
+  carousel: {
+    flex: 1,
+  },
+  onboardingSlide: {
+    width: screenWidth,
+    height: screenWidth * 1.3, // Increased height
+  },
+  onboardingImage: {
+    width: screenWidth,
+    height: screenWidth * 1.3, // Increased height
+    resizeMode: 'cover',
+  },
+  contentWrapper: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'ios' ? 20 : 40,
   },
-  logoSection: {
-    flex: 0.35,
-    justifyContent: 'flex-end',
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-    marginBottom: 40,
-    paddingTop: 60,
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
   },
-  logo: {
-    width: 180,
-    height: 72,
-    maxWidth: '70%',
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   contentSection: {
-    flex: 0.45,
+    flex: 0.2,
     justifyContent: 'center',
-    paddingHorizontal: 8,
   },
   ctaSection: {
-    flex: 0.2,
+    flex: 0.8,
     justifyContent: 'flex-end',
     paddingBottom: Platform.OS === 'ios' ? 32 : 48,
   },
@@ -221,16 +270,23 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 16,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    lineHeight: 18,
+    width: '85%',
+    alignSelf: 'center',
   },
   termsLink: {
     color: theme.colors.primary,
     textDecorationLine: 'underline',
-    fontFamily: 'Inter-Medium',
-    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+  },
+  logoContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 20,
+    zIndex: 1,
+  },
+  logo: {
+    width: 40,
+    height: 40,
   },
 });

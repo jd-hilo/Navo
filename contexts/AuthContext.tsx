@@ -22,6 +22,7 @@ interface AuthContextType {
   signInWithOtp: (email: string) => Promise<{ data: any; error: any }>;
   signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signInWithApple: (user: any) => Promise<{ success: boolean; error?: string }>;
+  deleteAccount: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -330,6 +331,49 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (!user?.id) {
+        return { success: false, error: 'No user logged in' };
+      }
+
+      console.log('🗑️ Starting account deletion process...');
+      
+      // Delete user profile first
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('user_id', user.id);
+        
+      if (profileError) {
+        console.error('Error deleting user profile:', profileError);
+        return { success: false, error: 'Failed to delete user profile' };
+      }
+
+      // Delete the user's auth account
+      const { error: deleteError } = await supabase.rpc('delete_user');
+      
+      if (deleteError) {
+        console.error('Error deleting user:', deleteError);
+        return { success: false, error: 'Failed to delete user account' };
+      }
+
+      // Clear local storage and state
+      setUser(null);
+      await removeUserFromStorage();
+      
+      console.log('✅ Account deletion successful');
+      
+      // Navigate to welcome screen
+      router.replace('/(auth)/welcome');
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error in deleteAccount:', error);
+      return { success: false, error: error.message || 'Failed to delete account' };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -343,6 +387,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signInWithOtp,
     signInWithPassword,
     signInWithApple,
+    deleteAccount
   };
 
   return (

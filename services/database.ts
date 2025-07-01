@@ -38,6 +38,17 @@ export interface CachedSearchResults {
   cacheAge?: number;
 }
 
+export interface SavedSearchRow {
+  id: string;
+  user_id: string;
+  query: string;
+  gemini_data: any;
+  tiktok_data: any;
+  reddit_data: any;
+  created_at: string;
+  updated_at: string;
+}
+
 // Database service for search results
 export class SearchResultsService {
   // Check if search results exist in cache and are still valid
@@ -531,3 +542,125 @@ export const GeneralSearchesService = {
     }
   }
 };
+
+// Saved Searches Service
+export class SavedSearchesService {
+  // Get all saved searches for a user
+  static async getSavedSearches(userId: string): Promise<SavedSearchRow[]> {
+    try {
+      const { data, error } = await supabase
+        .from('saved_searches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching saved searches:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getSavedSearches:', error);
+      return [];
+    }
+  }
+
+  // Save a search
+  static async saveSearch(
+    userId: string,
+    query: string,
+    results: { gemini: any; tiktok: any; reddit: any }
+  ): Promise<boolean> {
+    try {
+      const { data: existing } = await supabase
+        .from('saved_searches')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('query', query)
+        .single();
+
+      const searchData = {
+        user_id: userId,
+        query: query,
+        gemini_data: results.gemini,
+        tiktok_data: results.tiktok,
+        reddit_data: results.reddit,
+      };
+
+      if (existing) {
+        // Update existing saved search
+        const { error } = await supabase
+          .from('saved_searches')
+          .update(searchData)
+          .eq('id', existing.id);
+
+        if (error) {
+          console.error('Error updating saved search:', error);
+          return false;
+        }
+      } else {
+        // Insert new saved search
+        const { error } = await supabase
+          .from('saved_searches')
+          .insert([searchData]);
+
+        if (error) {
+          console.error('Error saving search:', error);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in saveSearch:', error);
+      return false;
+    }
+  }
+
+  // Delete a saved search
+  static async deleteSavedSearch(userId: string, searchId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('saved_searches')
+        .delete()
+        .eq('id', searchId)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error deleting saved search:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in deleteSavedSearch:', error);
+      return false;
+    }
+  }
+
+  // Check if a search is saved
+  static async isSearchSaved(userId: string, query: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('saved_searches')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('query', query)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') { // No rows found
+          return false;
+        }
+        console.error('Error checking saved search:', error);
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error in isSearchSaved:', error);
+      return false;
+    }
+  }
+}

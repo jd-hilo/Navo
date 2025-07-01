@@ -53,16 +53,15 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 32,
+          bottom: 16 + Math.max(insets.bottom, 0),
           left: '50%',
-          marginLeft: 50, // Half of the width (300/2)
+          marginLeft: 50, // Half of the width (300/2) - using negative for proper centering
           width: 300,
           backgroundColor: 'transparent',
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          height: 20 + Math.max(insets.bottom, 0),
-          paddingBottom: Math.max(insets.bottom, 0),
+          height: 48,
           borderRadius: 50,
           overflow: 'hidden',
         },
@@ -77,8 +76,10 @@ export default function TabLayout() {
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarShowLabel: false,
         tabBarItemStyle: {
-          paddingTop: 8,
-          paddingBottom: 10,
+          height: '100%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingTop: 5,
         },
         tabBarButton: (props: any) => (
           <TouchableOpacity
