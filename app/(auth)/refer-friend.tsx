@@ -29,11 +29,12 @@ export default function ReferFriendScreen() {
     // Optionally, add custom data (e.g., user ID, channel)
     event.addCallbackParameter('action', 'shared_referral_link');
 
+    console.log("adjust : event sent")
     Adjust.trackEvent(event);
     await Clipboard.setStringAsync(
-      `https://navo.go.link/c0c9W?adj_label=${user?.id}`
+      `https://navo.go.link/c0c9W?referralId=${user?.id}`
     );
-    const link = `https://navo.go.link/c0c9W?adj_label=${user?.id}`;
+    const link = `https://navo.go.link/c0c9W?referralId=${user?.id}`;
     await Share.share({
       message: `Join me on NAVO! Use my referral link: \n${link}`,
     });

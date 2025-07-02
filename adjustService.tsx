@@ -45,6 +45,7 @@ class AdjustService {
       event.addCallbackParameter('attribution', JSON.stringify(attribution));
 
       Adjust.trackEvent(event);
+      console.log("adjust: attribution :",attribution)
 
       // Handle referral logic here
       this.handleReferral(attribution);
@@ -52,7 +53,7 @@ class AdjustService {
 
     // Set deep link callback
     adjustConfig.setDeferredDeeplinkCallback((deeplink) => {
-      console.log('Deep link callback called with:', deeplink);
+      console.log('adjust: Deep link callback called with:', deeplink);
       this.handleDeepLink(deeplink);
     });
     adjustConfig.setLogLevel(AdjustConfig.LogLevelVerbose);
@@ -85,7 +86,7 @@ class AdjustService {
       // Send to your backend API
       await this.sendReferralToBackend(referrerData);
     } catch (error) {
-      console.error('Error processing referral:', error);
+      console.error('adjust: Error processing referral:', error);
     }
   }
 
@@ -97,17 +98,17 @@ class AdjustService {
     };
 
     // Store the referral data
-    console.log('Saving referrer data:', data);
+    console.log('adjust: Saving referrer data:', data);
     // await AsyncStorage.setItem('referral_data', JSON.stringify(data));
   }
 
   async sendReferralToBackend(referrerData: any) {
-    console.log('send data to backend :', referrerData);
+    console.log('adjust: send data to backend :', referrerData);
   }
 
   handleDeepLink(deeplink: any) {
     // Handle deep link navigation
-    console.log('Handling deep link:', deeplink);
+    console.log('adjust: Handling deep link:', deeplink);
     // Parse the deep link and navigate accordingly
     // Example: navigate to specific screen or apply promo code
   }

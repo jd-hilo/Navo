@@ -19,11 +19,6 @@ import { Adjust, AdjustConfig } from 'react-native-adjust';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import adjustService from '@/adjustService';
 
-const adjustConfig = new AdjustConfig(
-  'fw7q3vvpgtts',
-  __DEV__ ? AdjustConfig.EnvironmentSandbox : AdjustConfig.EnvironmentProduction
-);
-
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
@@ -55,6 +50,7 @@ export default function RootLayout() {
       if (status === 'granted') {
         console.log('Yay! I have user permission to track data');
         adjustService.initialize();
+        console.log('adjust service has been initialized');
       }
     })();
     const initializeRevenueCat = async () => {
