@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Image,
+  Animated,
+  Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, Star, Zap, Database, Settings, ArrowRight } from 'lucide-react-native';
@@ -20,6 +23,36 @@ export default function UpgradeScreen() {
   const { theme, isDark } = useTheme();
   const { upgradeToPremium, offerings, isLoading } = useSubscription();
   const router = useRouter();
+  
+  // Animation value for floating effect
+  const floatAnim = useRef(new Animated.Value(0)).current;
+
+  // Setup floating animation
+  useEffect(() => {
+    const floatAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    floatAnimation.start();
+
+    return () => {
+      floatAnimation.stop();
+      floatAnim.setValue(0);
+    };
+  }, []);
 
   const handleUpgrade = async () => {
     try {
@@ -79,15 +112,34 @@ export default function UpgradeScreen() {
 
   return (
     <LinearGradient
-      colors={isDark 
-        ? ['#4A0F17', '#4A2810', '#2A104A']  // Dark mode colors
-        : ['#F7E8EA', '#F7EDE8', '#EEE8F7']}  // Light mode colors - much lighter versions
+      colors={isDark
+        ? ['#0F0F0F', '#1A1A1A', '#0F0F0F']
+        : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
       style={styles.container}>
       <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           
+          {/* Hero Image */}
+          <View style={styles.heroContainer}>
+            <Animated.Image
+              source={require('@/assets/images/magnifying glass and stars.png')}
+              style={[
+                styles.heroImage,
+                {
+                  transform: [{
+                    translateY: floatAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0, -10],
+                    }),
+                  }],
+                },
+              ]}
+              resizeMode="contain"
+            />
+          </View>
+
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Upgrade to Navo Premium</Text>
@@ -126,14 +178,20 @@ export default function UpgradeScreen() {
               onPress={handleUpgrade}
               disabled={isLoading}
               activeOpacity={0.8}>
-              {isLoading ? (
-                <ActivityIndicator size="small" color={theme.colors.surface} />
-              ) : (
-                <>
-                  <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
-                  <ArrowRight size={20} color={theme.colors.surface} strokeWidth={2} />
-                </>
-              )}
+              <LinearGradient
+                colors={['#00E5FF', '#2F80ED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.upgradeButtonGradient}>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Text style={styles.upgradeButtonText}>Upgrade Now</Text>
+                    <ArrowRight size={20} color="#FFFFFF" strokeWidth={2} />
+                  </>
+                )}
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -157,21 +215,8 @@ export default function UpgradeScreen() {
             </Text>
           </Text>
 
-          {/* Subscription Disclosure */}
+          {/* Subscription Message */}
           <View style={styles.disclosureContainer}>
-            <Text style={styles.disclosureTitle}>Subscription Information</Text>
-            <View style={styles.disclosureItem}>
-              <Text style={styles.disclosureLabel}>Plan Name:</Text>
-              <Text style={styles.disclosureValue}>Navo Premium Monthly</Text>
-            </View>
-            <View style={styles.disclosureItem}>
-              <Text style={styles.disclosureLabel}>Subscription Length:</Text>
-              <Text style={styles.disclosureValue}>Monthly auto-renewing subscription</Text>
-            </View>
-            <View style={styles.disclosureItem}>
-              <Text style={styles.disclosureLabel}>Price:</Text>
-              <Text style={styles.disclosureValue}>{getPrice()} per month, billed monthly</Text>
-            </View>
             <Text style={styles.disclosureNote}>
               Your subscription will automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period. You can manage your subscription and turn off auto-renewal in your App Store account settings.
             </Text>
@@ -194,6 +239,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 32,
   },
+  heroContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  heroImage: {
+    width: '80%',
+    height: 140,
+  },
   header: {
     alignItems: 'center',
     marginBottom: 40,
@@ -202,15 +256,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 28,
     fontFamily: 'Inter-Bold',
     color: theme.colors.text,
-    textAlign: 'center',
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   featuresContainer: {
     marginBottom: 40,
@@ -285,25 +339,24 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 24,
   },
   upgradeButton: {
+    width: '100%',
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  upgradeButtonGradient: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 8,
   },
   upgradeButtonText: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.surface,
-    marginRight: 8,
+    fontSize: 17,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    marginRight: 4,
   },
   skipButton: {
     alignItems: 'center',
@@ -323,49 +376,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 24,
   },
   disclosureContainer: {
-    backgroundColor: theme.colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 24,
-  },
-  disclosureTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  disclosureItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-    paddingVertical: 4,
-  },
-  disclosureLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
-  },
-  disclosureValue: {
-    fontSize: 14,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    textAlign: 'right',
-    flex: 1,
-    marginLeft: 16,
+    marginTop: 24,
+    paddingHorizontal: 16,
   },
   disclosureNote: {
     fontSize: 12,
-    fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
-    marginTop: 12,
+    textAlign: 'center',
     lineHeight: 16,
-  },
-  upgradeButtonDisabled: {
-    backgroundColor: theme.colors.disabled,
   },
   link: {
     color: theme.colors.primary,
     textDecorationLine: 'underline',
+  },
+  upgradeButtonDisabled: {
+    backgroundColor: theme.colors.disabled,
   },
 }); 

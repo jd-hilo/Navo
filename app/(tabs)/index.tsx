@@ -102,6 +102,8 @@ export default function HomeScreen() {
   const [isBookmarkSaved, setIsBookmarkSaved] = useState(false);
   const [searchCount, setSearchCount] = useState(0);
   const router = useRouter();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countedSearches = useRef<Set<string>>(new Set());
 
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(0)).current;
@@ -139,39 +141,56 @@ export default function HomeScreen() {
 
   // Handle search results and increment count
   useEffect(() => {
-    if (debouncedQuery && searchResults && user?.id) {
-      console.log('🔍 Search completed, incrementing count...');
-      
-      // Trigger haptic feedback when results are loaded
-      if (Platform.OS === 'ios') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (debouncedQuery && searchResults && user?.id && !countedSearches.current.has(debouncedQuery)) {
+      // Clear any existing timer
+      if (searchTimer.current) {
+        clearTimeout(searchTimer.current);
       }
-      
-      SearchResultsService.incrementSearchCount(user.id)
-        .then(success => {
-          if (success) {
-            console.log('✅ Search count incremented successfully');
-          } else {
-            console.error('❌ Failed to increment search count');
-          }
-        })
-        .catch(error => {
-          console.error('❌ Error incrementing search count:', error);
-        });
 
-      // Track general search
-      GeneralSearchesService.trackSearch(user.id, debouncedQuery)
-        .then(success => {
-          if (success) {
-            console.log('✅ General search tracked successfully');
-          } else {
-            console.error('❌ Failed to track general search');
-          }
-        })
-        .catch(error => {
-          console.error('❌ Error tracking general search:', error);
-        });
+      // Start a new timer
+      searchTimer.current = setTimeout(() => {
+        console.log('🔍 Search viewed for 2 seconds, incrementing count...');
+        
+        // Trigger haptic feedback when results are loaded
+        if (Platform.OS === 'ios') {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+        
+        SearchResultsService.incrementSearchCount(user.id)
+          .then(success => {
+            if (success) {
+              console.log('✅ Search count incremented successfully');
+              // Mark this search as counted
+              countedSearches.current.add(debouncedQuery);
+            } else {
+              console.error('❌ Failed to increment search count');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error incrementing search count:', error);
+          });
+
+        // Track general search
+        GeneralSearchesService.trackSearch(user.id, debouncedQuery)
+          .then(success => {
+            if (success) {
+              console.log('✅ General search tracked successfully');
+            } else {
+              console.error('❌ Failed to track general search');
+            }
+          })
+          .catch(error => {
+            console.error('❌ Error tracking general search:', error);
+          });
+      }, 2000); // 2 seconds delay
     }
+
+    return () => {
+      // Clear timer when search query or results change
+      if (searchTimer.current) {
+        clearTimeout(searchTimer.current);
+      }
+    };
   }, [debouncedQuery, searchResults, user?.id]);
 
   // Check search limits for free users
@@ -472,6 +491,16 @@ export default function HomeScreen() {
     ],
   });
 
+  // Clear timer on unmount
+  useEffect(() => {
+    return () => {
+      countedSearches.current.clear();
+      if (searchTimer.current) {
+        clearTimeout(searchTimer.current);
+      }
+    };
+  }, []);
+
   return (
     <LinearGradient
       colors={isDark ? ['#0F0F0F', '#1A1A1A', '#0F0F0F'] : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
@@ -528,7 +557,7 @@ export default function HomeScreen() {
           />
           {user && (
             <Text style={styles.welcomeText}>
-              search, but better
+               search, but better
             </Text>
           )}
         </Animated.View>

@@ -384,9 +384,6 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
     } else {
       console.log(`❌ Failed to cache results for "${query}"`);
     }
-    
-    // Increment search count
-    await SearchResultsService.incrementSearchCount(userId);
   }
   
   return {

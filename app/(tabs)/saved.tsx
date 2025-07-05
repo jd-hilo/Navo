@@ -29,7 +29,7 @@ interface SavedSearch {
 }
 
 export default function SavedScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -187,6 +187,126 @@ export default function SavedScreen() {
     );
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    title: {
+      fontSize: 28,
+      fontFamily: 'Inter-Bold',
+      color: theme.colors.text,
+    },
+    count: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.primary,
+      backgroundColor: isDark ? 'rgba(94, 234, 212, 0.1)' : 'rgba(94, 234, 212, 0.15)',
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    searchItemContainer: {
+      marginHorizontal: 16,
+      marginVertical: 8,
+      borderRadius: 16,
+      backgroundColor: theme.colors.surface,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.3 : 0.1,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    searchItem: {
+      padding: 16,
+    },
+    searchContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    searchIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    searchInfo: {
+      flex: 1,
+      marginRight: 8,
+    },
+    searchQuery: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.text,
+      marginBottom: 4,
+    },
+    timestamp: {
+      fontSize: 13,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+    },
+    bookmarkContainer: {
+      marginRight: 8,
+    },
+    expandButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    expandedContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+      marginTop: 8,
+    },
+    expandedSection: {
+      marginTop: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+      fontFamily: 'Inter-Regular',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      fontFamily: 'Inter-Regular',
+      lineHeight: 24,
+    },
+    listContainer: {
+      paddingVertical: 8,
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -213,98 +333,3 @@ export default function SavedScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    flex: 1,
-  },
-  count: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginLeft: 10,
-  },
-  listContainer: {
-    padding: 20,
-  },
-  searchItemContainer: {
-    marginBottom: 10,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  searchItem: {
-    overflow: 'hidden',
-  },
-  searchContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  searchIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2A2A2A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  searchInfo: {
-    flex: 1,
-  },
-  searchQuery: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  timestamp: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  bookmarkContainer: {
-    marginRight: 12,
-  },
-  expandButton: {
-    padding: 4,
-  },
-  expandedContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  expandedSection: {
-    marginBottom: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666666',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666666',
-  },
-});

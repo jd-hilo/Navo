@@ -34,8 +34,7 @@ import { useRouter } from 'expo-router';
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut, deleteAccount } = useAuth();
-  const { isPremium, restorePurchases, isLoading, refreshSubscriptionStatus } =
-    useSubscription();
+  const { isPremium, restorePurchases, isLoading } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
   const [cacheStats, setCacheStats] = useState({
@@ -188,7 +187,7 @@ export default function SettingsScreen() {
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-
+          
           <View style={styles.accountCard}>
             <View style={styles.accountInfo}>
               <View style={styles.avatarContainer}>
@@ -202,8 +201,28 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* Appearance Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Appearance</Text>
+          <SettingRow
+            icon={Moon}
+            title="Dark Mode"
+            rightElement={
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{
+                  false: theme.colors.border,
+                  true: theme.colors.primary,
+                }}
+                thumbColor={theme.colors.surface}
+              />
+            }
+          />
+        </View>
+
         {/* Subscription Section */}
-        <View style={[styles.section, { marginBottom: 40 }]}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Subscription</Text>
 
           <View style={styles.subscriptionCard}>
@@ -326,21 +345,6 @@ export default function SettingsScreen() {
                 strokeWidth={2}
               />
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
-            </TouchableOpacity>
-          )}
-
-          {!isPremium && (
-            <TouchableOpacity
-              style={styles.refreshButton}
-              onPress={refreshSubscriptionStatus}
-              disabled={isLoading}
-            >
-              <RefreshCw
-                size={16}
-                color={theme.colors.primary}
-                strokeWidth={2}
-              />
-              <Text style={styles.refreshButtonText}>Refresh Status</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -524,32 +528,12 @@ const createStyles = (theme: any) =>
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 12,
-      paddingHorizontal: 16,
-      marginTop: 12,
-      borderRadius: 8,
-      backgroundColor: theme.colors.background,
+      gap: 8,
     },
     restoreButtonText: {
       fontSize: 14,
+      color: theme.colors.primary,
       fontFamily: 'Inter-Medium',
-      color: theme.colors.textSecondary,
-      marginLeft: 8,
-    },
-    refreshButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      marginTop: 12,
-      borderRadius: 8,
-      backgroundColor: theme.colors.background,
-    },
-    refreshButtonText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Medium',
-      color: theme.colors.textSecondary,
-      marginLeft: 8,
     },
     statsCard: {
       backgroundColor: theme.colors.surface,

@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Image,
+  KeyboardAvoidingViewProps,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Mail, Shield, ArrowRight } from 'lucide-react-native';
@@ -202,7 +204,8 @@ export default function AuthScreen() {
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+          enabled
         >
           {/* Header */}
           <View style={styles.header}>
@@ -220,20 +223,27 @@ export default function AuthScreen() {
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled">
-            <View style={styles.content}>
-              <View style={styles.iconContainer}>
-                {showOtp ? (
-                  <Shield size={32} color={theme.colors.text} strokeWidth={2} />
-                ) : (
-                  <Mail size={32} color={theme.colors.text} strokeWidth={2} />
-                )}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+          >
+            <View style={[styles.content, { paddingBottom: Platform.OS === 'ios' ? 40 : 60 }]}>
+              {/* Stars Container */}
+              <View style={styles.starsContainer}>
+                <Image 
+                  source={require('@/assets/images/blue.png')}
+                  style={[styles.star, styles.blueStar]}
+                  resizeMode="contain"
+                />
+                <Image 
+                  source={require('@/assets/images/organge star.png')}
+                  style={[styles.star, styles.orangeStar]}
+                  resizeMode="contain"
+                />
               </View>
 
               {showOtp ? (
                 <>
                   <Text style={styles.title}>Verify Your Email</Text>
-  
                   <Text style={styles.subtitle}>
                     We've sent a 6-digit verification code to{'\n'}
                     <Text style={styles.emailText}>{email}</Text>
@@ -258,8 +268,8 @@ export default function AuthScreen() {
                         value={digit}
                         onChangeText={(text) => handleOtpChange(text, index)}
                         onKeyPress={({ nativeEvent }) =>
-                        handleKeyPress(nativeEvent.key, index)
-                      }
+                          handleKeyPress(nativeEvent.key, index)
+                        }
                         keyboardType="number-pad"
                         maxLength={1}
                         selectTextOnFocus
@@ -270,46 +280,44 @@ export default function AuthScreen() {
                   {/* Resend Code */}
                   <View style={styles.resendContainer}>
                     <Text style={styles.resendText}>
-                    Didn't receive the code?
-                  </Text>
+                      Didn't receive the code?
+                    </Text>
                     <TouchableOpacity
                       onPress={handleResendOTP}
                       disabled={!canResend || isResending}
                       activeOpacity={0.7}
-                  >
+                    >
                       <Text
-                      style={[
+                        style={[
                           styles.resendLink,
                           (!canResend || isResending) &&
                           styles.resendLinkDisabled,
                         ]}
-                    >
+                      >
                         {isResending
-                        ? 'Sending...'
-                        : canResend
-                        ? 'Resend Code'
-                        : `Resend in ${countdown}s`}
+                          ? 'Sending...'
+                          : canResend
+                          ? 'Resend Code'
+                          : `Resend in ${countdown}s`}
                       </Text>
                     </TouchableOpacity>
                   </View>
                 </>
               ) : (
                 <>
-                  <Text style={styles.title}>Welcome to Navo</Text>
-                  
+                  <Text style={styles.title}>Enter your email</Text>
                   <Text style={styles.subtitle}>
-                    Enter your email to get started
+                    We will send a code to sign you in or create an account
                   </Text>
 
                   {/* Email Input */}
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Email Address</Text>
                     <View style={styles.inputWrapper}>
                       <TextInput
                         style={styles.input}
                         value={email}
                         onChangeText={setEmail}
-                        placeholder="Enter your email"
+                        placeholder="your@email.com"
                         placeholderTextColor={theme.colors.textSecondary}
                         keyboardType="email-address"
                         autoCapitalize="none"
@@ -324,15 +332,11 @@ export default function AuthScreen() {
             </View>
           </ScrollView>
 
-          {/* Footer Button */}
+          {/* Footer */}
           <View style={styles.footer}>
             <AppleAuthentication.AppleAuthenticationButton
-              buttonType={
-                AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN
-              }
-              buttonStyle={
-                AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-              }
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
               cornerRadius={16}
               style={styles.appleButton}
               onPress={async () => {
@@ -388,15 +392,9 @@ export default function AuthScreen() {
             >
               <LinearGradient
                 colors={
-                  (
-                    showOtp
-                      ? !isOtpComplete || isLoading
-                      : !email.trim() || isLoading
-                  )
+                  (!email.trim() || isLoading)
                     ? [theme.colors.border, theme.colors.border]
-                    : isDark
-                    ? ['#FFFFFF', '#F0F0F0']
-                    : ['#000000', '#333333']
+                    : ['#00E5FF', '#2F80ED']
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -412,25 +410,16 @@ export default function AuthScreen() {
                     <Text
                       style={[
                         styles.buttonText,
-                        (showOtp
-                          ? !isOtpComplete || isLoading
-                          : !email.trim() || isLoading) &&
-                          styles.buttonTextDisabled,
+                        (!email.trim() || isLoading) && styles.buttonTextDisabled,
                       ]}
                     >
-                      {showOtp ? 'Verify & Continue' : 'Continue'}
+                      Continue
                     </Text>
                     <ArrowRight
                       size={20}
                       color={
-                        (
-                          showOtp
-                            ? !isOtpComplete || isLoading
-                            : !email.trim() || isLoading
-                        )
+                        (!email.trim() || isLoading)
                           ? theme.colors.textSecondary
-                          : isDark
-                          ? '#000000'
                           : '#FFFFFF'
                       }
                       strokeWidth={2}
@@ -475,16 +464,37 @@ const createStyles = (theme: any) =>
       shadowRadius: 8,
       elevation: 2,
     },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 24,
-  },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
     content: {
       flex: 1,
-      paddingTop: 32,
+      paddingTop: 80,
+      position: 'relative',
+    },
+    starsContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 80,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1,
+    },
+    star: {
+      width: 40,
+      height: 40,
+    },
+    blueStar: {
+      transform: [{ translateX: -20 }, { translateY: 10 }],
+    },
+    orangeStar: {
+      transform: [{ translateX: 20 }, { translateY: -10 }],
     },
     iconContainer: {
       width: 64,
@@ -504,7 +514,7 @@ const createStyles = (theme: any) =>
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: theme.colors.text,
-      marginBottom: 12,
+      marginBottom: 8,
       lineHeight: 34,
     },
     subtitle: {
@@ -512,27 +522,21 @@ const createStyles = (theme: any) =>
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
       lineHeight: 22,
-      marginBottom: 40,
-    },
-    inputContainer: {
       marginBottom: 24,
     },
-    inputLabel: {
-      fontSize: 14,
-      fontFamily: 'Inter-Medium',
-      color: theme.colors.textSecondary,
-      marginBottom: 8,
+    inputContainer: {
+      marginTop: 8,
     },
     inputWrapper: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      borderRadius: 16,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
     },
     input: {
-      fontSize: 16,
+      fontSize: 17,
       fontFamily: 'Inter-Regular',
       color: theme.colors.text,
       padding: 0,
@@ -599,39 +603,37 @@ const createStyles = (theme: any) =>
       color: theme.colors.text,
     },
     footer: {
-      paddingBottom: Platform.OS === 'ios' ? 20 : 40,
+      paddingTop: 12,
+      backgroundColor: theme.colors.background,
+    },
+    appleButton: {
+      width: '100%',
+      height: 56,
+      marginBottom: 12,
     },
     button: {
+      width: '100%',
+      height: 56,
       borderRadius: 16,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 20,
-      elevation: 8,
+      overflow: 'hidden',
     },
     buttonDisabled: {
       opacity: 0.5,
     },
     buttonGradient: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 20,
-      paddingHorizontal: 32,
-      borderRadius: 16,
+      gap: 8,
     },
     buttonText: {
       fontSize: 17,
-      fontFamily: 'Inter-SemiBold',
-      color: theme.colors.background,
-      marginRight: 8,
+      fontFamily: 'Inter-Medium',
+      color: '#FFFFFF',
+      marginRight: 4,
     },
     buttonTextDisabled: {
       color: theme.colors.textSecondary,
-    },
-    appleButton: {
-      width: '100%',
-      height: 50,
-      marginBottom: 12,
     },
   });
