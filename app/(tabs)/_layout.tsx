@@ -40,7 +40,7 @@ export default function TabLayout() {
       { backgroundColor: focused ? (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)') : 'transparent' }
     ]}>
       <Icon 
-        size={20} 
+        size={24} 
         color={focused ? theme.colors.text : theme.colors.textSecondary} 
         strokeWidth={focused ? 2.5 : 2}
       />
@@ -61,7 +61,7 @@ export default function TabLayout() {
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
-          height: 48,
+          height: 68,
           borderRadius: 50,
           overflow: 'hidden',
         },
@@ -79,7 +79,7 @@ export default function TabLayout() {
           height: '100%',
           justifyContent: 'center',
           alignItems: 'center',
-          paddingTop: 5,
+          paddingTop: 15,
         },
         tabBarButton: (props: any) => (
           <TouchableOpacity
@@ -129,9 +129,9 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
