@@ -24,11 +24,12 @@ import {
   Crown,
   CheckCircle,
   RefreshCw,
+  Trash2,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { SearchResultsService } from '@/services/database';
+import { GeneralSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
@@ -37,11 +38,6 @@ export default function SettingsScreen() {
   const { isPremium, restorePurchases, isLoading } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
-  const [cacheStats, setCacheStats] = useState({
-    totalCached: 0,
-    oldestCache: null as string | null,
-    newestCache: null as string | null,
-  });
 
   // Load user stats on mount
   useEffect(() => {
@@ -52,13 +48,9 @@ export default function SettingsScreen() {
     if (!user?.id) return;
 
     try {
-      // Get search count
-      const count = await SearchResultsService.getSearchCount(user.id);
-      setSearchCount(count);
-
-      // Get cache stats
-      const stats = await SearchResultsService.getCacheStats(user.id);
-      setCacheStats(stats);
+      // Get search count from general_searches
+      const stats = await GeneralSearchesService.getUserSearchStats(user.id);
+      setSearchCount(stats.totalSearches);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
@@ -124,6 +116,35 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleClearHistory = () => {
+    Alert.alert(
+      'Clear Cache',
+      'This will delete all your cached search data. This action cannot be undone. Saved searches will not be affected.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear Cache',
+          style: 'destructive',
+          onPress: async () => {
+            if (!user?.id) return;
+            
+            try {
+              const success = await GeneralSearchesService.clearSearchHistory(user.id);
+              if (success) {
+                Alert.alert('Success', 'Cache cleared successfully');
+              } else {
+                Alert.alert('Error', 'Failed to clear cache');
+              }
+            } catch (error) {
+              console.error('Error clearing cache:', error);
+              Alert.alert('Error', 'An error occurred while clearing cache');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const SettingRow = ({
     icon: Icon,
     title,
@@ -178,16 +199,13 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={[styles.subtitle, { marginBottom: 16 }]}>
-          Customize your Navo experience
-        </Text>
+        <Text style={styles.subtitle}>Customize your Navo experience</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
-          
           <View style={styles.accountCard}>
             <View style={styles.accountInfo}>
               <View style={styles.avatarContainer}>
@@ -199,6 +217,84 @@ export default function SettingsScreen() {
               </View>
             </View>
           </View>
+        </View>
+
+        {/* Subscription Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Subscription</Text>
+          <View style={styles.subscriptionCard}>
+            <View style={styles.subscriptionHeader}>
+              <View style={styles.subscriptionIcon}>
+                <Crown
+                  size={24}
+                  color={isPremium ? theme.colors.primary : theme.colors.textSecondary}
+                  strokeWidth={2}
+                />
+              </View>
+              <View style={styles.subscriptionText}>
+                <Text style={styles.subscriptionTitle}>
+                  {isPremium ? 'Premium Plan' : 'Free Plan'}
+                </Text>
+                <Text style={styles.subscriptionStatus}>
+                  {isPremium ? 'Active subscription' : 'Upgrade for more features'}
+                </Text>
+                {isPremium && (
+                  <Text style={styles.premiumDetails}>
+                    Unlimited searches • 500 saved searches • Faster loading times
+                  </Text>
+                )}
+              </View>
+              {isPremium && (
+                <View style={styles.premiumBadge}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                </View>
+              )}
+            </View>
+
+            {!isPremium && (
+              <TouchableOpacity
+                style={styles.upgradeButton}
+                onPress={handleUpgrade}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
+                <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
+              </TouchableOpacity>
+            )}
+
+            {isPremium && (
+              <View style={styles.premiumFeatures}>
+                <Text style={styles.premiumFeaturesTitle}>Your Premium Benefits:</Text>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Unlimited searches</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>500 saved searches</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Faster loading times</Text>
+                </View>
+                <View style={styles.premiumFeatureItem}>
+                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <Text style={styles.premiumFeatureText}>Custom search settings</Text>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {!isPremium && (
+            <TouchableOpacity
+              style={styles.restoreButton}
+              onPress={handleRestorePurchases}
+              disabled={isLoading}
+            >
+              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Appearance Section */}
@@ -221,144 +317,25 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Subscription Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Subscription</Text>
-
-          <View style={styles.subscriptionCard}>
-            <View style={styles.subscriptionHeader}>
-              <View style={styles.subscriptionIcon}>
-                {isPremium ? (
-                  <Crown
-                    size={24}
-                    color={theme.colors.primary}
-                    strokeWidth={2}
-                  />
-                ) : (
-                  <Crown
-                    size={24}
-                    color={theme.colors.textSecondary}
-                    strokeWidth={2}
-                  />
-                )}
-              </View>
-              <View style={styles.subscriptionText}>
-                <Text style={styles.subscriptionTitle}>
-                  {isPremium ? 'Premium Plan' : 'Free Plan'}
-                </Text>
-                <Text style={styles.subscriptionStatus}>
-                  {isPremium
-                    ? 'Active subscription'
-                    : 'Upgrade for more features'}
-                </Text>
-                {isPremium && (
-                  <Text style={styles.premiumDetails}>
-                    Unlimited searches • 500 saved searches • Faster loading
-                    times
-                  </Text>
-                )}
-              </View>
-              {isPremium && (
-                <View style={styles.premiumBadge}>
-                  <CheckCircle
-                    size={16}
-                    color={theme.colors.success}
-                    strokeWidth={2}
-                  />
-                </View>
-              )}
-            </View>
-
-            {!isPremium && (
-              <TouchableOpacity
-                style={styles.upgradeButton}
-                onPress={handleUpgrade}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
-                <ChevronRight
-                  size={20}
-                  color={theme.colors.surface}
-                  strokeWidth={2}
-                />
-              </TouchableOpacity>
-            )}
-
-            {isPremium && (
-              <View style={styles.premiumFeatures}>
-                <Text style={styles.premiumFeaturesTitle}>
-                  Your Premium Benefits:
-                </Text>
-                <View style={styles.premiumFeatureItem}>
-                  <CheckCircle
-                    size={16}
-                    color={theme.colors.success}
-                    strokeWidth={2}
-                  />
-                  <Text style={styles.premiumFeatureText}>
-                    Unlimited searches
-                  </Text>
-                </View>
-                <View style={styles.premiumFeatureItem}>
-                  <CheckCircle
-                    size={16}
-                    color={theme.colors.success}
-                    strokeWidth={2}
-                  />
-                  <Text style={styles.premiumFeatureText}>
-                    500 saved searches
-                  </Text>
-                </View>
-                <View style={styles.premiumFeatureItem}>
-                  <CheckCircle
-                    size={16}
-                    color={theme.colors.success}
-                    strokeWidth={2}
-                  />
-                  <Text style={styles.premiumFeatureText}>
-                    Faster loading times
-                  </Text>
-                </View>
-                <View style={styles.premiumFeatureItem}>
-                  <CheckCircle
-                    size={16}
-                    color={theme.colors.success}
-                    strokeWidth={2}
-                  />
-                  <Text style={styles.premiumFeatureText}>
-                    Custom search settings
-                  </Text>
-                </View>
-              </View>
-            )}
-          </View>
-
-          {!isPremium && (
-            <TouchableOpacity
-              style={styles.restoreButton}
-              onPress={handleRestorePurchases}
-              disabled={isLoading}
-            >
-              <RefreshCw
-                size={16}
-                color={theme.colors.primary}
-                strokeWidth={2}
-              />
-              <Text style={styles.restoreButtonText}>Restore Purchases</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
         {/* Privacy Section */}
-        <View style={[styles.section, { marginBottom: 40 }]}>
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Privacy & Security</Text>
           <SettingRow
             icon={Shield}
             title="Privacy Policy"
             onPress={showPrivacyInfo}
           />
-
-          <SettingRow icon={Info} title="About Navo" onPress={showAbout} />
+          <SettingRow 
+            icon={Info} 
+            title="About Navo" 
+            onPress={showAbout} 
+          />
+          <SettingRow
+            icon={Trash2}
+            title="Clear Cache"
+            subtitle="Delete all your cached search data (saved searches will not be affected)"
+            onPress={handleClearHistory}
+          />
         </View>
 
         {/* Account Actions */}
@@ -382,7 +359,6 @@ export default function SettingsScreen() {
             onPress={handleDeleteAccount}
             isDestructive
           />
-          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -396,39 +372,81 @@ const createStyles = (theme: any) =>
       backgroundColor: theme.colors.background,
     },
     header: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 24,
       paddingTop: 16,
       paddingBottom: 8,
     },
     title: {
       fontSize: 28,
-      fontWeight: '700',
+      fontFamily: 'Inter-Bold',
       color: theme.colors.text,
       marginBottom: 4,
     },
     subtitle: {
       fontSize: 16,
+      fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
     },
     content: {
       flex: 1,
-      paddingHorizontal: 20,
+      paddingHorizontal: 24,
     },
     section: {
       marginBottom: 32,
     },
     sectionTitle: {
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 13,
+      fontFamily: 'Inter-SemiBold',
       color: theme.colors.textSecondary,
-      marginBottom: 12,
+      marginBottom: 16,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
+      paddingHorizontal: 4,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: theme.colors.surface,
+      marginBottom: 8,
+      borderRadius: 12,
+    },
+    settingLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    settingText: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    settingTitle: {
+      fontSize: 16,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.text,
+    },
+    settingSubtitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    card: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 8,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
     },
     accountCard: {
       backgroundColor: theme.colors.surface,
-      marginHorizontal: 16,
-      borderRadius: 12,
+      borderRadius: 16,
       padding: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -465,8 +483,7 @@ const createStyles = (theme: any) =>
     },
     subscriptionCard: {
       backgroundColor: theme.colors.surface,
-      marginHorizontal: 16,
-      borderRadius: 12,
+      borderRadius: 16,
       padding: 16,
       shadowColor: theme.colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -501,130 +518,65 @@ const createStyles = (theme: any) =>
       color: theme.colors.textSecondary,
       marginTop: 2,
     },
-    premiumBadge: {
-      backgroundColor: theme.colors.success,
-      borderRadius: 12,
-      padding: 4,
-      position: 'absolute',
-      top: 8,
-      right: 8,
+    premiumDetails: {
+      fontSize: 13,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginTop: 4,
     },
-    upgradeButton: {
-      backgroundColor: theme.colors.primary,
-      borderRadius: 12,
-      padding: 16,
+    premiumBadge: {
+      marginLeft: 12,
+    },
+    premiumFeatures: {
+      marginTop: 16,
+      paddingTop: 16,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+    },
+    premiumFeaturesTitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-Medium',
+      color: theme.colors.text,
+      marginBottom: 12,
+    },
+    premiumFeatureItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    premiumFeatureText: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginLeft: 8,
+    },
+    upgradeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
       marginTop: 16,
     },
     upgradeButtonText: {
       fontSize: 16,
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.surface,
+      marginRight: 8,
     },
     restoreButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 12,
-      gap: 8,
+      marginTop: 8,
     },
     restoreButtonText: {
       fontSize: 14,
+      fontFamily: 'Inter-Medium',
       color: theme.colors.primary,
-      fontFamily: 'Inter-Medium',
-    },
-    statsCard: {
-      backgroundColor: theme.colors.surface,
-      marginHorizontal: 16,
-      borderRadius: 12,
-      padding: 16,
-      flexDirection: 'row',
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
-    },
-    statItem: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    statText: {
-      marginLeft: 12,
-    },
-    statValue: {
-      fontSize: 20,
-      fontFamily: 'Inter-Bold',
-      color: theme.colors.text,
-    },
-    statLabel: {
-      fontSize: 12,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
-      marginTop: 2,
-    },
-    statDivider: {
-      width: 1,
-      backgroundColor: theme.colors.border,
-      marginHorizontal: 16,
-    },
-    settingRow: {
-      backgroundColor: theme.colors.surface,
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-    },
-    settingLeft: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    settingText: {
-      marginLeft: 16,
-      flex: 1,
-    },
-    settingTitle: {
-      fontSize: 16,
-      fontFamily: 'Inter-Medium',
-      color: theme.colors.text,
-    },
-    settingSubtitle: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
-      marginTop: 2,
-    },
-    premiumDetails: {
-      fontSize: 12,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
-      marginTop: 4,
-    },
-    premiumFeatures: {
-      marginTop: 16,
-    },
-    premiumFeaturesTitle: {
-      fontSize: 16,
-      fontFamily: 'Inter-SemiBold',
-      color: theme.colors.text,
-      marginBottom: 8,
-    },
-    premiumFeatureItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 4,
-    },
-    premiumFeatureText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
       marginLeft: 8,
     },
   });

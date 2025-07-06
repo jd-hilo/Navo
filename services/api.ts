@@ -1,6 +1,7 @@
 import { searchGemini, generateMockGeminiResponse } from './gemini';
 import { SearchResultsService } from './database';
 import { supabase } from './database';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 // Mock API responses for demonstration
 // In a real app, these would be actual API calls
@@ -304,29 +305,17 @@ const generateTikTokVideos = (query: string) => {
   return mockVideos.slice(0, Math.floor(Math.random() * 3) + 3); // Return 3-5 videos
 };
 
-export const searchAllSources = async (query: string): Promise<SearchResults> => {
+export const searchAllSources = async (query: string, isPremium: boolean = false): Promise<SearchResults> => {
   console.log(`🔍 Starting search for: "${query}"`);
   const startTime = Date.now();
   
-  // Get current user ID for caching and search count
+  // Get current user ID for tracking search count
   const userId = await getCurrentUserId();
   
-  // Check cache first
-  if (userId) {
-    console.log('👤 User authenticated, checking cache...');
-    const cachedResults = await SearchResultsService.getCachedResults(query, userId);
-    
-    if (cachedResults) {
-      console.log(`✅ Found cached results for "${query}"`);
-      return {
-        ...cachedResults,
-        cached: true,
-      };
-    }
-    
-    console.log(`❌ No cached results found for "${query}", fetching fresh data...`);
-  } else {
-    console.log('👤 User not authenticated, skipping cache check');
+  // Add 1 second delay for non-premium users
+  if (!isPremium) {
+    console.log('⏳ Adding 1 second delay for non-premium user...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
   
   // Simulate API delay for better UX
@@ -373,18 +362,9 @@ export const searchAllSources = async (query: string): Promise<SearchResults> =>
     reddit: redditResults,
   };
   
-  // Save to cache if user is authenticated
-  if (userId) {
-    console.log('💾 Saving results to cache...');
-    
-    // Save results to cache
-    const saved = await SearchResultsService.saveResults(query, results, userId);
-    if (saved) {
-      console.log(`✅ Results cached for "${query}"`);
-    } else {
-      console.log(`❌ Failed to cache results for "${query}"`);
-    }
-  }
+  const totalTime = Date.now() - startTime;
+  const premiumStatus = isPremium ? 'premium' : 'non-premium';
+  console.log(`✨ Search completed for "${query}" in ${totalTime}ms (${premiumStatus} user)`);
   
   return {
     ...results,

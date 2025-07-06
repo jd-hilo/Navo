@@ -540,6 +540,28 @@ export const GeneralSearchesService = {
       console.error('Error in getPopularSearches:', error);
       return [];
     }
+  },
+
+  // Clear user's search history
+  async clearSearchHistory(userId: string): Promise<boolean> {
+    try {
+      // Delete from general_searches table
+      const { error: generalError } = await supabase
+        .from('general_searches')
+        .delete()
+        .eq('user_id', userId);
+
+      if (generalError) {
+        console.error('Error clearing general searches:', generalError);
+        return false;
+      }
+
+      console.log('✅ Successfully cleared search history');
+      return true;
+    } catch (error) {
+      console.error('Error in clearSearchHistory:', error);
+      return false;
+    }
   }
 };
 

@@ -130,7 +130,7 @@ export default function HomeScreen() {
     refetch,
   } = useQuery({
     queryKey: ['search', debouncedQuery],
-    queryFn: () => searchAllSources(debouncedQuery),
+    queryFn: () => searchAllSources(debouncedQuery, isPremium),
     enabled: debouncedQuery.length > 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: (failureCount, error) => {
@@ -149,32 +149,20 @@ export default function HomeScreen() {
 
       // Start a new timer
       searchTimer.current = setTimeout(() => {
-        console.log('🔍 Search viewed for 2 seconds, incrementing count...');
+        console.log('🔍 Search viewed for 2 seconds, tracking search...');
         
         // Trigger haptic feedback when results are loaded
         if (Platform.OS === 'ios') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
-        
-        SearchResultsService.incrementSearchCount(user.id)
-          .then(success => {
-            if (success) {
-              console.log('✅ Search count incremented successfully');
-              // Mark this search as counted
-              countedSearches.current.add(debouncedQuery);
-            } else {
-              console.error('❌ Failed to increment search count');
-            }
-          })
-          .catch(error => {
-            console.error('❌ Error incrementing search count:', error);
-          });
 
         // Track general search
         GeneralSearchesService.trackSearch(user.id, debouncedQuery)
           .then(success => {
             if (success) {
               console.log('✅ General search tracked successfully');
+              // Mark this search as counted
+              countedSearches.current.add(debouncedQuery);
             } else {
               console.error('❌ Failed to track general search');
             }
