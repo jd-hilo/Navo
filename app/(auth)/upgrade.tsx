@@ -93,12 +93,12 @@ export default function UpgradeScreen() {
     },
     {
       icon: <Database size={20} color={theme.colors.primary} strokeWidth={2} />,
-      title: 'Up to 300 Searches a Month',
-      description: 'Unlimited access to all search sources'
+      title: 'Unlimited Searches',
+      description: 'No monthly search limits'
     },
     {
       icon: <Star size={20} color={theme.colors.primary} strokeWidth={2} />,
-      title: '1000 Saved Searches',
+      title: '500 Saved Searches',
       description: 'Never lose important search results again'
     },
     {

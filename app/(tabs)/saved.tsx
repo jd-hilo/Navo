@@ -106,9 +106,9 @@ export default function SavedScreen() {
     
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInHours * 60);
-      return `${diffInMinutes} min`;
+      return `${diffInMinutes} min ago`;
     } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h`;
+      return `${Math.floor(diffInHours)}h ago`;
     } else {
       return date.toLocaleDateString();
     }
@@ -199,8 +199,6 @@ export default function SavedScreen() {
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 8,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
     },
     title: {
       fontSize: 28,

@@ -253,7 +253,7 @@ export default function SettingsScreen() {
                 </Text>
                 {isPremium && (
                   <Text style={styles.premiumDetails}>
-                    1000 searches a month • 1000 saved searches • Faster loading
+                    Unlimited searches • 500 saved searches • Faster loading
                     times
                   </Text>
                 )}
@@ -296,7 +296,7 @@ export default function SettingsScreen() {
                     strokeWidth={2}
                   />
                   <Text style={styles.premiumFeatureText}>
-                    1000 searches a month
+                    Unlimited searches
                   </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
@@ -306,7 +306,7 @@ export default function SettingsScreen() {
                     strokeWidth={2}
                   />
                   <Text style={styles.premiumFeatureText}>
-                    1000 saved searches
+                    500 saved searches
                   </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>

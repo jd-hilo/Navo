@@ -796,7 +796,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   bookmarkContainer: {
     position: 'absolute',
-    bottom: 120, // Position above tab bar
+    bottom: 140, // Position above tab bar
     right: 24,
     zIndex: 20,
   },
