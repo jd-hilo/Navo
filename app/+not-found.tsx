@@ -9,7 +9,7 @@ export default function NotFoundScreen() {
   const styles = createStyles(theme);
 
   return (
-    <>
+    <View style={{flex:1,backgroundColor:"#fff"}}>
       <Stack.Screen options={{ title: 'Page Not Found' }} />
       <View style={styles.container}>
         <Text style={styles.title}>404</Text>
@@ -22,7 +22,7 @@ export default function NotFoundScreen() {
           </View>
         </Link>
       </View>
-    </>
+    </View>
   );
 }
 

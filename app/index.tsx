@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Loading } from '@/components/loading';
 
 export default function IndexScreen() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { theme } = useTheme();
 
   useEffect(() => {
     if (!isLoading) {
@@ -27,23 +25,9 @@ export default function IndexScreen() {
 
   // Show loading indicator while auth is initializing
   if (isLoading) {
-    const styles = createStyles(theme);
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={theme.colors.text} />
-      </View>
-    );
+    return <Loading />;
   }
 
   // This should never be reached, but just in case
-  return null;
+  return <Loading />;
 }
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-});

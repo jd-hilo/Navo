@@ -8,7 +8,7 @@
     "scheme": "navo",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/logo in dark.png",
+      "image": "./assets/images/darkIcon.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },

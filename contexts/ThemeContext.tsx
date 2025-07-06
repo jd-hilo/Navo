@@ -203,6 +203,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   return (
     <ThemeContext.Provider value={{ theme, isDark, toggleTheme, setTheme }}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
+
       {children}
     </ThemeContext.Provider>
   );

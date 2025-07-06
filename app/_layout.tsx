@@ -8,19 +8,17 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
-import * as SplashScreen from 'expo-splash-screen';
 import Purchases from 'react-native-purchases';
-import { Platform } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
-import { Adjust, AdjustConfig } from 'react-native-adjust';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import adjustService from '@/adjustService';
+import { Loading } from '@/components/loading';
 
 // Prevent the splash screen from auto-hiding
-SplashScreen.preventAutoHideAsync();
+//SplashScreen.preventAutoHideAsync();
 
 // Create a client
 const queryClient = new QueryClient({
@@ -99,17 +97,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
+      setTimeout(() => {
+        // SplashScreen.hideAsync();
+      }, 1000);
     }
   }, [fontsLoaded, fontError]);
 
   // Don't render anything until fonts are loaded and initialization is complete
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
-
-  if (!isInitialized) {
-    return null;
+  if (!fontsLoaded && !fontError && !isInitialized) {
+    return (
+      <ThemeProvider>
+        <Loading />
+      </ThemeProvider>
+    );
   }
 
   return (
