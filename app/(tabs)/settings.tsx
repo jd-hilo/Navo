@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Linking,
 } from 'react-native';
 import {
   Key,
@@ -70,11 +71,7 @@ export default function SettingsScreen() {
   };
 
   const showPrivacyInfo = () => {
-    Alert.alert(
-      'Privacy Policy',
-      'Your search queries are processed through third-party APIs. Please review our privacy policy for more information.',
-      [{ text: 'OK' }]
-    );
+    Linking.openURL('https://www.notion.so/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f?source=copy_link');
   };
 
   const showAbout = () => {
