@@ -50,11 +50,11 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
     const requestBody = {
       contents: [{
         parts: [{
-          text: `Search the web for current information about "${query}" and provide a response with a one-sentence summary between single quotes like this:
+          text: `Search the web for current information about "${query}" and provide a response with a one-sentence summary between double carets like this:
 
-' [Your summary here] '
+^^ [Your summary here] ^^
 
-Then provide the detailed information after the quotes.`
+Then provide the detailed information after the carets.`
         }]
       }],
       generationConfig: {
@@ -328,13 +328,13 @@ const extractSourcesFromResponse = (text: string): string[] => {
 // Generate mock Gemini response for fallback - EXTREMELY SHORT
 export const generateMockGeminiResponse = (query: string): string => {
   const responses = [
-    `' ${query} is a significant topic with growing importance across multiple sectors and recent developments show strong market fundamentals. '
+    `^^ ${query} is a significant topic with growing importance across multiple sectors and recent developments show strong market fundamentals. ^^
 Recent developments show strong market fundamentals, high adoption rates, and active investment from major stakeholders. This creates opportunities for innovation, competitive advantage, and market expansion through technology integration and strategic positioning.`,
 
-    `' ${query} represents an important and rapidly evolving field with substantial implications for industry participants and current trends indicate robust performance metrics. '
+    `^^ ${query} represents an important and rapidly evolving field with substantial implications for industry participants and current trends indicate robust performance metrics. ^^
 Current trends indicate robust performance metrics, significant investment activity, and expanding market reach. The combination of strong fundamentals and emerging technologies suggests continued momentum and strategic value for stakeholders.`,
 
-    `' ${query} is a well-established area with strong market presence and consistent growth trajectory with key highlights including robust user engagement. '
+    `^^ ${query} is a well-established area with strong market presence and consistent growth trajectory with key highlights including robust user engagement. ^^
 Key highlights include robust user engagement, technology innovation, and expanding adoption rates. This represents strategic opportunities for leveraging emerging trends, building competitive advantages, and capturing market value through innovation.`,
   ];
   

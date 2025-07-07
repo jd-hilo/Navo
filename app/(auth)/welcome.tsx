@@ -26,8 +26,19 @@ const onboardingImages = [
   require('@/assets/images/OB 9.png'),
 ];
 
+// Dark theme colors for welcome screen
+const darkColors = {
+  background: '#0F0F0F',
+  surface: '#1A1A1A',
+  text: '#FFFFFF',
+  textSecondary: '#A1A1AA',
+  border: '#2A2A2A',
+  primary: '#FFFFFF',
+  shadow: '#000000',
+};
+
 export default function WelcomeScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme(); // Keep theme for non-color properties
   const [activeIndex, setActiveIndex] = useState(0);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<FlatList>(null);
@@ -80,14 +91,14 @@ export default function WelcomeScreen() {
           key={index}
           style={[
             styles.paginationDot,
-            { backgroundColor: index === activeIndex ? theme.colors.text : theme.colors.textSecondary }
+            { backgroundColor: index === activeIndex ? darkColors.text : darkColors.textSecondary }
           ]}
         />
       ))}
     </View>
   );
 
-  const styles = createStyles(theme);
+  const styles = createStyles();
 
   return (
     <LinearGradient
@@ -107,7 +118,7 @@ export default function WelcomeScreen() {
                   { translateX: i * 60 - 150 },
                   { translateY: i * 40 - 80 },
                 ],
-                opacity: isDark ? 0.02 : 0.015,
+                opacity: 0.02,
               },
             ]}
           />
@@ -151,14 +162,14 @@ export default function WelcomeScreen() {
               onPress={handleGetStarted}
               activeOpacity={0.8}>
               <LinearGradient
-                colors={isDark ? ['#FFFFFF', '#F0F0F0'] : ['#000000', '#333333']}
+                colors={['#FFFFFF', '#F0F0F0']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.buttonGradient}>
                 <Text style={styles.buttonText}>Get Started</Text>
                 <ArrowRight 
                   size={20} 
-                  color={isDark ? '#000000' : '#FFFFFF'} 
+                  color="#000000"
                   strokeWidth={2} 
                 />
               </LinearGradient>
@@ -181,7 +192,7 @@ export default function WelcomeScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -197,25 +208,25 @@ const createStyles = (theme: any) => StyleSheet.create({
     position: 'absolute',
     width: 2,
     height: 150,
-    backgroundColor: theme.colors.text,
+    backgroundColor: darkColors.text,
   },
   safeArea: {
     flex: 1,
   },
   carouselSection: {
-    height: screenWidth * 1.3, // Increased height
-    backgroundColor: theme.colors.background,
+    height: screenWidth * 1.3,
+    backgroundColor: darkColors.background,
   },
   carousel: {
     flex: 1,
   },
   onboardingSlide: {
     width: screenWidth,
-    height: screenWidth * 1.3, // Increased height
+    height: screenWidth * 1.3,
   },
   onboardingImage: {
     width: screenWidth,
-    height: screenWidth * 1.3, // Increased height
+    height: screenWidth * 1.3,
     resizeMode: 'cover',
   },
   contentWrapper: {
@@ -249,7 +260,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   getStartedButton: {
     borderRadius: 16,
     marginBottom: 24,
-    shadowColor: theme.colors.shadow,
+    shadowColor: darkColors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
@@ -268,20 +279,20 @@ const createStyles = (theme: any) => StyleSheet.create({
   buttonText: {
     fontSize: 17,
     fontFamily: 'Inter-SemiBold',
-    color: theme.colors.background,
+    color: darkColors.background,
     marginRight: 8,
   },
   termsText: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
+    color: darkColors.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
     width: '85%',
     alignSelf: 'center',
   },
   termsLink: {
-    color: theme.colors.primary,
+    color: darkColors.primary,
     textDecorationLine: 'underline',
     fontFamily: 'Inter-Regular',
   },

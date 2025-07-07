@@ -41,6 +41,17 @@ interface RedditSectionProps {
   isLoading?: boolean;
 }
 
+interface RedditComment {
+  id: string;
+  content?: {
+    markdown: string;
+  };
+  score: number;
+  createdAt: string;
+  depth?: number;
+  replies?: RedditComment[];
+}
+
 export default function RedditSection({ data, query, onRetry, isLoading }: RedditSectionProps) {
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -76,12 +87,14 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   };
 
   const closeModal = () => {
-    setModalAnimation('none');
     setModalVisible(false);
-    setSelectedPost(null);
-    setComments([]);
-    setCommentsError(null);
-    setCommentsLoading(false);
+    // Delay the cleanup until after the fade animation
+    setTimeout(() => {
+      setSelectedPost(null);
+      setComments([]);
+      setCommentsError(null);
+      setCommentsLoading(false);
+    }, 300); // 300ms matches the default Modal fade duration
   };
 
   const formatNumber = (num: number): string => {
@@ -102,6 +115,43 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   };
 
   const styles = createStyles(theme);
+
+  const CommentThread = ({ comment, depth = 0 }: { comment: RedditComment; depth?: number }) => {
+    const { theme } = useTheme();
+    const styles = createStyles(theme);
+    const maxDepth = 8; // Maximum nesting level before we stop showing indent lines
+    
+    const renderIndentLines = () => {
+      return Array.from({ length: Math.min(depth, maxDepth) }).map((_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.indentLine,
+            {
+              left: index * 16,
+              backgroundColor: theme.colors.border,
+            }
+          ]}
+        />
+      ));
+    };
+
+    return (
+      <View style={[styles.commentItem, { marginLeft: Math.min(depth, maxDepth) * 16 }]}>
+        {depth > 0 && renderIndentLines()}
+        <View style={styles.commentContent}>
+          <View style={styles.commentHeaderRow}>
+            <Text style={styles.commentScore}>{comment.score} points</Text>
+            <Text style={styles.commentTime}>• {formatDateOnly(comment.createdAt)}</Text>
+          </View>
+          <Text style={styles.commentBody}>{comment.content?.markdown || ''}</Text>
+        </View>
+        {comment.replies?.map((reply) => (
+          <CommentThread key={reply.id} comment={reply} depth={depth + 1} />
+        ))}
+      </View>
+    );
+  };
 
   // Show loading state
   if (isLoading) {
@@ -281,12 +331,14 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
         {/* Modal for full post and comments */}
         <Modal
           visible={modalVisible}
-          animationType={modalAnimation}
+          animationType="fade"
           transparent={true}
           onRequestClose={closeModal}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
+          <Pressable style={styles.modalOverlay} onPress={closeModal}>
+            <Pressable 
+              style={styles.modalContent} 
+              onPress={(e) => e.stopPropagation()}>
               <ScrollView>
                 <View style={styles.modalHeaderRow}>
                   <TouchableOpacity
@@ -318,25 +370,22 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
                         <Text style={styles.commentsPlaceholder}>No comments found.</Text>
                       )}
                       {!commentsLoading && !commentsError && comments.length > 0 && (
-                        comments.slice(0, 10).map((comment, idx) => (
-                          <View key={comment.id || idx} style={styles.commentItem}>
-                            <View style={styles.commentHeaderRow}>
-                              <Text style={styles.commentScore}>{comment.score} points</Text>
-                              <Text style={styles.commentTime}>• {formatDateOnly(comment.createdAt)}</Text>
-                            </View>
-                            <Text style={styles.commentBody}>{comment.content?.markdown || ''}</Text>
-                          </View>
+                        comments.slice(0, 10).map((comment) => (
+                          <CommentThread key={comment.id} comment={comment} />
                         ))
                       )}
                     </View>
                   </>
                 )}
               </ScrollView>
-              <Pressable style={styles.closeButton} onPress={closeModal}>
+              <Pressable 
+                style={styles.closeButton} 
+                onPress={closeModal}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
                 <Text style={styles.closeButtonText}>Close</Text>
               </Pressable>
-            </View>
-          </View>
+            </Pressable>
+          </Pressable>
         </Modal>
       </View>
     </LinearGradient>
@@ -610,11 +659,21 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   commentItem: {
     marginBottom: 16,
+    position: 'relative',
+  },
+  commentContent: {
     padding: 12,
     backgroundColor: theme.colors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  indentLine: {
+    position: 'absolute',
+    width: 2,
+    top: 0,
+    bottom: 0,
+    opacity: 0.3,
   },
   commentHeaderRow: {
     flexDirection: 'row',
@@ -640,10 +699,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   commentBody: {
-    fontSize: 17,
+    fontSize: 15,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
-    lineHeight: 24,
+    lineHeight: 20,
   },
   modalHeaderRow: {
     flexDirection: 'row',

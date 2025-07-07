@@ -45,18 +45,18 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   const parseResponse = (response: string) => {
     console.log('🔍 Parsing response:', response);
     
-    // Find the first two single quotes
-    const firstQuoteIndex = response.indexOf("'");
-    const secondQuoteIndex = response.indexOf("'", firstQuoteIndex + 1);
+    // Find the first two carets
+    const firstCaretIndex = response.indexOf("^^");
+    const secondCaretIndex = response.indexOf("^^", firstCaretIndex + 2);
     
-    console.log('🔍 Quote indices:', { firstQuoteIndex, secondQuoteIndex });
+    console.log('🔍 Caret indices:', { firstCaretIndex, secondCaretIndex });
     
-    if (firstQuoteIndex !== -1 && secondQuoteIndex !== -1) {
-      const summary = response.substring(firstQuoteIndex + 1, secondQuoteIndex).trim();
-      // Remove the entire quoted section (including the quotes)
-      const beforeQuotes = response.substring(0, firstQuoteIndex).trim();
-      const afterQuotes = response.substring(secondQuoteIndex + 1).trim();
-      const details = (beforeQuotes + ' ' + afterQuotes).trim();
+    if (firstCaretIndex !== -1 && secondCaretIndex !== -1) {
+      const summary = response.substring(firstCaretIndex + 2, secondCaretIndex).trim();
+      // Remove the entire careted section (including the carets)
+      const beforeCarets = response.substring(0, firstCaretIndex).trim();
+      const afterCarets = response.substring(secondCaretIndex + 2).trim();
+      const details = (beforeCarets + ' ' + afterCarets).trim();
       
       console.log('🔍 Summary:', summary);
       console.log('🔍 Details:', details);
@@ -64,8 +64,8 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       return { summary, details };
     }
     
-    // Fallback if no quotes found
-    console.log('🔍 No quotes found, using fallback');
+    // Fallback if no carets found
+    console.log('🔍 No carets found, using fallback');
     return { 
       summary: response.substring(0, 100) + '...', 
       details: response 
