@@ -13,8 +13,8 @@
       "backgroundColor": "#000000",
       "imageResizeMode": "contain",
       "imageStyle": {
-        "width": "50%",
-        "height": "50%"
+        "width": "25%",
+        "height": "25%"
       }
     },
     "newArchEnabled": true,

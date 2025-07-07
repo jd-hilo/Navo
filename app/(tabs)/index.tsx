@@ -17,6 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Bookmark, Crown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { Adjust, AdjustEvent } from 'react-native-adjust';
 import SearchBar from '@/components/SearchBar';
 import GeminiSection from '@/components/GeminiSection';
 import TikTokSection from '@/components/TikTokSection';
@@ -155,6 +156,12 @@ export default function HomeScreen() {
         if (Platform.OS === 'ios') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
+
+        // Track search completion with Adjust
+        const event = new AdjustEvent('27gu4x');
+        event.addCallbackParameter('action', 'search_completed');
+        event.addCallbackParameter('query_length', debouncedQuery.length.toString());
+        Adjust.trackEvent(event);
 
         // Track general search
         GeneralSearchesService.trackSearch(user.id, debouncedQuery)

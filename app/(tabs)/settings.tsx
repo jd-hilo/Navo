@@ -336,7 +336,7 @@ export default function SettingsScreen() {
         </View>
 
         {/* Account Actions */}
-        <View style={[styles.section, { marginBottom: 40 }]}>
+        <View style={[styles.section, { marginBottom: 80 }]}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
           <SettingRow
             icon={Share}

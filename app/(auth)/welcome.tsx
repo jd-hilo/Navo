@@ -16,6 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Adjust, AdjustEvent } from 'react-native-adjust';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -40,6 +41,11 @@ export default function WelcomeScreen() {
   }, []);
 
   const handleGetStarted = () => {
+    // Track get started event with Adjust
+    const event = new AdjustEvent('27gu4x');
+    event.addCallbackParameter('action', 'get_started');
+    Adjust.trackEvent(event);
+    
     router.push('/(auth)/auth');
   };
 
