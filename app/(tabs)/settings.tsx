@@ -338,11 +338,13 @@ export default function SettingsScreen() {
         {/* Account Actions */}
         <View style={[styles.section, { marginBottom: 80 }]}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
+          {/* Temporarily disabled
           <SettingRow
             icon={Share}
             title="Refer To a friend"
             onPress={() => router.push('/(auth)/refer-friend')}
           />
+          */}
           <SettingRow
             icon={LogOut}
             title="Sign Out"
