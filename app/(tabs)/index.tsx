@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { SearchResultsService, GeneralSearchesService, SavedSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
+import PremiumModal from '@/components/PremiumModal';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -105,6 +106,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(0)).current;
@@ -149,7 +151,7 @@ export default function HomeScreen() {
       }
 
       // Start a new timer
-      searchTimer.current = setTimeout(() => {
+      searchTimer.current = setTimeout(async () => {
         console.log('🔍 Search viewed for 2 seconds, tracking search...');
         
         // Trigger haptic feedback when results are loaded
@@ -163,20 +165,25 @@ export default function HomeScreen() {
         event.addCallbackParameter('query_length', debouncedQuery.length.toString());
         Adjust.trackEvent(event);
 
-        // Track general search
-        GeneralSearchesService.trackSearch(user.id, debouncedQuery)
-          .then(success => {
-            if (success) {
-              console.log('✅ General search tracked successfully');
-              // Mark this search as counted
-              countedSearches.current.add(debouncedQuery);
-            } else {
-              console.error('❌ Failed to track general search');
-            }
-          })
-          .catch(error => {
-            console.error('❌ Error tracking general search:', error);
-          });
+        try {
+          // Track in general_searches
+          const generalSuccess = await GeneralSearchesService.trackSearch(user.id, debouncedQuery);
+          
+          // Increment search count in user_profiles
+          const searchSuccess = await SearchResultsService.incrementSearchCount(user.id);
+          
+          if (generalSuccess && searchSuccess) {
+            console.log('✅ Search tracked successfully in both tables');
+            // Mark this search as counted
+            countedSearches.current.add(debouncedQuery);
+            // Refresh the search count
+            loadSearchCount();
+          } else {
+            console.error('❌ Failed to track search in one or both tables');
+          }
+        } catch (error) {
+          console.error('❌ Error tracking search:', error);
+        }
       }, 2000); // 2 seconds delay
     }
 
@@ -191,17 +198,7 @@ export default function HomeScreen() {
   // Check search limits for free users
   useEffect(() => {
     if (!isPremium && searchCount >= 10 && debouncedQuery) {
-      Alert.alert(
-        'Search Limit Reached',
-        'You\'ve reached your monthly search limit. Upgrade to Premium for unlimited searches!',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Upgrade', 
-            onPress: () => router.push('/(auth)/upgrade' as any)
-          }
-        ]
-      );
+      setShowPremiumModal(true);
       setSearchQuery('');
       setDebouncedQuery('');
     }
@@ -451,6 +448,11 @@ export default function HomeScreen() {
     // This will trigger the useEffect and start the search
   };
 
+  const handleUpgrade = () => {
+    setShowPremiumModal(false);
+    router.push('/(auth)/upgrade' as any);
+  };
+
   const styles = createStyles(theme);
 
   // Calculate search bar width and positioning
@@ -698,6 +700,12 @@ export default function HomeScreen() {
           </Animated.View>
         )}
       </SafeAreaView>
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onUpgrade={handleUpgrade}
+      />
     </LinearGradient>
   );
 }
