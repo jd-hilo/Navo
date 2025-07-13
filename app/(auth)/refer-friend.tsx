@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,105 +7,114 @@ import {
   SafeAreaView,
   ScrollView,
   Share,
+  Image,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Gift, Users, ArrowRight, Check } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 export default function ReferFriendScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, getReferralCode } = useAuth();
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadReferralCode();
+  }, []);
+
+  const loadReferralCode = async () => {
+    const code = await getReferralCode();
+    setReferralCode(code);
+  };
+
   const handleContinue = async () => {
     router.replace('/(tabs)');
   };
+
   const referAFriend = async () => {
-    const event = new AdjustEvent('fe9jhz'); // Your event token for "shared referral"
+    if (!referralCode) return;
 
-    // Optionally, add custom data (e.g., user ID, channel)
-    event.addCallbackParameter('action', 'shared_referral_link');
-
+    const event = new AdjustEvent('fe9jhz');
+    event.addCallbackParameter('action', 'shared_referral_code');
     console.log("adjust : event sent")
     Adjust.trackEvent(event);
-    await Clipboard.setStringAsync(
-      `https://navo.go.link/c0c9W?referralId=${user?.id}`
-    );
-    const link = `https://navo.go.link/c0c9W?referralId=${user?.id}`;
+    
+    await Clipboard.setStringAsync(referralCode);
     await Share.share({
-      message: `Join me on NAVO! Use my referral link: \n${link}`,
+      message: `Download Navo and use my referral code ${referralCode} for 25 free searches ✨\n\nhttps://apps.apple.com/us/app/navo-magic-search/id6747410792`,
     });
   };
-
-  const benefits = [
-    'Get 1 month of Premium free',
-    'No credit card required',
-    'Share with friends and family',
-    'Unlock all premium features',
-  ];
 
   const styles = createStyles(theme);
 
   return (
     <LinearGradient
-      colors={['#4A0F17', '#4A2810', '#2A104A']}
+      colors={isDark
+        ? ['#0F0F0F', '#1A1A1A', '#0F0F0F']
+        : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
       style={styles.container}
     >
-      <SafeAreaView
-        style={[styles.safeArea, { backgroundColor: 'transparent' }]}
-      >
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Decorative Elements */}
+          <Image
+            source={require('@/assets/images/blue.png')}
+            style={[styles.decorativeElement, styles.blueStar]}
+            resizeMode="contain"
+          />
+          <Image
+            source={require('@/assets/images/organge star.png')}
+            style={[styles.decorativeElement, styles.orangeStar]}
+            resizeMode="contain"
+          />
+
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <Gift size={48} color={theme.colors.primary} strokeWidth={2} />
-            </View>
-            <Text style={styles.title}>Get Premium Free!</Text>
+            <Text style={styles.title}>Invite Friends{'\n'}Get Credits</Text>
             <Text style={styles.subtitle}>
-              Refer a friend and get 1 month of Premium completely free
+              Share your referral code and you'll both get 25 free search credits
             </Text>
           </View>
 
-          {/* Benefits */}
-          <View style={styles.benefitsContainer}>
-            <Text style={styles.benefitsTitle}>What you get:</Text>
-            {benefits.map((benefit, index) => (
-              <View key={index} style={styles.benefitItem}>
-                <Check size={16} color={theme.colors.success} strokeWidth={2} />
-                <Text style={styles.benefitText}>{benefit}</Text>
-              </View>
-            ))}
+          {/* Referral Code Display */}
+          <View style={styles.codeContainer}>
+            <Text style={styles.codeLabel}>Your Referral Code</Text>
+            <Text style={styles.code}>{referralCode || '...'}</Text>
           </View>
 
           {/* How it works */}
-          <View style={styles.howItWorksContainer}>
-            <Text style={styles.howItWorksTitle}>How it works:</Text>
+          <View style={styles.pricingContainer}>
+            <Text style={styles.pricingTitle}>How it works</Text>
             <View style={styles.stepsContainer}>
               <View style={styles.step}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>1</Text>
                 </View>
-                <Text style={styles.stepText}>Share your referral link</Text>
+                <Text style={styles.stepText}>Share your referral code with friends</Text>
               </View>
               <View style={styles.step}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>2</Text>
                 </View>
-                <Text style={styles.stepText}>
-                  Friend signs up and uses the app
-                </Text>
+                <Text style={styles.stepText}>Friend creates account using your code</Text>
               </View>
               <View style={styles.step}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
-                <Text style={styles.stepText}>You both get 1 month free!</Text>
+                <Text style={styles.stepText}>You both receive 25 search credits!</Text>
               </View>
             </View>
           </View>
@@ -114,20 +123,18 @@ export default function ReferFriendScreen() {
           <View style={styles.actionsContainer}>
             <TouchableOpacity
               style={styles.referButton}
-              onPress={() => {
-                // TODO: Implement referral functionality
-                referAFriend()
-                console.log('Refer friend clicked');
-              }}
+              onPress={referAFriend}
               activeOpacity={0.8}
             >
-              <Users size={20} color={theme.colors.surface} strokeWidth={2} />
-              <Text style={styles.referButtonText}>Refer a Friend</Text>
-              <ArrowRight
-                size={20}
-                color={theme.colors.surface}
-                strokeWidth={2}
-              />
+              <LinearGradient
+                colors={['#00E5FF', '#2F80ED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.referButtonGradient}
+              >
+                <Text style={styles.referButtonText}>Share Referral Code</Text>
+                <ArrowRight size={20} color="#FFFFFF" strokeWidth={2} />
+              </LinearGradient>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -135,13 +142,13 @@ export default function ReferFriendScreen() {
               onPress={handleContinue}
               activeOpacity={0.8}
             >
-              <Text style={styles.skipButtonText}>Continue with Free Plan</Text>
+              <Text style={styles.skipButtonText}>Continue to App</Text>
             </TouchableOpacity>
           </View>
 
           {/* Terms */}
           <Text style={styles.termsText}>
-            Referral program terms and conditions apply. Limited time offer.
+            Each referral code can be used up to 3 times
           </Text>
         </ScrollView>
       </SafeAreaView>
@@ -149,8 +156,7 @@ export default function ReferFriendScreen() {
   );
 }
 
-const createStyles = (theme: any) =>
-  StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
     container: {
       flex: 1,
     },
@@ -162,79 +168,55 @@ const createStyles = (theme: any) =>
       paddingHorizontal: 24,
       paddingVertical: 32,
     },
+  decorativeElement: {
+    position: 'absolute',
+    zIndex: 1,
+  },
+  blueStar: {
+    width: screenWidth * 0.15,
+    height: screenWidth * 0.15,
+    top: 20,
+    left: 20,
+    opacity: 0.8,
+  },
+  orangeStar: {
+    width: screenWidth * 0.12,
+    height: screenWidth * 0.12,
+    top: 40,
+    right: 30,
+    opacity: 0.8,
+  },
     header: {
       alignItems: 'center',
       marginBottom: 40,
-    },
-    iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      backgroundColor: theme.colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 4,
+    marginTop: screenWidth * 0.15,
     },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: theme.colors.text,
+    marginBottom: 8,
       textAlign: 'center',
-      marginBottom: 12,
     },
     subtitle: {
       fontSize: 16,
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
       textAlign: 'center',
-      lineHeight: 24,
+    lineHeight: 22,
     },
-    benefitsContainer: {
+  pricingContainer: {
       backgroundColor: theme.colors.surface,
-      padding: 20,
-      borderRadius: 16,
-      marginBottom: 24,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
-    },
-    benefitsTitle: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
-      color: theme.colors.text,
-      marginBottom: 16,
-    },
-    benefitItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    benefitText: {
-      fontSize: 14,
-      fontFamily: 'Inter-Regular',
-      color: theme.colors.textSecondary,
-      marginLeft: 12,
-      flex: 1,
-    },
-    howItWorksContainer: {
-      backgroundColor: theme.colors.surface,
-      padding: 20,
+    padding: 24,
       borderRadius: 16,
       marginBottom: 32,
       shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
     },
-    howItWorksTitle: {
+  pricingTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.text,
@@ -271,25 +253,24 @@ const createStyles = (theme: any) =>
       marginBottom: 24,
     },
     referButton: {
+    width: '100%',
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  referButtonGradient: {
+    flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.colors.primary,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      borderRadius: 12,
-      marginBottom: 12,
-      shadowColor: theme.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 4,
+    gap: 8,
     },
     referButtonText: {
-      fontSize: 18,
-      fontFamily: 'Inter-SemiBold',
-      color: theme.colors.surface,
-      marginHorizontal: 8,
+    fontSize: 17,
+    fontFamily: 'Inter-Medium',
+    color: '#FFFFFF',
+    marginRight: 4,
     },
     skipButton: {
       alignItems: 'center',
@@ -306,6 +287,30 @@ const createStyles = (theme: any) =>
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
       textAlign: 'center',
-      lineHeight: 16,
+    marginBottom: 24,
+  },
+  codeContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 32,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  codeLabel: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
+  },
+  code: {
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.primary,
+    letterSpacing: 4,
     },
   });

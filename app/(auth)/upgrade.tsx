@@ -66,7 +66,7 @@ export default function UpgradeScreen() {
   };
 
   const handleSkip = () => {
-    router.push('/(tabs)' as any);
+    router.push('/(auth)/refer-friend' as any);
   };
 
   const handlePrivacyPress = () => {

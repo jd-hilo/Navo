@@ -162,7 +162,7 @@ export default function SearchBar({
                 styles.cursor,
                 { 
                   opacity: cursorOpacity,
-                  left: currentPlaceholder.length * 9.5 + 28, // Approximate character width
+                  left: (currentPlaceholder.length * 8) + 28, // Adjusted character width
                 }
               ]} 
             />
@@ -205,11 +205,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     position: 'relative',
   },
   input: {
-    fontSize: 16.5, // Increased by 10%
+    fontSize: 16.5,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
     paddingVertical: 0,
     paddingRight: 0,
+    letterSpacing: -0.3, // Added to reduce letter spacing
   },
   cursor: {
     position: 'absolute',

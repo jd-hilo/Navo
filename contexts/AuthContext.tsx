@@ -7,6 +7,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  referralCode?: string;
 }
 
 interface AuthContextType {
@@ -23,6 +24,7 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signInWithApple: (user: any) => Promise<{ success: boolean; error?: string }>;
   deleteAccount: () => Promise<{ success: boolean; error?: string }>;
+  getReferralCode: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -203,8 +205,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
         setUser(userData);
         await saveUserToStorage(userData);
-      // Ensure user profile exists
+      // Ensure user profile exists and get referral code
       await ensureUserProfile(data.user.id);
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('referral_code')
+        .eq('user_id', data.user.id)
+        .single();
+      if (profile?.referral_code) {
+        userData.referralCode = profile.referral_code;
+        setUser(userData);
+        await saveUserToStorage(userData);
+      }
         return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message || 'Sign up failed.' };
@@ -214,17 +226,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Helper to ensure user profile exists
   const ensureUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
-        .select('id')
+        .select('id, referral_code')
         .eq('user_id', userId)
         .single();
-      if (!data) {
-        // Create profile if not exists
-        await supabase.from('user_profiles').insert([{ user_id: userId }]);
+
+      if (!existingProfile) {
+        // Create profile if not exists - trigger will auto-generate referral code
+        const { data: newProfile, error: insertError } = await supabase
+          .from('user_profiles')
+          .insert([{ user_id: userId }])
+          .select('referral_code')
+          .single();
+
+        if (insertError) throw insertError;
+        
+        // Update user state with referral code
+        if (newProfile?.referral_code && user) {
+          const updatedUser = { ...user, referralCode: newProfile.referral_code };
+          setUser(updatedUser);
+          await saveUserToStorage(updatedUser);
+        }
+      } else if (existingProfile.referral_code && user) {
+        // Update user state with existing referral code
+        const updatedUser = { ...user, referralCode: existingProfile.referral_code };
+        setUser(updatedUser);
+        await saveUserToStorage(updatedUser);
       }
     } catch (error) {
-      // Ignore errors for now
+      console.error('Error ensuring user profile:', error);
+    }
+  };
+
+  const getReferralCode = async (): Promise<string | null> => {
+    try {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('referral_code')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (error) throw error;
+      return data?.referral_code || null;
+    } catch (error) {
+      console.error('Error getting referral code:', error);
+      return null;
     }
   };
 
@@ -387,7 +436,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signInWithOtp,
     signInWithPassword,
     signInWithApple,
-    deleteAccount
+    deleteAccount,
+    getReferralCode
   };
 
   return (

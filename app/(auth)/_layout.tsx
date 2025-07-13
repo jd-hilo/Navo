@@ -14,6 +14,9 @@ export default function AuthLayout() {
       <Stack.Screen name="welcome" />
       <Stack.Screen name="email" />
       <Stack.Screen name="otp" />
+      <Stack.Screen name="enter-referral" />
+      <Stack.Screen name="upgrade" />
+      <Stack.Screen name="refer-friend" />
     </Stack>
   );
 }

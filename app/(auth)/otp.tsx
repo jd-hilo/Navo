@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Clipboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Shield, ArrowRight } from 'lucide-react-native';
@@ -120,6 +121,22 @@ export default function OTPScreen() {
     router.back();
   };
 
+  const handlePaste = async (index: number) => {
+    try {
+      const content = await Clipboard.getString();
+      // Check if pasted content is a 6-digit number
+      if (/^\d{6}$/.test(content)) {
+        const digits = content.split('');
+        setOtp(digits);
+        // Focus the last input
+        inputRefs.current[5]?.focus();
+      }
+    } catch (error) {
+      // Silently handle clipboard errors
+      console.log('Clipboard error:', error);
+    }
+  };
+
   const isOtpComplete = otp.every(digit => digit !== '');
 
   const styles = createStyles(theme);
@@ -183,6 +200,7 @@ export default function OTPScreen() {
                     maxLength={1}
                     selectTextOnFocus
                     editable={!isLoading}
+                    onPressIn={() => handlePaste(index)}
                   />
                 ))}
               </View>

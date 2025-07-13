@@ -9,7 +9,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import { Search, ChevronDown, ChevronUp, Bookmark } from 'lucide-react-native';
+import { Search, ChevronDown, ChevronUp, Bookmark, Trash2 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -140,6 +140,15 @@ export default function SavedScreen() {
               <Bookmark size={20} color="#5EEAD4" strokeWidth={2} fill="#5EEAD4" />
             </View>
             <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={(e) => {
+                e.stopPropagation();
+                handleDelete(item.id);
+              }}
+            >
+              <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.expandButton}
               onPress={() => toggleExpanded(item.id)}
             >
@@ -266,6 +275,15 @@ export default function SavedScreen() {
       backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    deleteButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: isDark ? 'rgba(255, 87, 87, 0.1)' : 'rgba(255, 87, 87, 0.1)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 8,
     },
     expandedContent: {
       paddingHorizontal: 16,

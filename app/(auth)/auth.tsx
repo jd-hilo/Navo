@@ -139,11 +139,11 @@ export default function AuthScreen() {
         : await signUp(email, otpString);
 
       if (result.success) {
-        // Route new users to upgrade screen, existing users to home
+        // Route new users to enter-referral screen, existing users to home
         if (isExistingUser) {
           router.replace('/(tabs)');
         } else {
-          router.replace('/(auth)/upgrade');
+          router.replace('/(auth)/enter-referral');
         }
       } else {
         Alert.alert('Error', result.error || 'Invalid verification code');

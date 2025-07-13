@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { GeneralSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
+import AboutModal from '@/components/AboutModal';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -39,6 +40,7 @@ export default function SettingsScreen() {
   const { isPremium, restorePurchases, isLoading } = useSubscription();
   const router = useRouter();
   const [searchCount, setSearchCount] = useState(0);
+  const [showAboutModal, setShowAboutModal] = useState(false);
 
   // Load user stats on mount
   useEffect(() => {
@@ -75,11 +77,7 @@ export default function SettingsScreen() {
   };
 
   const showAbout = () => {
-    Alert.alert(
-      'About Navo',
-      'Navo v1.0.0\n\nA powerful search app that aggregates results from Gemini, TikTok, and Reddit in one place.',
-      [{ text: 'OK' }]
-    );
+    setShowAboutModal(true);
   };
 
   const handleSignOut = () => {
@@ -338,13 +336,11 @@ export default function SettingsScreen() {
         {/* Account Actions */}
         <View style={[styles.section, { marginBottom: 80 }]}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
-          {/* Temporarily disabled
           <SettingRow
             icon={Share}
             title="Refer To a friend"
             onPress={() => router.push('/(auth)/refer-friend')}
           />
-          */}
           <SettingRow
             icon={LogOut}
             title="Sign Out"
@@ -360,6 +356,10 @@ export default function SettingsScreen() {
           />
         </View>
       </ScrollView>
+      <AboutModal 
+        visible={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+      />
     </SafeAreaView>
   );
 }
