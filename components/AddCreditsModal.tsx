@@ -49,9 +49,11 @@ export default function AddCreditsModal({ visible, onClose }: AddCreditsModalPro
         tint={isDark ? 'dark' : 'light'}
       >
         <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
-          </TouchableOpacity>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <X size={24} color={theme.colors.textSecondary} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.title}>Get More Searches</Text>
           <Text style={styles.subtitle}>Choose how you want to earn more search credits</Text>
@@ -109,17 +111,18 @@ const createStyles = (theme: any) => StyleSheet.create({
       },
     }),
   },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
   closeButton: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
     width: 32,
     height: 32,
     borderRadius: 16,
     backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
   },
   title: {
     fontSize: 24,
