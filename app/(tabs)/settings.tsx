@@ -338,7 +338,7 @@ export default function SettingsScreen() {
           <Text style={styles.sectionTitle}>Account Actions</Text>
           <SettingRow
             icon={Share}
-            title="Refer To a friend"
+            title="Invite Friends and Earn Searches"
             onPress={() => router.push('/(auth)/refer-friend')}
           />
           <SettingRow

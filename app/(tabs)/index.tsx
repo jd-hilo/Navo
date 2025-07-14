@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bookmark, Crown } from 'lucide-react-native';
+import { Bookmark, Crown, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
 import SearchBar from '@/components/SearchBar';
@@ -33,6 +33,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { SearchResultsService, GeneralSearchesService, SavedSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
 import PremiumModal from '@/components/PremiumModal';
+import AddCreditsModal from '@/components/AddCreditsModal';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -107,6 +108,7 @@ export default function HomeScreen() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAddCreditsModal, setShowAddCreditsModal] = useState(false);
 
   // Animation values
   const searchBarPosition = useRef(new Animated.Value(0)).current;
@@ -536,15 +538,23 @@ export default function HomeScreen() {
         {/* Animated Header with Logo */}
         <Animated.View style={[styles.headerContainer, { opacity: headerOpacity }]}>
           <View style={styles.headerTop}>
-            {isPremium && (
+            {isPremium ? (
               <Text style={styles.premiumText}>PREMIUM</Text>
-            )}
-            {!isPremium && (
-              <View style={styles.searchCounter}>
-                <Text style={styles.searchCounterText}>
-                  {Math.max(0, 10 - searchCount)} searches left
-                </Text>
-              </View>
+            ) : (
+              <>
+                <View style={styles.searchCounter}>
+                  <Text style={styles.searchCounterText}>
+                                          {Math.max(0, 10 - searchCount)} Searches Left
+                  </Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.addCreditsButton}
+                  onPress={() => setShowAddCreditsModal(true)}
+                >
+                  <Plus size={16} color={theme.colors.textSecondary} strokeWidth={2} />
+                  <Text style={styles.addCreditsText}>Add Searches</Text>
+                </TouchableOpacity>
+              </>
             )}
           </View>
           <Image
@@ -706,6 +716,11 @@ export default function HomeScreen() {
         onClose={() => setShowPremiumModal(false)}
         onUpgrade={handleUpgrade}
       />
+      
+      <AddCreditsModal
+        visible={showAddCreditsModal}
+        onClose={() => setShowAddCreditsModal(false)}
+      />
     </LinearGradient>
   );
 }
@@ -846,5 +861,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-Medium',
     color: theme.colors.textSecondary,
+  },
+  addCreditsButton: {
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addCreditsText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+    marginLeft: 4,
   },
 });
