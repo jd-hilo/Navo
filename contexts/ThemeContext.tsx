@@ -41,6 +41,7 @@ export interface Theme {
     gemini: string[];
     tiktok: string[];
     reddit: string[];
+    pinterest: string[];
   };
 }
 
@@ -83,6 +84,7 @@ const lightTheme: Theme = {
     gemini: ['#FF8FA3', '#FFC285', '#C285FF'],
     tiktok: ['#FFC285', '#C285FF', '#FF8FA3'],
     reddit: ['#C285FF', '#FF8FA3', '#FFC285'],
+    pinterest: ['#E60023', '#FF6B8A', '#FFA366'],
   },
 };
 
@@ -125,6 +127,7 @@ const darkTheme: Theme = {
     gemini: ['#FF6B8A', '#FFA366', '#A366FF'],
     tiktok: ['#FFA366', '#A366FF', '#FF6B8A'],
     reddit: ['#A366FF', '#FF6B8A', '#FFA366'],
+    pinterest: ['#CC001F', '#FF6B8A', '#FFA366'],
   },
 };
 

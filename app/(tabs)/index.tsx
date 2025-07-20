@@ -22,6 +22,7 @@ import SearchBar from '@/components/SearchBar';
 import GeminiSection from '@/components/GeminiSection';
 import TikTokSection from '@/components/TikTokSection';
 import RedditSection from '@/components/RedditSection';
+import PinterestSection from '@/components/PinterestSection';
 import LoadingCard from '@/components/LoadingCard';
 import ErrorCard from '@/components/ErrorCard';
 import { searchAllSources } from '@/services/api';
@@ -549,7 +550,15 @@ export default function HomeScreen() {
                 </View>
                 <TouchableOpacity 
                   style={styles.addCreditsButton}
-                  onPress={() => setShowAddCreditsModal(true)}
+                  onPress={() => {
+                    // Track Add Credits button click with Adjust
+                    const event = new AdjustEvent('reecpr');
+                    event.addCallbackParameter('action', 'add_credits_clicked');
+                    event.addCallbackParameter('user_type', isPremium ? 'premium' : 'free');
+                    Adjust.trackEvent(event);
+                    
+                    setShowAddCreditsModal(true);
+                  }}
                 >
                   <Plus size={16} color={theme.colors.textSecondary} strokeWidth={2} />
                   <Text style={styles.addCreditsText}>Add Searches</Text>
@@ -677,6 +686,7 @@ export default function HomeScreen() {
                     <LoadingCard title="Google" />
                     <LoadingCard title="TikTok" />
                     <LoadingCard title="Reddit" />
+                    <LoadingCard title="Pinterest" />
                   </>
                 ) : error ? (
                   <ErrorCard
@@ -699,6 +709,12 @@ export default function HomeScreen() {
                     />
                     <RedditSection
                       data={searchResults?.reddit || { posts: [], success: false, error: 'No Reddit data available', text: '' }}
+                      query={debouncedQuery}
+                      onRetry={handleRetry}
+                      isLoading={isLoading}
+                    />
+                    <PinterestSection
+                      data={searchResults?.pinterest || { pins: [], success: false, error: 'No Pinterest data available' }}
                       query={debouncedQuery}
                       onRetry={handleRetry}
                       isLoading={isLoading}

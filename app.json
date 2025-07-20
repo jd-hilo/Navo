@@ -32,10 +32,7 @@
       "usesAppleSignIn": true,
       "appleTeamId": "N8SACG5845"
     },
-    "android": {
-      "versionCode": 8,
-      "package": "media.hilo.navo"
-    },
+
     "web": {
       "bundler": "metro",
       "output": "server",
