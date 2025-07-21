@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Sparkles, Video, MessageCircle } from 'lucide-react-native';
+import { Sparkles, Video, MessageCircle, Heart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -19,6 +19,8 @@ export default function LoadingCard({ title }: LoadingCardProps) {
         return <Video size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
       case 'Reddit':
         return <MessageCircle size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
+      case 'Pinterest':
+        return <Heart size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
       default:
         return <Sparkles size={20} color={theme.colors.textSecondary} strokeWidth={2} />;
     }

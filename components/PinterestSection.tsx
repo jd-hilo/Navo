@@ -43,6 +43,7 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
   const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPin, setSelectedPin] = useState<PinterestPin | null>(null);
+  const [retryLoading, setRetryLoading] = useState(false);
 
   const handlePinPress = (pin: PinterestPin) => {
     setSelectedPin(pin);
@@ -52,6 +53,16 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
   const closeModal = () => {
     setModalVisible(false);
     setSelectedPin(null);
+  };
+
+  const handleRetry = async () => {
+    if (!onRetry) return;
+    setRetryLoading(true);
+    try {
+      await Promise.resolve(onRetry());
+    } finally {
+      setRetryLoading(false);
+    }
   };
 
   const formatNumber = (num: number): string => {
@@ -123,9 +134,13 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{data.error}</Text>
             {onRetry && (
-              <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-                <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
-                <Text style={styles.retryText}>Try Again</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={handleRetry} disabled={retryLoading}>
+                {retryLoading ? (
+                  <ActivityIndicator size="small" color={theme.colors.text} />
+                ) : (
+                  <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
+                )}
+                <Text style={styles.retryText}>{retryLoading ? 'Loading...' : 'Try Again'}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -155,9 +170,13 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>No Pinterest pins found for this search.</Text>
             {onRetry && (
-              <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-                <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
-                <Text style={styles.retryText}>Try Again</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={handleRetry} disabled={retryLoading}>
+                {retryLoading ? (
+                  <ActivityIndicator size="small" color={theme.colors.text} />
+                ) : (
+                  <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
+                )}
+                <Text style={styles.retryText}>{retryLoading ? 'Loading...' : 'Try Again'}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -224,16 +243,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                     style={styles.pinImage}
                     resizeMode="cover"
                   />
-                  <View style={styles.imageOverlay}>
-                    <TouchableOpacity 
-                      style={styles.saveButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        // Handle save action
-                      }}>
-                      <Bookmark size={16} color="#fff" fill="#fff" />
-                    </TouchableOpacity>
-                  </View>
                 </View>
               )}
               

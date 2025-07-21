@@ -129,6 +129,7 @@ const searchPinterestAPI = async (query: string) => {
   try {
     console.log('🔍 Making Pinterest API request for:', query);
     
+    // Use boards endpoint for Pinterest
     const url = `${PINTEREST_API_CONFIG.baseURL}/pinterest/boards/relevance?keyword=${encodeURIComponent(query)}&num=5`;
     console.log('🔗 Pinterest API URL:', url);
     
@@ -143,7 +144,7 @@ const searchPinterestAPI = async (query: string) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Pinterest API Error Response:', errorText);
-      throw new Error(`Pinterest API returned status ${response.status}: ${errorText}`);
+      throw new Error(`Pinterest API error (RapidAPI may be down or rate-limited): ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
