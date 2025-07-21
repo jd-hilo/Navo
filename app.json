@@ -2,7 +2,7 @@
   "expo": {
     "name": "Navo",
     "slug": "Navo",
-    "version": "1.5.0",
+    "version": "1.7.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "navo",
@@ -22,7 +22,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "bundleIdentifier": "media.hilo.navo",
-      "buildNumber": "24",
+      "buildNumber": "25",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Navo needs access to your camera to take photos for your profile and posts.",
