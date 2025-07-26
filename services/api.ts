@@ -496,15 +496,6 @@ export const searchAllSources = async (query: string, isPremium: boolean = false
   // Get current user ID for tracking search count
   const userId = await getCurrentUserId();
   
-  // Add 1 second delay for non-premium users
-  if (!isPremium) {
-    console.log('⏳ Adding 1 second delay for non-premium user...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-  
-  // Simulate API delay for better UX
-  await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
-  
   // Start all API calls in parallel
   const geminiStart = Date.now();
   const tiktokStart = Date.now();

@@ -127,8 +127,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Sparkles size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Gemini</Text>
               <View style={styles.searchingIndicator}>
                 <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
                 <Text style={styles.searchingText}>Google Search</Text>
@@ -156,8 +154,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Sparkles size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Gemini</Text>
               <View style={styles.errorIndicator}>
                 <Text style={styles.errorIndicatorText}>Error</Text>
               </View>
@@ -192,30 +188,10 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Sparkles size={20} color={theme.colors.text} strokeWidth={2} />
-            <Text style={styles.title}>Google</Text>
-            
-            {/* Show cache indicator if data is cached */}
-            {cached && cacheAge !== undefined ? (
-              <View style={styles.cachedIndicator}>
-                <Database size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
-                <Text style={styles.cachedText}>
-                  Cached • {formatCacheAge(cacheAge)}
-                </Text>
-              </View>
-            ) : (
-              /* Always show Google Search indicator since we force search for everything */
-              <View style={styles.webSearchIndicator}>
-                <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
-                <Text style={styles.webSearchText}>Gemini Flash 1.5</Text>
-              </View>
-            )}
-            
-            {!data.success && (
-              <View style={styles.fallbackIndicator}>
-                <Text style={styles.fallbackText}>Sample</Text>
-              </View>
-            )}
+            <View style={styles.webSearchIndicator}>
+              <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
+              <Text style={styles.webSearchText}>Gemini Flash 1.5</Text>
+            </View>
           </View>
           
           <View style={styles.actions}>
@@ -332,7 +308,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 1,
     marginBottom: 16,
   },
   container: {

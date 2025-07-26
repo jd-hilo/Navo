@@ -88,8 +88,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Heart size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Pinterest</Text>
               <View style={styles.liveIndicator}>
                 <Text style={styles.liveText}>Live</Text>
               </View>
@@ -116,8 +114,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Heart size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Pinterest</Text>
               <View style={styles.errorIndicator}>
                 <Text style={styles.errorIndicatorText}>Error</Text>
               </View>
@@ -153,8 +149,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Heart size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Pinterest</Text>
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>No Pins</Text>
               </View>
@@ -187,29 +181,13 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <Heart size={20} color={theme.colors.text} strokeWidth={2} />
-            <Text style={styles.title}>Pinterest</Text>
-            
-            {data.success ? (
-              <View style={styles.liveIndicator}>
-                <Text style={styles.liveText}>Live</Text>
-              </View>
-            ) : (
+            {!data.success && (
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>Sample</Text>
               </View>
             )}
           </View>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => {
-              if (data.pins && data.pins.length > 0) {
-                Linking.openURL(data.pins[0].link);
-              }
-            }}
-          >
-            <ExternalLink size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-          </TouchableOpacity>
+
         </View>
 
         {!data.success && data.error && (
@@ -332,7 +310,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 1,
     marginBottom: 16,
   },
   container: {

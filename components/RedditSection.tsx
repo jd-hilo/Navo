@@ -164,8 +164,6 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <MessageCircle size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Reddit</Text>
               <View style={styles.liveIndicator}>
                 <Text style={styles.liveText}>Live</Text>
               </View>
@@ -192,8 +190,6 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <MessageCircle size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Reddit</Text>
               <View style={styles.errorIndicator}>
                 <Text style={styles.errorIndicatorText}>Error</Text>
               </View>
@@ -225,8 +221,6 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <MessageCircle size={20} color={theme.colors.text} strokeWidth={2} />
-              <Text style={styles.title}>Reddit</Text>
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>No Posts</Text>
               </View>
@@ -254,30 +248,15 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
       style={styles.gradientBorder}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <MessageCircle size={20} color={theme.colors.text} strokeWidth={2} />
-            <Text style={styles.title}>Reddit</Text>
+                      <View style={styles.titleContainer}>
             
-            {data.success ? (
-              <View style={styles.liveIndicator}>
-                <Text style={styles.liveText}>Live</Text>
-              </View>
-            ) : (
+            {!data.success && (
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>Sample</Text>
               </View>
             )}
           </View>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => {
-              if (data.posts && data.posts.length > 0) {
-                Linking.openURL(data.posts[0].url);
-              }
-            }}
-          >
-            <ExternalLink size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-          </TouchableOpacity>
+
         </View>
 
         {!data.success && data.error && (
@@ -395,7 +374,6 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
-    padding: 1,
     marginBottom: 16,
   },
   container: {

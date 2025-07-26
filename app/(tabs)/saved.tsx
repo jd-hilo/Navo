@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Search, ChevronDown, ChevronUp, Bookmark, Trash2 } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
@@ -166,6 +167,12 @@ export default function SavedScreen() {
           <View style={styles.expandedContent}>
             {item.gemini_data && (
               <View style={styles.expandedSection}>
+                <View style={styles.moduleHeader}>
+                  <View style={styles.moduleHeaderLeft}>
+                    <Text style={styles.moduleTitle}>GOOGLE GEMINI</Text>
+                    <View style={[styles.priorityIndicator, { backgroundColor: '#10B981' }]} />
+                  </View>
+                </View>
                 <GeminiSection
                   data={item.gemini_data}
                   query={item.query}
@@ -176,14 +183,26 @@ export default function SavedScreen() {
             )}
             {item.tiktok_data && (
               <View style={styles.expandedSection}>
+                <View style={styles.moduleHeader}>
+                  <View style={styles.moduleHeaderLeft}>
+                    <Text style={styles.moduleTitle}>TIKTOK</Text>
+                    <View style={[styles.priorityIndicator, { backgroundColor: '#F59E0B' }]} />
+                  </View>
+                </View>
                 <TikTokSection
                   data={item.tiktok_data}
                   query={item.query}
                 />
               </View>
             )}
-            {item.reddit_data && (
+                        {item.reddit_data && (
               <View style={styles.expandedSection}>
+                <View style={styles.moduleHeader}>
+                  <View style={styles.moduleHeaderLeft}>
+                    <Text style={styles.moduleTitle}>REDDIT</Text>
+                    <View style={[styles.priorityIndicator, { backgroundColor: '#6B7280' }]} />
+                  </View>
+                </View>
                 <RedditSection
                   data={item.reddit_data}
                   query={item.query}
@@ -294,6 +313,37 @@ export default function SavedScreen() {
     },
     expandedSection: {
       marginTop: 16,
+    },
+    moduleHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: theme.colors.card,
+      borderRadius: 8,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    moduleHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    moduleTitle: {
+      fontSize: 14,
+      fontFamily: 'Inter-SemiBold',
+      color: theme.colors.text,
+    },
+    priorityIndicator: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      marginLeft: 8,
+    },
+    gradientBorder: {
+      borderRadius: 14,
+      marginBottom: 16,
     },
     loadingContainer: {
       flex: 1,

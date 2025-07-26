@@ -19,11 +19,9 @@ import { Bookmark, Crown, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
 import SearchBar from '@/components/SearchBar';
-import GeminiSection from '@/components/GeminiSection';
-import TikTokSection from '@/components/TikTokSection';
-import RedditSection from '@/components/RedditSection';
-import PinterestSection from '@/components/PinterestSection';
+import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
 import LoadingCard from '@/components/LoadingCard';
+import { Search } from 'lucide-react-native';
 import ErrorCard from '@/components/ErrorCard';
 import { searchAllSources } from '@/services/api';
 import { debounce } from '@/utils/debounce';
@@ -47,6 +45,17 @@ const getCurrentDate = () => {
     year: 'numeric'
   };
   return today.toLocaleDateString('en-US', options);
+};
+
+const getFunLoadingMessage = () => {
+  const messages = [
+    "Searching the depths of the internet...",
+    "Asking AI to be extra smart today...",
+    "Gathering the finest content for you...",
+    "Making sure we don't break the internet...",
+    "Teaching AI to read your mind..."
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
 };
 
 const SEARCH_SUGGESTIONS = [
@@ -119,6 +128,9 @@ export default function HomeScreen() {
   const suggestionsOpacity = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(0)).current;
   const bookmarkOpacity = useRef(new Animated.Value(0)).current;
+  
+  // Loading animation values
+  const loadingProgress = useRef(new Animated.Value(0)).current;
 
   // Debounce search query
   const debouncedSearch = useCallback(
@@ -456,6 +468,38 @@ export default function HomeScreen() {
     router.push('/(auth)/upgrade' as any);
   };
 
+  // Start loading animations
+  useEffect(() => {
+    if (isLoading) {
+
+
+      // Loading bar animation
+      const barAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(loadingProgress, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(loadingProgress, {
+            toValue: 0,
+            duration: 0,
+            useNativeDriver: false,
+          }),
+        ])
+      );
+
+
+
+      // Start all animations
+      barAnimation.start();
+
+      return () => {
+        barAnimation.stop();
+      };
+    }
+  }, [isLoading]);
+
   const styles = createStyles(theme);
 
   // Calculate search bar width and positioning
@@ -680,14 +724,39 @@ export default function HomeScreen() {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
               }
             >
-              <View style={{ width: cardsWidth, marginTop: 12 }}>
+              <View style={{ width: '100%', marginTop: 12 }}>
                 {isLoading ? (
-                  <>
-                    <LoadingCard title="Google" />
-                    <LoadingCard title="TikTok" />
-                    <LoadingCard title="Reddit" />
-                    <LoadingCard title="Pinterest" />
-                  </>
+                  <View style={styles.loadingScreenContainer}>
+                    <View style={styles.loadingContent}>
+                      {/* Animated Loading Bar */}
+                      <View style={styles.loadingBarContainer}>
+                        <Animated.View 
+                          style={[
+                            styles.loadingBar, 
+                            { 
+                              width: loadingProgress.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0%', '100%']
+                              })
+                            }
+                          ]} 
+                        >
+                          <LinearGradient
+                            colors={['#FF8FA3', '#4A90E2']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={styles.loadingBarGradient}
+                          />
+                        </Animated.View>
+                      </View>
+                      
+                      {/* Fun Loading Text */}
+                      <Text style={styles.loadingTitle}>Searching Navo</Text>
+                      <Text style={styles.loadingSubtitle}>{getFunLoadingMessage()}</Text>
+                      
+
+                    </View>
+                  </View>
                 ) : error ? (
                   <ErrorCard
                     title="Search Error"
@@ -695,31 +764,12 @@ export default function HomeScreen() {
                     onRetry={handleRetry}
                   />
                 ) : searchResults ? (
-                  <>
-                    <GeminiSection
-                      data={searchResults.gemini}
-                      query={debouncedQuery}
-                      onRetry={handleRetry}
-                      isLoading={isLoading}
-                    />
-                    <TikTokSection
-                      data={searchResults.tiktok}
-                      query={debouncedQuery}
-                      onRetry={handleRetry}
-                    />
-                    <RedditSection
-                      data={searchResults?.reddit || { posts: [], success: false, error: 'No Reddit data available', text: '' }}
-                      query={debouncedQuery}
-                      onRetry={handleRetry}
-                      isLoading={isLoading}
-                    />
-                    <PinterestSection
-                      data={searchResults?.pinterest || { pins: [], success: false, error: 'No Pinterest data available' }}
-                      query={debouncedQuery}
-                      onRetry={handleRetry}
-                      isLoading={isLoading}
-                    />
-                  </>
+                  <DynamicLayoutEngine
+                    searchResults={searchResults}
+                    query={debouncedQuery}
+                    onRetry={handleRetry}
+                    isLoading={isLoading}
+                  />
                 ) : null}
               </View>
             </ScrollView>
@@ -892,5 +942,108 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color: theme.colors.textSecondary,
     marginLeft: 4,
+  },
+
+  loadingScreenContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingIconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  loadingIconGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBarContainer: {
+    width: 200,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    marginTop: 40,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  loadingBar: {
+    height: '100%',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  loadingBarGradient: {
+    width: '100%',
+    height: '100%',
+  },
+  loadingTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 30,
+  },
+  floatingStarsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  floatingStar: {
+    opacity: 0.7,
+  },
+  floatingStarImage: {
+    width: 24,
+    height: 24,
+  },
+  assetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  assetItem: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  starAsset: {
+    width: 48,
+    height: 48,
+  },
+  magnifyingAsset: {
+    width: 64,
+    height: 64,
+  },
+  funText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
