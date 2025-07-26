@@ -129,8 +129,8 @@ const searchPinterestAPI = async (query: string) => {
   try {
     console.log('🔍 Making Pinterest API request for:', query);
     
-    // Use boards endpoint for Pinterest
-    const url = `${PINTEREST_API_CONFIG.baseURL}/pinterest/boards/relevance?keyword=${encodeURIComponent(query)}&num=5`;
+    // Use pins endpoint for Pinterest (individual pins instead of boards)
+    const url = `${PINTEREST_API_CONFIG.baseURL}/pinterest/pins/relevance?keyword=${encodeURIComponent(query)}&num=20`;
     console.log('🔗 Pinterest API URL:', url);
     
     const response = await fetch(url, {
@@ -158,52 +158,68 @@ const searchPinterestAPI = async (query: string) => {
       throw new Error('Invalid response structure from Pinterest API');
     }
 
-    // Handle RapidAPI Pinterest response structure - data.data contains array of boards
-    const pins = data.data.slice(0, 5).map((board: any, index: number) => {
-      // Debug: Log the board structure to see what's available
-      console.log(`🔍 Pinterest Board ${index + 1}:`, {
-        name: board.name,
-        cover_images: board.cover_images,
-        image_cover_url: board.image_cover_url,
-        cover_pin: board.cover_pin,
-        pin_thumbnail_urls: board.pin_thumbnail_urls,
+    // Handle RapidAPI Pinterest response structure - data.data contains array of individual pins
+    const pins = data.data.slice(0, 8).map((pin: any, index: number) => {
+      // Debug: Log the pin structure to see what's available
+      console.log(`🔍 Pinterest Pin ${index + 1}:`, {
+        title: pin.title,
+        grid_title: pin.grid_title,
+        description: pin.description,
+        images: pin.images,
+        link: pin.link,
+        board: pin.board,
+        pinner: pin.pinner,
+        reaction_counts: pin.reaction_counts,
       });
 
-      // Extract image URL from board cover images or thumbnail URLs
-      const imageUrl = board.cover_images?.['400x300']?.url ||
-                      board.cover_images?.['216x146']?.url ||
-                      board.image_cover_url ||
-                      board.cover_pin?.image_thumbnail_url ||
-                      board.pin_thumbnail_urls?.[0] ||
+      // Extract image URL from pin images - prefer larger sizes
+      const imageUrl = pin.images?.['736x']?.url ||
+                      pin.images?.['474x']?.url ||
+                      pin.images?.['236x']?.url ||
+                      pin.images?.['170x']?.url ||
+                      pin.images?.orig?.url ||
                       'https://images.pexels.com/photos/3944091/pexels-photo-3944091.jpeg?auto=compress&cs=tinysrgb&w=400&h=500&fit=crop';
 
-      console.log(`🖼️ Pinterest Image URL for board ${index + 1}:`, imageUrl);
+      console.log(`🖼️ Pinterest Image URL for pin ${index + 1}:`, imageUrl);
 
-      // Construct Pinterest URL using board access path
-      const pinterestUrl = board.access?.url ? 
-                          `https://pinterest.com${board.access.url}` :
-                          `https://pinterest.com/search/pins/?q=${encodeURIComponent(query)}`;
-
-      // Extract title and description from board
-      const title = board.name || 
-                   board.description || 
-                   `${query} Pinterest Board ${index + 1}`;
+      // Extract title - prefer grid_title over title
+      const title = pin.grid_title || 
+                   pin.title || 
+                   `${query} Pinterest Pin ${index + 1}`;
       
-      const description = board.description || 
-                         board.name || 
+      const description = pin.description || 
+                         pin.auto_alt_text || 
                          '';
 
+      // Extract Pinterest URL
+      const pinterestUrl = pin.link || 
+                          `https://pinterest.com/pin/${pin.id || pin.node_id}`;
+
+      // Extract likes from reaction counts
+      const likes = pin.reaction_counts?.['1'] || 
+                   pin.reaction_counts?.like || 
+                   Math.floor(Math.random() * 1000 + 100);
+
+      // Extract saves from reaction counts
+      const saves = pin.reaction_counts?.['5'] || 
+                   pin.reaction_counts?.save || 
+                   Math.floor(Math.random() * 500 + 50);
+
+      // Extract board information
+      const boardName = pin.board?.name || undefined;
+      const userName = pin.pinner?.username || undefined;
+
       return {
-        id: board.node_id || `pinterest-${Date.now()}-${index}`,
+        id: pin.node_id || pin.id || `pinterest-${Date.now()}-${index}`,
         title: title,
         description: description,
         image_url: imageUrl,
         link: pinterestUrl,
-        likes: Math.floor(Math.random() * 1000 + 100), // Random since not provided in response
-        saves: Math.floor(Math.random() * 500 + 50), // Random since not provided in response
-        created_at: board.timestamp ? new Date(board.timestamp * 1000).toISOString() : new Date().toISOString(),
-        board_name: board.name || undefined,
-        user_name: board.access?.url?.split('/')[1] || undefined, // Extract username from access path
+        likes: likes,
+        saves: saves,
+        created_at: pin.created_at || new Date().toISOString(),
+        board_name: boardName,
+        user_name: userName,
       };
     });
 
@@ -223,7 +239,7 @@ const searchPinterestAPI = async (query: string) => {
     const samplePins = [
       {
         id: `pinterest-fallback-1`,
-        title: `${query} Pinterest Board`,
+        title: `${query} Pinterest Pin`,
         description: 'Sample Pinterest content for this search',
         image_url: 'https://images.pexels.com/photos/3944091/pexels-photo-3944091.jpeg?auto=compress&cs=tinysrgb&w=400&h=500&fit=crop',
         link: `https://pinterest.com/search/pins/?q=${encodeURIComponent(query)}`,

@@ -11,7 +11,7 @@ import {
   Pressable,
   Image,
 } from 'react-native';
-import { Heart, ExternalLink, RefreshCw, Share2, Bookmark } from 'lucide-react-native';
+import { Heart, ExternalLink, RefreshCw } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -73,13 +73,6 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
       return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();
-  };
-
-  const formatDateOnly = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString();
   };
 
   const styles = createStyles(theme);
@@ -225,53 +218,58 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
           </View>
         )}
 
-        <View style={styles.pinsGrid}>
-          {data.pins.slice(0, 6).map((pin, index) => (
-            <TouchableOpacity
-              key={pin.id}
-              style={[
-                styles.pinCard,
-                index % 2 === 0 ? styles.pinCardLeft : styles.pinCardRight,
-                index >= data.pins.length - 2 && styles.lastRowPin
-              ]}
-              onPress={() => handlePinPress(pin)}>
-              
-              {pin.image_url && (
-                <View style={styles.imageContainer}>
+        <View style={styles.pinsContainer}>
+          <View style={styles.leftColumn}>
+            {data.pins.filter((_, index) => index % 2 === 0).map((pin, index) => (
+              <TouchableOpacity
+                key={pin.id}
+                style={styles.pinCard}
+                onPress={() => handlePinPress(pin)}>
+                
+                {pin.image_url && (
                   <Image 
                     source={{ uri: pin.image_url }} 
-                    style={styles.pinImage}
+                    style={[
+                      styles.pinImage,
+                      // Vary image heights for masonry effect
+                      { height: 200 + (index % 4) * 60 } // Heights: 200, 260, 320, 380
+                    ]}
                     resizeMode="cover"
                   />
-                </View>
-              )}
-              
-              <View style={styles.pinContent}>
-                <Text style={styles.pinTitle} numberOfLines={2}>
-                  {pin.title}
-                </Text>
-                
-                {pin.description && (
-                  <Text style={styles.pinDescription} numberOfLines={1}>
-                    {pin.description}
-                  </Text>
                 )}
                 
-                <View style={styles.pinFooter}>
-                  {pin.user_name && (
-                    <Text style={styles.userName}>@{pin.user_name}</Text>
-                  )}
-                  
-                  <View style={styles.pinStats}>
-                    <View style={styles.statItem}>
-                      <Heart size={12} color={theme.colors.textSecondary} strokeWidth={1.5} />
-                      <Text style={styles.statText}>{formatNumber(pin.likes)}</Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <Text style={styles.pinTitle}>
+                  {pin.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          <View style={styles.rightColumn}>
+            {data.pins.filter((_, index) => index % 2 === 1).map((pin, index) => (
+              <TouchableOpacity
+                key={pin.id}
+                style={styles.pinCard}
+                onPress={() => handlePinPress(pin)}>
+                
+                {pin.image_url && (
+                  <Image 
+                    source={{ uri: pin.image_url }} 
+                    style={[
+                      styles.pinImage,
+                      // Vary image heights for masonry effect
+                      { height: 200 + (index % 4) * 60 } // Heights: 200, 260, 320, 380
+                    ]}
+                    resizeMode="cover"
+                  />
+                )}
+                
+                <Text style={styles.pinTitle}>
+                  {pin.title}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         {/* Modal for full pin details */}
@@ -351,7 +349,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -454,103 +452,37 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginLeft: 6,
   },
-  pinsGrid: {
+  pinsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  leftColumn: {
+    width: '48%',
+  },
+  rightColumn: {
+    width: '48%',
   },
   pinCard: {
-    width: '48%',
-    marginBottom: 16,
-    borderRadius: 16,
-    backgroundColor: theme.colors.surface,
-    overflow: 'hidden',
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  pinCardLeft: {
-    marginRight: 4,
-  },
-  pinCardRight: {
-    marginLeft: 4,
-  },
-  lastRowPin: {
-    marginBottom: 0,
-  },
-  imageContainer: {
-    position: 'relative',
     width: '100%',
+    marginBottom: 12, // Reduced spacing between rows
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   pinImage: {
     width: '100%',
-    height: 180,
-  },
-  imageOverlay: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-  },
-  saveButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 20,
-    padding: 8,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pinContent: {
-    padding: 12,
+    height: 200, // Base height, will be overridden by inline styles
+    borderRadius: 16,
+    marginBottom: 6, // Reduced spacing between image and title
   },
   pinTitle: {
-    fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    marginBottom: 6,
-    lineHeight: 22,
-  },
-  pinDescription: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  pinFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  userName: {
-    fontSize: 12,
     fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
-    flex: 1,
-  },
-  pinStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  statText: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginLeft: 4,
-  },
-  boardName: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
+    color: theme.colors.text,
+    lineHeight: 18, // Reduced line height
+    paddingHorizontal: 2, // Reduced horizontal padding
+    marginBottom: 4, // Reduced bottom margin
   },
   modalOverlay: {
     flex: 1,
