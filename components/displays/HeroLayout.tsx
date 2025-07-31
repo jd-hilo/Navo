@@ -27,7 +27,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeroLayoutProps {
   data: any;
-  type: 'gemini' | 'tiktok' | 'reddit' | 'pinterest';
+  type: 'perplexity_sonar' | 'tiktok' | 'reddit' | 'pinterest';
   query: string;
   onRetry?: () => void;
 }
@@ -41,7 +41,7 @@ export default function HeroLayout({ data, type, query, onRetry }: HeroLayoutPro
 
   const getTypeIcon = () => {
     switch (type) {
-      case 'gemini': return <Sparkles size={24} color="#fff" />;
+      case 'perplexity_sonar': return <Sparkles size={24} color="#fff" />;
       case 'tiktok': return <Play size={24} color="#fff" />;
       case 'reddit': return <MessageCircle size={24} color="#fff" />;
       case 'pinterest': return <Heart size={24} color="#fff" />;
@@ -51,7 +51,7 @@ export default function HeroLayout({ data, type, query, onRetry }: HeroLayoutPro
 
   const getTypeGradient = () => {
     switch (type) {
-      case 'gemini': return theme.gradients.gemini;
+      case 'perplexity_sonar': return theme.gradients.gemini;
       case 'tiktok': return theme.gradients.tiktok;
       case 'reddit': return theme.gradients.reddit;
       case 'pinterest': return theme.gradients.pinterest;
@@ -61,7 +61,7 @@ export default function HeroLayout({ data, type, query, onRetry }: HeroLayoutPro
 
   const getTypeTitle = () => {
     switch (type) {
-      case 'gemini': return 'AI Answer';
+      case 'perplexity_sonar': return 'AI Answer';
       case 'tiktok': return 'Featured Video';
       case 'reddit': return 'Top Discussion';
       case 'pinterest': return 'Featured Pin';
@@ -288,7 +288,7 @@ export default function HeroLayout({ data, type, query, onRetry }: HeroLayoutPro
 
   const renderHeroContent = () => {
     switch (type) {
-      case 'gemini': return renderGeminiHero();
+      case 'perplexity_sonar': return renderGeminiHero();
       case 'tiktok': return renderTikTokHero();
       case 'reddit': return renderRedditHero();
       case 'pinterest': return renderPinterestHero();
@@ -323,7 +323,7 @@ export default function HeroLayout({ data, type, query, onRetry }: HeroLayoutPro
               
               {selectedItem && (
                 <View style={styles.modalBody}>
-                  {type === 'gemini' && (
+                  {type === 'perplexity_sonar' && (
                     <Text style={styles.modalText}>{selectedItem.response}</Text>
                   )}
                   {type === 'tiktok' && (

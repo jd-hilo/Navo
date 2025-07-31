@@ -216,8 +216,8 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                   />
                 )}
                 
-                <Text style={styles.pinTitle}>
-                  {pin.title}
+                <Text style={styles.pinTitle} numberOfLines={2} ellipsizeMode="tail">
+                  {typeof pin.title === 'string' ? pin.title : 'Pinterest Pin'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -242,8 +242,8 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                   />
                 )}
                 
-                <Text style={styles.pinTitle}>
-                  {pin.title}
+                <Text style={styles.pinTitle} numberOfLines={2} ellipsizeMode="tail">
+                  {typeof pin.title === 'string' ? pin.title : 'Pinterest Pin'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -280,10 +280,14 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                       />
                     )}
                     
-                    <Text style={styles.modalTitle}>{selectedPin.title}</Text>
+                    <Text style={styles.modalTitle}>
+                      {typeof selectedPin.title === 'string' ? selectedPin.title : 'Pinterest Pin'}
+                    </Text>
                     
                     {selectedPin.description && (
-                      <Text style={styles.modalDescription}>{selectedPin.description}</Text>
+                      <Text style={styles.modalDescription}>
+                        {typeof selectedPin.description === 'string' ? selectedPin.description : ''}
+                      </Text>
                     )}
                     
                     <View style={styles.modalStats}>

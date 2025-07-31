@@ -52,14 +52,24 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     console.log('🔍 Caret indices:', { firstCaretIndex, secondCaretIndex });
     
     if (firstCaretIndex !== -1 && secondCaretIndex !== -1) {
+      // Standard format: ^^ summary ^^ details
       const summary = response.substring(firstCaretIndex + 2, secondCaretIndex).trim();
-      // Remove the entire careted section (including the carets)
       const beforeCarets = response.substring(0, firstCaretIndex).trim();
       const afterCarets = response.substring(secondCaretIndex + 2).trim();
       const details = (beforeCarets + ' ' + afterCarets).trim();
       
       console.log('🔍 Summary:', summary);
       console.log('🔍 Details:', details);
+      
+      return { summary, details };
+    } else if (firstCaretIndex !== -1 && secondCaretIndex === -1) {
+      // Only one set of carets at the beginning: ^^ content...
+      const content = response.substring(firstCaretIndex + 2).trim();
+      const summary = content.substring(0, 100) + (content.length > 100 ? '...' : '');
+      const details = content;
+      
+      console.log('🔍 Single caret format - Summary:', summary);
+      console.log('🔍 Single caret format - Details:', details);
       
       return { summary, details };
     }
@@ -129,7 +139,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
             <View style={styles.titleContainer}>
               <View style={styles.searchingIndicator}>
                 <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
-                <Text style={styles.searchingText}>Google Search</Text>
+                <Text style={styles.searchingText}>Perplexity Search</Text>
               </View>
             </View>
           </View>
@@ -145,6 +155,9 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 
   // Show error state
   if (!data.success && data.error) {
+    const isOverloadError = data.error.includes('overloaded') || data.error.includes('503');
+    const isRateLimitError = data.error.includes('rate limit') || data.error.includes('429');
+    
     return (
       <LinearGradient
         colors={theme.gradients.gemini as unknown as readonly [string, string, ...string[]]}
@@ -155,17 +168,28 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
           <View style={styles.header}>
             <View style={styles.titleContainer}>
               <View style={styles.errorIndicator}>
-                <Text style={styles.errorIndicatorText}>Error</Text>
+                <Text style={styles.errorIndicatorText}>
+                  {isOverloadError ? 'Temporarily Unavailable' : 'Error'}
+                </Text>
               </View>
             </View>
           </View>
           
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{data.error}</Text>
+            <Text style={styles.errorText}>
+              {isOverloadError 
+                ? 'Perplexity Sonar is currently experiencing high traffic. Please try again in a moment.'
+                : isRateLimitError
+                ? 'Too many requests to Perplexity Sonar. Please wait a moment before trying again.'
+                : data.error
+              }
+            </Text>
             {onRetry && (
               <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
                 <RefreshCw size={16} color={theme.colors.text} strokeWidth={2} />
-                <Text style={styles.retryText}>Try Again</Text>
+                <Text style={styles.retryText}>
+                  {isOverloadError ? 'Try Again' : 'Retry'}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -190,7 +214,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
           <View style={styles.titleContainer}>
             <View style={styles.webSearchIndicator}>
               <Search size={12} color={theme.colors.indicator.webSearchText} strokeWidth={2} />
-              <Text style={styles.webSearchText}>Gemini Flash 1.5</Text>
+              <Text style={styles.webSearchText}>Sonar Pro</Text>
             </View>
           </View>
           
@@ -295,7 +319,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         {data.success && data.usage && (
           <View style={styles.usageContainer}>
             <Text style={styles.usageText}>
-              {data.usage.totalTokenCount} tokens • Google Search enabled
+              {data.usage.totalTokenCount} tokens • Perplexity Search enabled
               {cached && ' • From cache'}
             </Text>
           </View>
@@ -541,20 +565,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: 12,
   },
   detailsPreview: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 22,
     marginBottom: 8,
   },
 });
 
 const createMarkdownStyles = (theme: any) => StyleSheet.create({
   body: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
-    lineHeight: 18,
+    lineHeight: 22,
   },
   heading1: {
     fontSize: 16,
@@ -597,10 +621,10 @@ const createMarkdownStyles = (theme: any) => StyleSheet.create({
     marginVertical: 4,
   },
   list_item: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
-    lineHeight: 18,
+    lineHeight: 22,
     marginVertical: 1,
   },
   bullet_list: {

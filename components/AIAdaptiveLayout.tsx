@@ -26,7 +26,7 @@ import PinterestSection from './PinterestSection';
 // import CarouselLayout from './displays/CarouselLayout';
 
 interface SearchResult {
-  type: 'gemini' | 'tiktok' | 'reddit' | 'pinterest';
+  type: 'perplexity_sonar' | 'tiktok' | 'reddit' | 'pinterest';
   data: any;
   priority: number;
   contentType: string;
@@ -83,8 +83,8 @@ const analyzeOptimalLayout = (query: string, results: any): SearchResult[] => {
     }
     
     searchResults.push({
-      type: 'gemini',
-      data: results.gemini,
+              type: 'perplexity_sonar',
+        data: results.gemini,
       priority,
       contentType: isStructured ? 'structured' : 'narrative',
       userIntent: isHowToQuery ? 'how-to' : isVisualQuery ? 'visual' : 'information',
@@ -188,7 +188,7 @@ const getLayoutComponent = (result: SearchResult, query: string, onRetry?: () =>
   
   // For now, always use original components until we build the adaptive layouts
   switch (type) {
-    case 'gemini':
+    case 'perplexity_sonar':
       return <GeminiSection data={data} query={query} onRetry={onRetry} />;
     case 'tiktok':
       return <TikTokSection data={data} query={query} onRetry={onRetry} />;

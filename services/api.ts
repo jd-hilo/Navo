@@ -1,4 +1,4 @@
-import { searchGemini, generateMockGeminiResponse } from './gemini';
+import { searchSonar, generateMockSonarResponse } from './sonar';
 import { SearchResultsService } from './database';
 import { supabase } from './database';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -502,15 +502,15 @@ export const searchAllSources = async (query: string, isPremium: boolean = false
   const redditStart = Date.now();
   const pinterestStart = Date.now();
 
-  const geminiPromise = searchGemini(query).then(result => {
-    console.log(`⏱️ Gemini response returned in ${Date.now() - geminiStart}ms`);
+  const sonarPromise = searchSonar(query).then(result => {
+    console.log(`⏱️ Sonar response returned in ${Date.now() - geminiStart}ms`);
     return result;
   }).catch(error => {
-    console.error('Error calling Google Gemini API:', error);
+    console.error('Error calling Perplexity Sonar API:', error);
     return {
-      response: generateMockGeminiResponse(query),
+      response: generateMockSonarResponse(query),
       success: false,
-      error: 'Unable to connect to Google Gemini. Showing sample response.',
+      error: 'Unable to connect to Perplexity Sonar. Showing sample response.',
       hasWebSearch: false,
     };
   });
@@ -531,15 +531,15 @@ export const searchAllSources = async (query: string, isPremium: boolean = false
   });
 
   // Wait for all to finish
-  const [geminiResults, tiktokResults, redditResults, pinterestResults] = await Promise.all([
-    geminiPromise,
+  const [sonarResults, tiktokResults, redditResults, pinterestResults] = await Promise.all([
+    sonarPromise,
     tiktokPromise,
     redditPromise,
     pinterestPromise,
   ]);
   
   const results = {
-    gemini: geminiResults,
+    gemini: sonarResults,
     tiktok: tiktokResults,
     reddit: redditResults,
     pinterest: pinterestResults,
@@ -557,7 +557,7 @@ export const searchAllSources = async (query: string, isPremium: boolean = false
 
 // Individual API functions for future use
 export const searchGeminiAPI = async (query: string) => {
-  return await searchGemini(query);
+  return await searchSonar(query);
 };
 
 export const searchTikTok = async (query: string) => {

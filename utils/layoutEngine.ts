@@ -1,4 +1,4 @@
-export type ModuleType = 'google_gemini' | 'tiktok' | 'reddit' | 'pinterest';
+export type ModuleType = 'perplexity_sonar' | 'tiktok' | 'reddit' | 'pinterest';
 export type PriorityLevel = 'high' | 'medium' | 'low' | 'none';
 export type DisplayMode = 'full' | 'expandable' | 'collapsed' | 'hidden';
 
@@ -23,8 +23,12 @@ const INTENT_PATTERNS: Record<string, { keywords: string[]; examples: string[] }
     examples: ['Best food spots in Austin', 'Restaurants near me', 'Coffee shops downtown']
   },
   visual: {
-    keywords: ['aesthetic', 'design', 'outfit', 'style', 'decor', 'inspiration', 'ideas', 'trends', 'hair', 'makeup', 'fashion', 'interior', 'exterior', 'color', 'theme'],
-    examples: ['Bedroom aesthetic ideas', 'Summer outfit inspiration', 'Kitchen design trends']
+    keywords: ['aesthetic', 'design', 'outfit', 'style', 'decor', 'inspiration', 'ideas', 'trends', 'hair', 'makeup', 'fashion', 'interior', 'exterior', 'color', 'theme', 'look', 'outfit', 'clothing', 'dress', 'shoes', 'accessories', 'jewelry', 'bag', 'purse', 'heels', 'sneakers', 'jeans', 'dress', 'skirt', 'blouse', 'jacket', 'coat', 'sweater', 'shirt', 'pants', 'shorts', 'swimsuit', 'bikini', 'lingerie', 'underwear', 'bra', 'panties', 'socks', 'stockings', 'tights', 'leggings', 'yoga pants', 'workout clothes', 'athleisure', 'streetwear', 'casual', 'formal', 'business', 'professional', 'elegant', 'chic', 'trendy', 'vintage', 'retro', 'modern', 'minimalist', 'bohemian', 'boho', 'grunge', 'punk', 'gothic', 'preppy', 'classic', 'timeless', 'sustainable', 'ethical', 'fast fashion', 'luxury', 'designer', 'brand', 'logo', 'pattern', 'print', 'solid', 'stripes', 'polka dots', 'floral', 'animal print', 'leopard', 'zebra', 'snake', 'cow', 'tie dye', 'tie-dye', 'ombre', 'gradient', 'metallic', 'sequin', 'sparkle', 'glitter', 'velvet', 'satin', 'silk', 'cotton', 'denim', 'leather', 'suede', 'fur', 'faux fur', 'knit', 'crochet', 'lace', 'mesh', 'sheer', 'transparent', 'opaque', 'stretchy', 'loose', 'tight', 'fitted', 'oversized', 'cropped', 'long', 'short', 'mini', 'midi', 'maxi', 'ankle', 'floor length', 'high waisted', 'low waisted', 'mid rise', 'high rise', 'low rise', 'skinny', 'straight', 'wide leg', 'bootcut', 'flare', 'bell bottom', 'mom jeans', 'boyfriend jeans', 'girlfriend jeans', 'distressed', 'ripped', 'faded', 'dark wash', 'light wash', 'black', 'white', 'navy', 'khaki', 'beige', 'cream', 'ivory', 'gray', 'grey', 'silver', 'gold', 'rose gold', 'copper', 'bronze', 'brown', 'tan', 'camel', 'taupe', 'olive', 'army green', 'forest green', 'emerald', 'teal', 'turquoise', 'aqua', 'blue', 'royal blue', 'navy blue', 'sky blue', 'baby blue', 'powder blue', 'periwinkle', 'lavender', 'purple', 'violet', 'plum', 'burgundy', 'maroon', 'red', 'coral', 'salmon', 'pink', 'hot pink', 'fuchsia', 'magenta', 'orange', 'peach', 'apricot', 'yellow', 'mustard', 'chartreuse', 'lime', 'mint', 'sage', 'jade', 'turquoise', 'teal', 'indigo', 'periwinkle', 'lavender', 'lilac', 'mauve', 'rose', 'blush', 'dusty rose', 'terracotta', 'rust', 'copper', 'bronze', 'gold', 'silver', 'champagne', 'cream', 'ivory', 'off white', 'ecru', 'beige', 'tan', 'camel', 'khaki', 'olive', 'army green', 'forest green', 'hunter green', 'emerald', 'jade', 'sage', 'mint', 'seafoam', 'aqua', 'turquoise', 'teal', 'navy', 'royal blue', 'cobalt', 'periwinkle', 'lavender', 'lilac', 'mauve', 'plum', 'burgundy', 'wine', 'maroon', 'crimson', 'ruby', 'coral', 'salmon', 'peach', 'apricot', 'nude', 'blush', 'rose', 'dusty rose', 'magenta', 'fuchsia', 'hot pink', 'bubblegum', 'baby pink', 'powder pink', 'rose gold', 'copper', 'bronze', 'gold', 'silver', 'champagne', 'cream', 'ivory', 'off white', 'ecru', 'beige', 'tan', 'camel', 'khaki', 'olive', 'army green', 'forest green', 'hunter green', 'emerald', 'jade', 'sage', 'mint', 'seafoam', 'aqua', 'turquoise', 'teal', 'navy', 'royal blue', 'cobalt', 'periwinkle', 'lavender', 'lilac', 'mauve', 'plum', 'burgundy', 'wine', 'maroon', 'crimson', 'ruby', 'coral', 'salmon', 'peach', 'apricot', 'nude', 'blush', 'rose', 'dusty rose', 'magenta', 'fuchsia', 'hot pink', 'bubblegum', 'baby pink', 'powder pink'],
+    examples: ['Bedroom aesthetic ideas', 'Summer outfit inspiration', 'Kitchen design trends', 'Fashion inspiration', 'Style ideas', 'Outfit combinations']
+  },
+  fashion: {
+    keywords: ['fashion', 'outfit', 'style', 'clothing', 'dress', 'shoes', 'accessories', 'jewelry', 'bag', 'purse', 'heels', 'sneakers', 'jeans', 'skirt', 'blouse', 'jacket', 'coat', 'sweater', 'shirt', 'pants', 'shorts', 'swimsuit', 'bikini', 'lingerie', 'underwear', 'bra', 'panties', 'socks', 'stockings', 'tights', 'leggings', 'yoga pants', 'workout clothes', 'athleisure', 'streetwear', 'casual', 'formal', 'business', 'professional', 'elegant', 'chic', 'trendy', 'vintage', 'retro', 'modern', 'minimalist', 'bohemian', 'boho', 'grunge', 'punk', 'gothic', 'preppy', 'classic', 'timeless', 'sustainable', 'ethical', 'fast fashion', 'luxury', 'designer', 'brand', 'logo', 'pattern', 'print', 'solid', 'stripes', 'polka dots', 'floral', 'animal print', 'leopard', 'zebra', 'snake', 'cow', 'tie dye', 'tie-dye', 'ombre', 'gradient', 'metallic', 'sequin', 'sparkle', 'glitter', 'velvet', 'satin', 'silk', 'cotton', 'denim', 'leather', 'suede', 'fur', 'faux fur', 'knit', 'crochet', 'lace', 'mesh', 'sheer', 'transparent', 'opaque', 'stretchy', 'loose', 'tight', 'fitted', 'oversized', 'cropped', 'long', 'short', 'mini', 'midi', 'maxi', 'ankle', 'floor length', 'high waisted', 'low waisted', 'mid rise', 'high rise', 'low rise', 'skinny', 'straight', 'wide leg', 'bootcut', 'flare', 'bell bottom', 'mom jeans', 'boyfriend jeans', 'girlfriend jeans', 'distressed', 'ripped', 'faded', 'dark wash', 'light wash', 'black', 'white', 'navy', 'khaki', 'beige', 'cream', 'ivory', 'gray', 'grey', 'silver', 'gold', 'rose gold', 'copper', 'bronze', 'brown', 'tan', 'camel', 'taupe', 'olive', 'army green', 'forest green', 'emerald', 'teal', 'turquoise', 'aqua', 'blue', 'royal blue', 'navy blue', 'sky blue', 'baby blue', 'powder blue', 'periwinkle', 'lavender', 'purple', 'violet', 'plum', 'burgundy', 'maroon', 'red', 'coral', 'salmon', 'pink', 'hot pink', 'fuchsia', 'magenta', 'orange', 'peach', 'apricot', 'yellow', 'mustard', 'chartreuse', 'lime', 'mint', 'sage', 'jade', 'turquoise', 'teal', 'indigo', 'periwinkle', 'lavender', 'lilac', 'mauve', 'rose', 'blush', 'dusty rose', 'terracotta', 'rust', 'copper', 'bronze', 'gold', 'silver', 'champagne', 'cream', 'ivory', 'off white', 'ecru', 'beige', 'tan', 'camel', 'khaki', 'olive', 'army green', 'forest green', 'hunter green', 'emerald', 'jade', 'sage', 'mint', 'seafoam', 'aqua', 'turquoise', 'teal', 'navy', 'royal blue', 'cobalt', 'periwinkle', 'lavender', 'lilac', 'mauve', 'plum', 'burgundy', 'wine', 'maroon', 'crimson', 'ruby', 'coral', 'salmon', 'peach', 'apricot', 'nude', 'blush', 'rose', 'dusty rose', 'magenta', 'fuchsia', 'hot pink', 'bubblegum', 'baby pink', 'powder pink', 'rose gold', 'copper', 'bronze', 'gold', 'silver', 'champagne', 'cream', 'ivory', 'off white', 'ecru', 'beige', 'tan', 'camel', 'khaki', 'olive', 'army green', 'forest green', 'hunter green', 'emerald', 'jade', 'sage', 'mint', 'seafoam', 'aqua', 'turquoise', 'teal', 'navy', 'royal blue', 'cobalt', 'periwinkle', 'lavender', 'lilac', 'mauve', 'plum', 'burgundy', 'wine', 'maroon', 'crimson', 'ruby', 'coral', 'salmon', 'peach', 'apricot', 'nude', 'blush', 'rose', 'dusty rose', 'magenta', 'fuchsia', 'hot pink', 'bubblegum', 'baby pink', 'powder pink'],
+    examples: ['Summer fashion trends', 'Work outfit ideas', 'Date night dress', 'Casual street style', 'Formal wear inspiration', 'Accessories styling']
   },
   product_research: {
     keywords: ['best', 'review', 'comparison', 'vs', 'recommend', 'buy', 'purchase', 'price', 'budget', 'expensive', 'cheap', 'quality', 'features', 'specs'],
@@ -62,7 +66,7 @@ function classifyIntent(query: string): string {
 
 const LAYOUT_CONFIGS: Record<string, ModuleLayout[]> = {
   factual: [
-    { module: 'google_gemini', priority: 'high', display: 'full' },
+    { module: 'perplexity_sonar', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
     { module: 'tiktok', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
@@ -70,17 +74,23 @@ const LAYOUT_CONFIGS: Record<string, ModuleLayout[]> = {
   local: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'google_gemini', priority: 'low', display: 'collapsed' },
+    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
   ],
   visual: [
     { module: 'pinterest', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
     { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'google_gemini', priority: 'none', display: 'hidden' }
+    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
+  ],
+  fashion: [
+    { module: 'pinterest', priority: 'high', display: 'full' },
+    { module: 'tiktok', priority: 'medium', display: 'expandable' },
+    { module: 'reddit', priority: 'low', display: 'collapsed' },
+    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
   ],
   product_research: [
-    { module: 'google_gemini', priority: 'high', display: 'full' },
+    { module: 'perplexity_sonar', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
     { module: 'tiktok', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
@@ -88,30 +98,30 @@ const LAYOUT_CONFIGS: Record<string, ModuleLayout[]> = {
   how_to: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'google_gemini', priority: 'low', display: 'collapsed' },
+    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
   ],
   social: [
     { module: 'reddit', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
-    { module: 'google_gemini', priority: 'low', display: 'collapsed' },
+    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
   ],
   entertainment: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'google_gemini', priority: 'low', display: 'collapsed' },
+    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
   ],
   lifestyle: [
     { module: 'pinterest', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
     { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'google_gemini', priority: 'none', display: 'hidden' }
+    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
   ],
   general: [
     { module: 'tiktok', priority: 'high', display: 'full' },
-    { module: 'google_gemini', priority: 'medium', display: 'expandable' },
+    { module: 'perplexity_sonar', priority: 'medium', display: 'expandable' },
     { module: 'reddit', priority: 'low', display: 'collapsed' },
     { module: 'pinterest', priority: 'none', display: 'hidden' }
   ]

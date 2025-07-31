@@ -1,24 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
   Alert,
-  ScrollView,
+  Animated,
+  Dimensions,
+  Modal,
 } from 'react-native';
-import { Search, ChevronDown, ChevronUp, Bookmark, Trash2 } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Search, ChevronDown, ChevronUp, Bookmark, Trash2, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 import GeminiSection from '@/components/GeminiSection';
 import TikTokSection from '@/components/TikTokSection';
 import RedditSection from '@/components/RedditSection';
 import { SavedSearchesService } from '@/services/database';
 import { useAuth } from '@/contexts/AuthContext';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 interface SavedSearch {
   id: string;
@@ -29,21 +29,44 @@ interface SavedSearch {
   reddit_data: any;
 }
 
-export default function SavedScreen() {
+interface SavedSearchesModalProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+export default function SavedSearchesModal({ visible, onClose }: SavedSearchesModalProps) {
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  
+  // Animation for bottom slide transition
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
 
-  // Load saved searches when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      if (user?.id) {
-        loadSavedSearches();
-      }
-    }, [user?.id])
-  );
+  // Load saved searches when modal becomes visible
+  useEffect(() => {
+    if (visible && user?.id) {
+      loadSavedSearches();
+      // Animate in from bottom
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible, user?.id]);
+
+  const handleClose = () => {
+    // Animate out to bottom
+    Animated.timing(slideAnim, {
+      toValue: screenHeight,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      onClose();
+    });
+  };
 
   const loadSavedSearches = async () => {
     if (!user?.id) return;
@@ -169,7 +192,7 @@ export default function SavedScreen() {
               <View style={styles.expandedSection}>
                 <View style={styles.moduleHeader}>
                   <View style={styles.moduleHeaderLeft}>
-                    <Text style={styles.moduleTitle}>GOOGLE GEMINI</Text>
+                    <Text style={styles.moduleTitle}>PERPLEXITY SONAR</Text>
                     <View style={[styles.priorityIndicator, { backgroundColor: '#10B981' }]} />
                   </View>
                 </View>
@@ -195,7 +218,7 @@ export default function SavedScreen() {
                 />
               </View>
             )}
-                        {item.reddit_data && (
+            {item.reddit_data && (
               <View style={styles.expandedSection}>
                 <View style={styles.moduleHeader}>
                   <View style={styles.moduleHeaderLeft}>
@@ -216,9 +239,21 @@ export default function SavedScreen() {
   };
 
   const styles = StyleSheet.create({
-    container: {
+    modalOverlay: {
       flex: 1,
+      backgroundColor: 'transparent',
+      justifyContent: 'flex-end',
+    },
+    container: {
+      height: screenHeight * 0.9,
       backgroundColor: theme.colors.background,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 20,
+      elevation: 10,
     },
     header: {
       flexDirection: 'row',
@@ -227,6 +262,24 @@ export default function SavedScreen() {
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 8,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
     },
     title: {
       fontSize: 28,
@@ -241,6 +294,7 @@ export default function SavedScreen() {
       paddingHorizontal: 12,
       paddingVertical: 4,
       borderRadius: 12,
+      marginLeft: 7,
     },
     searchItemContainer: {
       marginHorizontal: 16,
@@ -341,10 +395,6 @@ export default function SavedScreen() {
       borderRadius: 3,
       marginLeft: 8,
     },
-    gradientBorder: {
-      borderRadius: 14,
-      marginBottom: 16,
-    },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
@@ -374,28 +424,57 @@ export default function SavedScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Saved searches</Text>
-        <Text style={styles.count}>{savedSearches.length}</Text>
-      </View>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading saved searches...</Text>
-        </View>
-      ) : savedSearches.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No saved searches yet</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={savedSearches}
-          renderItem={renderSearchItem}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-    </SafeAreaView>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="none"
+      onRequestClose={handleClose}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={handleClose}
+      >
+        <Animated.View 
+          style={[
+            styles.container,
+            {
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
+        >
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={styles.title}>Saved searches</Text>
+              <Text style={styles.count}>{savedSearches.length}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleClose}
+              activeOpacity={0.7}
+            >
+              <X size={24} color={theme.colors.text} strokeWidth={2} />
+            </TouchableOpacity>
+          </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading saved searches...</Text>
+            </View>
+          ) : savedSearches.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No saved searches yet</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={savedSearches}
+              renderItem={renderSearchItem}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContainer}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </Animated.View>
+      </TouchableOpacity>
+    </Modal>
   );
-}
+} 

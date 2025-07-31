@@ -26,6 +26,7 @@ import {
   CheckCircle,
   RefreshCw,
   Trash2,
+  X,
 } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -193,8 +194,17 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Customize your Navo experience</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Settings</Text>
+          <Text style={styles.subtitle}>Customize your Navo experience</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <X size={24} color={theme.colors.text} strokeWidth={2} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -231,7 +241,7 @@ export default function SettingsScreen() {
                   {isPremium ? 'Premium Plan' : 'Free Plan'}
                 </Text>
                 <Text style={styles.subscriptionStatus}>
-                  {isPremium ? 'Active subscription' : 'Upgrade for more features'}
+                  {isPremium ? 'Active subscription' : 'Upgrade for more searches'}
                 </Text>
                 {isPremium && (
                   <Text style={styles.premiumDetails}>
@@ -374,6 +384,25 @@ const createStyles = (theme: any) =>
       paddingHorizontal: 24,
       paddingTop: 16,
       paddingBottom: 8,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+    },
+    headerContent: {
+      flex: 1,
+    },
+    closeButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
     },
     title: {
       fontSize: 28,

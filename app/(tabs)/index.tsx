@@ -15,10 +15,10 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bookmark, Crown, Plus } from 'lucide-react-native';
+import { Bookmark, Crown, Plus, Settings } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
-import SearchBar from '@/components/SearchBar';
+import AnimatedSearchBar from '../../components/AnimatedSearchBar';
 import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
 import LoadingCard from '@/components/LoadingCard';
 import { Search } from 'lucide-react-native';
@@ -32,7 +32,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { SearchResultsService, GeneralSearchesService, SavedSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
 import PremiumModal from '@/components/PremiumModal';
-import AddCreditsModal from '@/components/AddCreditsModal';
+import SavedSearchesModal from '@/components/SavedSearchesModal';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -58,51 +58,9 @@ const getFunLoadingMessage = () => {
   return messages[Math.floor(Math.random() * messages.length)];
 };
 
-const SEARCH_SUGGESTIONS = [
 
-  `Tech News ${getCurrentDate()}`,
-  'How to lose weight fast',
-  'Best movies 2025',
-  'Restaurants near me',
-  'Weather today',
-  'How to make money online',
-  'Best workout routine',
-  'Healthy breakfast ideas',
-  'Travel deals this week',
-  'How to cook pasta',
-  'Best gaming laptops',
-  'How to meditate',
-  'Latest iPhone rumors',
-  'How to save money',
-  'Best dating apps',
-  'How to sleep better',
-  'Latest sports scores',
-  'How to learn guitar',
-  'Best Netflix shows',
-];
 
-// Configurable suggestion styling constants - EDIT THESE VALUES
-const SUGGESTION_CONFIG = {
-  // Container spacing - controls overall padding around suggestions
-  containerPaddingHorizontal: 20, // Reduced from 28 to 20
-  containerPaddingVertical: 0,    // No vertical padding for flush appearance
-  
-  // Individual chip styling - controls each suggestion button
-  chipPaddingHorizontal: 16,      // Reduced from 24 to 16 (smaller chips)
-  chipPaddingVertical: 8,         // Reduced from 12 to 8 (shorter chips)
-  chipMarginHorizontal: 6,        // Reduced from 10 to 6 (less space between chips)
-  chipBorderRadius: 16,           // Reduced from 24 to 16 (less rounded)
-  
-  // Typography
-  fontSize: 12,                   // Reduced from 14 to 12 (smaller text)
-  fontWeight: 'Inter-Medium' as const,
-  
-  // Positioning
-  gapFromSearchBar: -8,            // Negative value to ensure suggestions are flush with search bar
-  
-  // Animation
-  animationDuration: 300,
-};
+
 
 export default function HomeScreen() {
   const { theme, isDark } = useTheme();
@@ -114,20 +72,19 @@ export default function HomeScreen() {
   const [hasSearched, setHasSearched] = useState(false);
   const [isBookmarkSaved, setIsBookmarkSaved] = useState(false);
   const [searchCount, setSearchCount] = useState(0);
+  const [showSavedSearchesModal, setShowSavedSearchesModal] = useState(false);
   const router = useRouter();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showAddCreditsModal, setShowAddCreditsModal] = useState(false);
 
   // Animation values
-  const searchBarPosition = useRef(new Animated.Value(0)).current;
   const headerOpacity = useRef(new Animated.Value(1)).current;
   const cardsTranslateY = useRef(new Animated.Value(screenHeight)).current;
   const cardsOpacity = useRef(new Animated.Value(0)).current;
-  const suggestionsOpacity = useRef(new Animated.Value(1)).current;
   const bookmarkScale = useRef(new Animated.Value(0)).current;
   const bookmarkOpacity = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
   
   // Loading animation values
   const loadingProgress = useRef(new Animated.Value(0)).current;
@@ -239,6 +196,15 @@ export default function HomeScreen() {
     loadSearchCount();
   }, []);
 
+  // Logo fade-in animation on mount
+  useEffect(() => {
+    Animated.timing(logoOpacity, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   // Show bookmark when search results are available
   useEffect(() => {
     if (searchResults && debouncedQuery && !isBookmarkSaved) {
@@ -276,21 +242,11 @@ export default function HomeScreen() {
   }, [debouncedQuery, user?.id]);
 
   const animateToSearchMode = () => {
-    // Animate search bar to top and show cards immediately
+    // Show cards immediately when search starts
     Animated.parallel([
-      Animated.timing(searchBarPosition, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
       Animated.timing(headerOpacity, {
         toValue: 0,
         duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(suggestionsOpacity, {
-        toValue: 0,
-        duration: SUGGESTION_CONFIG.animationDuration,
         useNativeDriver: true,
       }),
       // Animate cards in immediately when search starts
@@ -310,19 +266,9 @@ export default function HomeScreen() {
 
   const animateToInitialMode = () => {
     Animated.parallel([
-      Animated.timing(searchBarPosition, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
       Animated.timing(headerOpacity, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true,
-      }),
-      Animated.timing(suggestionsOpacity, {
-        toValue: 1,
-        duration: SUGGESTION_CONFIG.animationDuration,
         useNativeDriver: true,
       }),
       Animated.timing(cardsTranslateY, {
@@ -333,6 +279,11 @@ export default function HomeScreen() {
       Animated.timing(cardsOpacity, {
         toValue: 0,
         duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
@@ -448,11 +399,7 @@ export default function HomeScreen() {
     }
   }, [debouncedQuery, refetch]);
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    setDebouncedQuery('');
-    animateToInitialMode();
-  };
+
 
   const handleRetry = useCallback(() => {
     refetch();
@@ -461,6 +408,13 @@ export default function HomeScreen() {
   const handleSuggestionPress = (suggestion: string) => {
     setSearchQuery(suggestion);
     // This will trigger the useEffect and start the search
+    if (suggestion.trim().length > 2) {
+      debouncedSearch(suggestion);
+      if (!hasSearched) {
+        setHasSearched(true);
+        animateToSearchMode();
+      }
+    }
   };
 
   const handleUpgrade = () => {
@@ -502,38 +456,17 @@ export default function HomeScreen() {
 
   const styles = createStyles(theme);
 
-  // Calculate search bar width and positioning
-  const searchBarWidth = Math.min(screenWidth * 0.85, 400); // Search bar is 85% of screen
-  const searchBarLeftMargin = (screenWidth - searchBarWidth) / 2;
+  // Calculate cards width and positioning
   const cardsWidth = Math.min(screenWidth * 0.92, 400); // Cards are 92% of screen
   const cardsLeftMargin = (screenWidth - cardsWidth) / 2;
 
-  // Interpolate search bar position - move to very top
-  const searchBarTranslateY = searchBarPosition.interpolate({
+  // Calculate the results container position
+  const resultsTranslateY = cardsTranslateY.interpolate({
     inputRange: [0, 1],
-    outputRange: [screenHeight * 0.4, Platform.OS === 'web' ? 20 : 60],
+    outputRange: [screenHeight, 100], // Fixed position from top
   });
 
-  const searchBarScale = searchBarPosition.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1.1, 0.95],
-  });
 
-  // Calculate the results container position using transform
-  const searchBarHeight = Platform.OS === 'ios' ? 48 : 46;
-  const resultsTranslateY = searchBarPosition.interpolate({
-    inputRange: [0, 1],
-    outputRange: [screenHeight, (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2], // Minimal 2px gap
-  });
-
-  // Calculate suggestions position using transform
-  const suggestionsTranslateY = searchBarPosition.interpolate({
-    inputRange: [0, 1],
-    outputRange: [
-      screenHeight * 0.4 + 80, 
-      (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + SUGGESTION_CONFIG.gapFromSearchBar
-    ],
-  });
 
   // Clear timer on unmount
   useEffect(() => {
@@ -568,7 +501,7 @@ export default function HomeScreen() {
                 display:
                   // Calculate the vertical position of the line
                   (screenHeight * 0.4 + 20 <
-                    (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2 &&
+                    (Platform.OS === 'web' ? 20 : 60) + 48 + 2 &&
                     screenHeight * 0.4 + 80 >
                     (Platform.OS === 'web' ? 20 : 60))
                     ? 'none'
@@ -586,96 +519,51 @@ export default function HomeScreen() {
             {isPremium ? (
               <Text style={styles.premiumText}>PREMIUM</Text>
             ) : (
-              <>
-                <View style={styles.searchCounter}>
-                  <Text style={styles.searchCounterText}>
-                                          {Math.max(0, 10 - searchCount)} Searches Left
-                  </Text>
-                </View>
-                <TouchableOpacity 
-                  style={styles.addCreditsButton}
-                  onPress={() => {
-                    // Track Add Credits button click with Adjust
-                    const event = new AdjustEvent('reecpr');
-                    event.addCallbackParameter('action', 'add_credits_clicked');
-                    event.addCallbackParameter('user_type', isPremium ? 'premium' : 'free');
-                    Adjust.trackEvent(event);
-                    
-                    setShowAddCreditsModal(true);
-                  }}
-                >
-                  <Plus size={16} color={theme.colors.textSecondary} strokeWidth={2} />
-                  <Text style={styles.addCreditsText}>Add Searches</Text>
-                </TouchableOpacity>
-              </>
+              <TouchableOpacity style={styles.searchCounter} onPress={() => setShowPremiumModal(true)}>
+                <Text style={styles.searchCounterText}>
+                  {Math.max(0, 10 - searchCount)} Searches Left
+                </Text>
+              </TouchableOpacity>
             )}
           </View>
-          <Image
+          <Animated.Image
             source={isDark ? require('@/assets/images/logo in dark.png') : require('@/assets/images/logo in light.png')}
-            style={styles.logo}
+            style={[styles.logo, { opacity: logoOpacity }]}
             resizeMode="contain"
           />
-          {user && (
-            <Text style={styles.welcomeText}>
-               search, but better
-            </Text>
-          )}
+
         </Animated.View>
 
-        {/* Animated Search Bar */}
-        <Animated.View
-          style={[
-            styles.searchContainer,
-            {
-              position: 'absolute',
-              left: searchBarLeftMargin,
-              width: searchBarWidth,
-              transform: [
-                { translateY: searchBarTranslateY },
-                { scale: searchBarScale }
-              ],
-              zIndex: 100,
-              backgroundColor: 'transparent',
-            },
-          ]}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={handleClearSearch}
-            placeholder="Create a search for..."
-          />
-        </Animated.View>
+        {/* Bottom Center Search Bar */}
+        <AnimatedSearchBar
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          onSearch={setSearchQuery}
+          placeholder="Create a search for..."
+        />
 
-        {/* Search Suggestions - positioned right under search bar */}
-        <Animated.View
-          style={[
-            styles.suggestionsContainer,
-            {
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              opacity: suggestionsOpacity,
-              transform: [{ translateY: suggestionsTranslateY }],
-              zIndex: 5,
-            },
-          ]}>
-          <View style={styles.suggestionsWrapper}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.suggestionsContent}>
-              {SEARCH_SUGGESTIONS.map((suggestion, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.suggestionChip}
-                  onPress={() => handleSuggestionPress(suggestion)}
-                  activeOpacity={0.7}>
-                  <Text style={styles.suggestionText}>{suggestion}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </Animated.View>
+        {/* Bottom Navigation Icons */}
+        <View style={styles.bottomNavigation}>
+          {/* Bookmark Icon - Bottom Left */}
+          <TouchableOpacity
+            style={styles.bottomIcon}
+            onPress={() => setShowSavedSearchesModal(true)}
+            activeOpacity={0.7}
+          >
+            <Bookmark size={24} color={theme.colors.text} strokeWidth={2} />
+          </TouchableOpacity>
+
+          {/* Settings Icon - Bottom Right */}
+          <TouchableOpacity
+            style={styles.bottomIcon}
+            onPress={() => router.push('/(tabs)/settings' as any)}
+            activeOpacity={0.7}
+          >
+            <Settings size={24} color={theme.colors.text} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+
+
 
         {/* Bookmark Button - Animated */}
         <Animated.View
@@ -704,7 +592,7 @@ export default function HomeScreen() {
           <Animated.View
             style={{
               position: 'absolute',
-              top: (Platform.OS === 'web' ? 20 : 60) + searchBarHeight + 2, // 2px gap below search bar
+              top: 100, // Fixed position from top
               left: 0,
               right: 0,
               zIndex: 1, // Between background (0) and search bar (100)
@@ -718,11 +606,8 @@ export default function HomeScreen() {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={[
                 styles.scrollContent,
-                { paddingBottom: 260, alignItems: 'center' } // Removed paddingTop
+                { paddingBottom: 120, alignItems: 'center' } // Reduced padding since no tab bar
               ]}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
             >
               <View style={{ width: '100%', marginTop: 12 }}>
                 {isLoading ? (
@@ -783,9 +668,9 @@ export default function HomeScreen() {
         onUpgrade={handleUpgrade}
       />
       
-      <AddCreditsModal
-        visible={showAddCreditsModal}
-        onClose={() => setShowAddCreditsModal(false)}
+      <SavedSearchesModal
+        visible={showSavedSearchesModal}
+        onClose={() => setShowSavedSearchesModal(false)}
       />
     </LinearGradient>
   );
@@ -841,46 +726,10 @@ const createStyles = (theme: any) => StyleSheet.create({
   searchContainer: {
     // Positioned absolutely with responsive width, styles handled by animation
   },
-  suggestionsContainer: {
-    // Positioned absolutely right under search bar
-    height: 40, // Reduced height from 50 to 40 for smaller chips
-  },
-  suggestionsWrapper: {
-    alignItems: 'center', // Center the ScrollView horizontally
-    justifyContent: 'center',
-    paddingVertical: SUGGESTION_CONFIG.containerPaddingVertical,
-  },
-  suggestionsContent: {
-    paddingHorizontal: SUGGESTION_CONFIG.containerPaddingHorizontal,
-    alignItems: 'center',
-  },
-  suggestionChip: {
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: SUGGESTION_CONFIG.chipPaddingHorizontal,
-    paddingVertical: SUGGESTION_CONFIG.chipPaddingVertical,
-    borderRadius: SUGGESTION_CONFIG.chipBorderRadius,
-    marginHorizontal: SUGGESTION_CONFIG.chipMarginHorizontal,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 }, // Reduced shadow
-    shadowOpacity: 0.05, // Reduced shadow opacity
-    shadowRadius: 4, // Reduced shadow radius
-    elevation: 2, // Reduced elevation for Android
-    // Add subtle hover effect for web
-    ...(Platform.OS === 'web' && {
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    }),
-  },
-  suggestionText: {
-    fontSize: SUGGESTION_CONFIG.fontSize,
-    fontFamily: SUGGESTION_CONFIG.fontWeight,
-    color: theme.colors.textSecondary,
-  },
+
   bookmarkContainer: {
     position: 'absolute',
-    bottom: 140, // Position above tab bar
+    bottom: 120, // Position above search bar
     right: 24,
     zIndex: 20,
   },
@@ -942,6 +791,31 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color: theme.colors.textSecondary,
     marginLeft: 4,
+  },
+  bottomNavigation: {
+    position: 'absolute',
+    bottom: 40,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
+    zIndex: 10,
+  },
+  bottomIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
 
   loadingScreenContainer: {

@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 interface CarouselLayoutProps {
   data: any;
-  type: 'gemini' | 'tiktok' | 'reddit' | 'pinterest';
+  type: 'perplexity_sonar' | 'tiktok' | 'reddit' | 'pinterest';
   query: string;
   onRetry?: () => void;
 }

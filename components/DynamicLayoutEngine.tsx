@@ -59,7 +59,7 @@ export default function DynamicLayoutEngine({
   const { theme } = useTheme();
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
   const [moduleStates, setModuleStates] = useState<Record<ModuleType, ModuleState>>({
-    google_gemini: { isExpanded: true, isVisible: true },
+    perplexity_sonar: { isExpanded: true, isVisible: true },
     tiktok: { isExpanded: true, isVisible: true },
     reddit: { isExpanded: true, isVisible: true },
     pinterest: { isExpanded: true, isVisible: true },
@@ -74,9 +74,9 @@ export default function DynamicLayoutEngine({
       
       // Initialize module states based on layout config
       const newModuleStates: Record<ModuleType, ModuleState> = {
-        google_gemini: { 
-          isExpanded: config.layout.find(m => m.module === 'google_gemini')?.display === 'full',
-          isVisible: shouldShowModule(config.layout.find(m => m.module === 'google_gemini')?.priority || 'none')
+        perplexity_sonar: { 
+          isExpanded: config.layout.find(m => m.module === 'perplexity_sonar')?.display === 'full',
+          isVisible: shouldShowModule(config.layout.find(m => m.module === 'perplexity_sonar')?.priority || 'none')
         },
         tiktok: { 
           isExpanded: config.layout.find(m => m.module === 'tiktok')?.display === 'full',
@@ -103,7 +103,7 @@ export default function DynamicLayoutEngine({
 
   // Get module data mapping
   const moduleDataMap = {
-    google_gemini: searchResults.gemini,
+    perplexity_sonar: searchResults.gemini,
     tiktok: searchResults.tiktok,
     reddit: searchResults.reddit,
     pinterest: searchResults.pinterest,
@@ -113,7 +113,7 @@ export default function DynamicLayoutEngine({
   const getModuleComponent = (moduleType: ModuleType, isCollapsed: boolean = false) => {
     const data = moduleDataMap[moduleType];
     const hasData = data?.success && 
-      ((moduleType === 'google_gemini' && data.response) ||
+      ((moduleType === 'perplexity_sonar' && data.response) ||
        (moduleType === 'tiktok' && data.videos?.length > 0) ||
        (moduleType === 'reddit' && data.posts?.length > 0) ||
        (moduleType === 'pinterest' && data.pins?.length > 0));
@@ -125,7 +125,7 @@ export default function DynamicLayoutEngine({
     }
 
     switch (moduleType) {
-      case 'google_gemini':
+      case 'perplexity_sonar':
         return <GeminiSection data={data} query={query} onRetry={onRetry} />;
       case 'tiktok':
         return <TikTokSection data={data} query={query} onRetry={onRetry} />;
@@ -141,7 +141,7 @@ export default function DynamicLayoutEngine({
   // Get collapsed preview for modules
   const getCollapsedPreview = (moduleType: ModuleType, data: any) => {
     switch (moduleType) {
-      case 'google_gemini':
+      case 'perplexity_sonar':
         const geminiText = data.response || '';
         // Remove markdown formatting for clean preview
         const cleanText = geminiText
@@ -345,7 +345,7 @@ export default function DynamicLayoutEngine({
           if (!moduleState.isVisible) return null;
 
           const hasData = moduleDataMap[moduleType]?.success && 
-            ((moduleType === 'google_gemini' && moduleDataMap[moduleType].response) ||
+            ((moduleType === 'perplexity_sonar' && moduleDataMap[moduleType].response) ||
              (moduleType === 'tiktok' && moduleDataMap[moduleType].videos?.length > 0) ||
              (moduleType === 'reddit' && moduleDataMap[moduleType].posts?.length > 0) ||
              (moduleType === 'pinterest' && moduleDataMap[moduleType].pins?.length > 0));

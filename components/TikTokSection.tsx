@@ -341,6 +341,37 @@ function TikTokVideoCard({
   onPress: () => void; 
 }) {
   const { theme } = useTheme();
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const videoRef = useRef<any>(null);
+  
+  // Auto-play when component mounts
+  useEffect(() => {
+    const loadVideo = async () => {
+      setIsLoadingVideo(true);
+      try {
+        const videoId = extractTikTokVideoId(video.url);
+        if (videoId) {
+          // Use a direct video URL or embed URL that can auto-play
+          const embedUrl = `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&loop=1&mute=1&controls=0`;
+          setVideoUrl(embedUrl);
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        console.error('Error loading TikTok video:', error);
+      } finally {
+        setIsLoadingVideo(false);
+      }
+    };
+    
+    // Start playing after a short delay
+    const timer = setTimeout(() => {
+      loadVideo();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [video.url]);
   
   return (
     <TouchableOpacity 
@@ -355,22 +386,50 @@ function TikTokVideoCard({
       activeOpacity={0.9}
     >
       <View style={{ flex: 1, position: 'relative' }}>
-        <Image 
-          source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x400/000000/FFFFFF?text=TikTok' }} 
-          style={{ flex: 1 }}
-          resizeMode="cover"
-        />
-        <View style={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          justifyContent: 'center', 
-          alignItems: 'center' 
-        }}>
-          <Play size={24} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
-        </View>
+        {isLoadingVideo ? (
+          <View style={{ 
+            flex: 1, 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: theme.colors.surface 
+          }}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+          </View>
+        ) : videoUrl ? (
+          <WebView
+            source={{ uri: videoUrl }}
+            style={{ flex: 1 }}
+            allowsInlineMediaPlayback={true}
+            mediaPlaybackRequiresUserAction={false}
+            scrollEnabled={false}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+            onError={() => {
+              // Fallback to thumbnail if video fails to load
+              setVideoUrl('');
+            }}
+          />
+        ) : (
+          <Image 
+            source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x400/000000/FFFFFF?text=TikTok' }} 
+            style={{ flex: 1 }}
+            resizeMode="cover"
+          />
+        )}
+        
+        {!videoUrl && (
+          <View style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            justifyContent: 'center', 
+            alignItems: 'center' 
+          }}>
+            <Play size={24} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
+          </View>
+        )}
       </View>
       
       <View style={{ padding: 12 }}>
