@@ -550,7 +550,7 @@ export default function HomeScreen() {
             onPress={() => setShowSavedSearchesModal(true)}
             activeOpacity={0.7}
           >
-            <Bookmark size={24} color={theme.colors.text} strokeWidth={2} />
+            <Bookmark size={24} color={theme.colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
 
           {/* Settings Icon - Bottom Right */}
@@ -559,7 +559,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/settings' as any)}
             activeOpacity={0.7}
           >
-            <Settings size={24} color={theme.colors.text} strokeWidth={2} />
+            <Settings size={24} color={theme.colors.textSecondary} strokeWidth={2} />
           </TouchableOpacity>
         </View>
 

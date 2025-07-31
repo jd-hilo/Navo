@@ -314,20 +314,29 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
           transparent={true}
           onRequestClose={closeModal}
         >
-          <Pressable style={styles.modalOverlay} onPress={closeModal}>
-            <Pressable 
-              style={styles.modalContent} 
-              onPress={(e) => e.stopPropagation()}>
-              <ScrollView>
-                <View style={styles.modalHeaderRow}>
-                  <TouchableOpacity
-                    style={styles.modalLinkButton}
-                    onPress={() => selectedPost && Linking.openURL(selectedPost.url)}
-                    accessibilityLabel="Open in Reddit"
-                  >
-                    <ExternalLink size={22} color={theme.colors.textSecondary} />
-                  </TouchableOpacity>
-                </View>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeaderRow}>
+                <TouchableOpacity
+                  style={styles.modalLinkButton}
+                  onPress={() => selectedPost && Linking.openURL(selectedPost.url)}
+                  accessibilityLabel="Open in Reddit"
+                >
+                  <ExternalLink size={22} color={theme.colors.textSecondary} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={closeModal}
+                >
+                  <Text style={styles.modalCloseButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView 
+                style={styles.modalScrollView}
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={styles.modalScrollContent}
+              >
                 {selectedPost && (
                   <>
                     <Text style={styles.modalSubreddit}>r/{selectedPost.subreddit}</Text>
@@ -357,14 +366,8 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
                   </>
                 )}
               </ScrollView>
-              <Pressable 
-                style={styles.closeButton} 
-                onPress={closeModal}
-                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}>
-                <Text style={styles.closeButtonText}>Close</Text>
-              </Pressable>
-            </Pressable>
-          </Pressable>
+            </View>
+          </View>
         </Modal>
       </View>
     </LinearGradient>
@@ -564,7 +567,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     width: '90%',
-    maxHeight: '80%',
+    height: '80%',
     shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -685,11 +688,30 @@ const createStyles = (theme: any) => StyleSheet.create({
   modalHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   modalLinkButton: {
-    marginRight: 8,
     padding: 4,
+  },
+  modalCloseButton: {
+    padding: 4,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+  },
+  modalCloseButtonText: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: theme.colors.textSecondary,
+  },
+  modalScrollView: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 20,
   },
 });

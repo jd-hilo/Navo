@@ -11,7 +11,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { X, Search } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -63,15 +63,15 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
       Animated.parallel([
         Animated.timing(animation, {
           toValue: 0,
-          duration: 150,
+          duration: 200,
           useNativeDriver: false,
-          easing: Easing.ease,
+          easing: Easing.out(Easing.cubic),
         }),
         Animated.timing(positionAnimation, {
           toValue: 0,
-          duration: 150,
+          duration: 200,
           useNativeDriver: false,
-          easing: Easing.ease,
+          easing: Easing.out(Easing.cubic),
         }),
       ]).start(() => {
         setIsExpanded(false);
@@ -79,24 +79,27 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
         if (onSearch) onSearch('');
       });
     } else {
-      // Expand search bar
+      // Expand search bar with bouncy animation
       setIsExpanded(true);
-      Animated.parallel([
-        Animated.timing(animation, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: false,
-          easing: Easing.ease,
-        }),
-        Animated.timing(positionAnimation, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: false,
-          easing: Easing.ease,
-        }),
-      ]).start(() => {
+      // Focus immediately to open keyboard right away
+      setTimeout(() => {
         inputRef.current?.focus();
-      });
+      }, 50); // Small delay to ensure component is rendered
+      
+      Animated.parallel([
+        Animated.spring(animation, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: false,
+        }),
+        Animated.spring(positionAnimation, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: false,
+        }),
+      ]).start();
     }
   };
 
@@ -141,7 +144,7 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
 
   const bottomPosition = positionAnimation.interpolate({
     inputRange: [0, 1],
-    outputRange: [40, 40], // stay at bottom center
+    outputRange: [40, keyboardHeight > 0 ? keyboardHeight + 15 : 40], // 15px above keyboard when expanded
   });
 
   const styles = createStyles(theme);
@@ -157,39 +160,42 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
         },
       ]}
     >
-      {isExpanded ? (
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={theme.colors.textSecondary}
-          value={value !== undefined ? value : searchQuery}
-          onChangeText={handleSearch}
-          returnKeyType="search"
-          autoCapitalize="none"
-          autoCorrect={false}
-          onSubmitEditing={handleSubmit}
-        />
-      ) : null}
-
-      <TouchableOpacity onPress={toggleSearch} style={styles.iconWrapper}>
-        {isExpanded ? (
-          <TouchableOpacity onPress={handleClose} style={styles.searchButton}>
-            <X size={24} color={theme.colors.text} strokeWidth={2} />
-          </TouchableOpacity>
-        ) : (
-          <Image 
-            source={require('../assets/images/magnifying glass.png')}
-            style={{ 
-              width: 40, 
-              height: 40, 
-              tintColor: theme.colors.text,
-              marginLeft: -30,
-            }}
-            resizeMode="contain"
+      {!isExpanded ? (
+        <TouchableOpacity onPress={toggleSearch} style={styles.fullContainer}>
+          <Search 
+            size={24} 
+            color="#FFFFFF" 
+            strokeWidth={3}
           />
-        )}
-      </TouchableOpacity>
+        </TouchableOpacity>
+      ) : (
+        <>
+          <View style={styles.searchIcon}>
+            <Search 
+              size={24} 
+              color="#FFFFFF" 
+              strokeWidth={3}
+            />
+          </View>
+          
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor={theme.colors.textSecondary}
+            value={value !== undefined ? value : searchQuery}
+            onChangeText={handleSearch}
+            returnKeyType="search"
+            autoCapitalize="none"
+            autoCorrect={false}
+            onSubmitEditing={handleSubmit}
+          />
+
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+            <X size={24} color={theme.colors.textSecondary} strokeWidth={3} />
+          </TouchableOpacity>
+        </>
+      )}
     </Animated.View>
   );
 };
@@ -200,7 +206,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     left: '50%',
     height: 56,
     borderRadius: 28,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.searchBar,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -208,35 +214,37 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
     zIndex: 1000,
-
+  },
+  searchIcon: {
+    marginRight: 12,
+  },
+  fullContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
     color: theme.colors.text,
-    paddingHorizontal: 12,
+    paddingHorizontal: 0,
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     height: '100%',
   },
-  iconWrapper: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'transparent',
-    display: 'flex',
-  },
-  searchButton: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginLeft: 8,
   },
 });
 

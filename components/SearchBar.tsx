@@ -141,8 +141,10 @@ export default function SearchBar({
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Search size={18} color={theme.colors.textSecondary} strokeWidth={2} style={styles.searchIcon} />
         <View style={styles.inputContainer}>
+          <View style={styles.searchIconContainer}>
+            <Search size={18} color={theme.colors.textSecondary} strokeWidth={2} />
+          </View>
           <TextInput
             style={styles.input}
             value={value}
@@ -185,20 +187,25 @@ const createStyles = (theme: any) => StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.searchBar,
-    borderRadius: 14,
-    paddingHorizontal: 18,
-    paddingVertical: Platform.OS === 'ios' ? 13.2 : 11, // Increased by 10%
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.searchBarBorder,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 0,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 5,
+    marginLeft: -15,
+  },
+  searchIconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputContainer: {
     flex: 1,
@@ -209,8 +216,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: theme.colors.text,
     paddingVertical: 0,
-    paddingRight: 0,
-    letterSpacing: -0.3, // Added to reduce letter spacing
+    paddingHorizontal: 0,
+    textAlign: 'center',
+    letterSpacing: -0.3,
   },
   cursor: {
     position: 'absolute',
