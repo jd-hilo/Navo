@@ -157,6 +157,7 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
           width: widthInterpolated,
           bottom: bottomPosition,
           transform: [{ translateX: translateXInterpolated }],
+          paddingHorizontal: isExpanded ? 16 : 0, // Remove padding when collapsed
         },
       ]}
     >
@@ -229,6 +230,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   input: {
     flex: 1,
     color: theme.colors.text,
