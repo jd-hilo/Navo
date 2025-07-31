@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const SONAR_API_CONFIG = {
   baseURL: 'https://api.perplexity.ai/chat/completions',
   model: 'sonar', // Faster model
-  maxTokens: 200, // Balanced for speed and detail
+  maxTokens: 1000, // Increased for comprehensive responses
   temperature: 0.1, // Lower temperature for faster, more focused responses
 };
 

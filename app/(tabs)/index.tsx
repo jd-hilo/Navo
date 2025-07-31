@@ -19,7 +19,7 @@ import { Bookmark, Crown, Plus, Settings } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
 import AnimatedSearchBar from '../../components/AnimatedSearchBar';
-import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
+import RealTimeAIResponse from '@/components/RealTimeAIResponse';
 import LoadingCard from '@/components/LoadingCard';
 import { Search } from 'lucide-react-native';
 import ErrorCard from '@/components/ErrorCard';
@@ -649,11 +649,12 @@ export default function HomeScreen() {
                     onRetry={handleRetry}
                   />
                 ) : searchResults ? (
-                  <DynamicLayoutEngine
-                    searchResults={searchResults}
+                  <RealTimeAIResponse
                     query={debouncedQuery}
-                    onRetry={handleRetry}
-                    isLoading={isLoading}
+                    searchResults={searchResults}
+                    onComplete={() => {
+                      console.log('AI response completed');
+                    }}
                   />
                 ) : null}
               </View>
