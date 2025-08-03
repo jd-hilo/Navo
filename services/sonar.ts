@@ -3,8 +3,8 @@ import Constants from 'expo-constants';
 // Perplexity Sonar API Configuration - Optimized for Speed
 const SONAR_API_CONFIG = {
   baseURL: 'https://api.perplexity.ai/chat/completions',
-  model: 'sonar', // Faster model
-  maxTokens: 200, // Balanced for speed and detail
+  model: 'sonar', // Use sonar model
+  maxTokens: 400, // Increased for more comprehensive responses
   temperature: 0.1, // Lower temperature for faster, more focused responses
 };
 
@@ -18,6 +18,11 @@ interface SonarResponse {
     totalTokenCount: number;
   };
   hasWebSearch?: boolean;
+  sources?: Array<{
+    title: string;
+    url: string;
+    domain: string;
+  }>;
 }
 
 export const searchSonar = async (query: string): Promise<SonarResponse> => {
@@ -35,20 +40,31 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
       };
     }
 
-    // Ultra-simple request for maximum speed
+    // Request with web search enabled
     const requestBody = {
       model: SONAR_API_CONFIG.model,
       messages: [
         {
           role: 'user',
-          content: `${query}. Format: ^^ [summary] ^^ [details]`
+          content: `Answer: ${query}. 
+
+Format: ^^ [2-3 sentence summary] ^^ [detailed explanation]
+
+Keep the summary concise and clean without citation numbers.`
         }
       ],
-      max_tokens: SONAR_API_CONFIG.maxTokens,
-      temperature: SONAR_API_CONFIG.temperature,
-      top_p: 0.1, // Minimal for fastest responses
+      max_tokens: 400,
+      temperature: 0.1,
+      top_p: 0.1,
+      stream: false,
+      search_domain_filter: [], // Allow all domains
+      include_search_results: true, // Enable web search
     };
 
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(SONAR_API_CONFIG.baseURL, {
       method: 'POST',
       headers: {
@@ -56,7 +72,10 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -67,6 +86,7 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
         success: false,
         error: 'Sonar temporarily unavailable.',
         hasWebSearch: false,
+        sources: undefined,
       };
     }
 
@@ -78,10 +98,24 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
         success: false,
         error: 'Invalid response from Sonar.',
         hasWebSearch: false,
+        sources: undefined,
       };
     }
 
     const content = data.choices[0].message.content;
+    
+    // Extract sources from the response if available
+    let sources = [];
+    if (data.search_results && Array.isArray(data.search_results)) {
+      sources = data.search_results.map((result: any) => ({
+        title: result.title || '',
+        url: result.url || '',
+        domain: result.url ? new URL(result.url).hostname : '',
+      }));
+    }
+
+    console.log('🔍 Sonar response:', content);
+    console.log('🔍 Sonar sources:', sources);
 
     return {
       response: content.trim(),
@@ -91,17 +125,30 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
         candidatesTokenCount: data.usage.completion_tokens || 0,
         totalTokenCount: data.usage.total_tokens || 0,
       } : undefined,
-      hasWebSearch: false,
+      hasWebSearch: sources.length > 0,
+      sources: sources.length > 0 ? sources : undefined,
     };
 
   } catch (error: any) {
     console.error('❌ Sonar error:', error.message);
+    
+    // Handle timeout specifically
+    if (error.name === 'AbortError') {
+          return {
+      response: generateMockSonarResponse(query),
+      success: false,
+      error: 'Request timed out. Please try again.',
+      hasWebSearch: false,
+      sources: undefined,
+    };
+    }
     
     return {
       response: generateMockSonarResponse(query),
       success: false,
       error: 'Network error. Please try again.',
       hasWebSearch: false,
+      sources: undefined,
     };
   }
 };

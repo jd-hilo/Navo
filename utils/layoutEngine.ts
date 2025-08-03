@@ -1,4 +1,4 @@
-export type ModuleType = 'perplexity_sonar' | 'tiktok' | 'reddit' | 'pinterest';
+export type ModuleType = 'tiktok' | 'reddit' | 'pinterest';
 export type PriorityLevel = 'high' | 'medium' | 'low' | 'none';
 export type DisplayMode = 'full' | 'expandable' | 'collapsed' | 'hidden';
 
@@ -66,64 +66,54 @@ function classifyIntent(query: string): string {
 
 const LAYOUT_CONFIGS: Record<string, ModuleLayout[]> = {
   factual: [
-    { module: 'perplexity_sonar', priority: 'high', display: 'full' },
-    { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'tiktok', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'high', display: 'full' },
+    { module: 'tiktok', priority: 'medium', display: 'expandable' },
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   local: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   visual: [
     { module: 'pinterest', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
-    { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'low', display: 'collapsed' }
   ],
   fashion: [
     { module: 'pinterest', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
-    { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'low', display: 'collapsed' }
   ],
   product_research: [
-    { module: 'perplexity_sonar', priority: 'high', display: 'full' },
-    { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'tiktok', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'high', display: 'full' },
+    { module: 'tiktok', priority: 'medium', display: 'expandable' },
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   how_to: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   social: [
     { module: 'reddit', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
-    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   entertainment: [
     { module: 'tiktok', priority: 'high', display: 'full' },
     { module: 'reddit', priority: 'medium', display: 'expandable' },
-    { module: 'perplexity_sonar', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ],
   lifestyle: [
     { module: 'pinterest', priority: 'high', display: 'full' },
     { module: 'tiktok', priority: 'medium', display: 'expandable' },
-    { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'perplexity_sonar', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'low', display: 'collapsed' }
   ],
   general: [
     { module: 'tiktok', priority: 'high', display: 'full' },
-    { module: 'perplexity_sonar', priority: 'medium', display: 'expandable' },
-    { module: 'reddit', priority: 'low', display: 'collapsed' },
-    { module: 'pinterest', priority: 'none', display: 'hidden' }
+    { module: 'reddit', priority: 'medium', display: 'expandable' },
+    { module: 'pinterest', priority: 'low', display: 'collapsed' }
   ]
 };
 

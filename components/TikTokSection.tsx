@@ -375,13 +375,13 @@ function TikTokVideoCard({
   
   return (
     <TouchableOpacity 
-      style={{ 
-        width: 320, 
-        height: 400, 
-        borderRadius: 12, 
-        overflow: 'hidden', 
-        backgroundColor: theme.colors.card 
-      }} 
+              style={{ 
+          width: 320, 
+          height: 500, 
+          borderRadius: 24, 
+          overflow: 'hidden', 
+          backgroundColor: 'transparent'
+        }} 
       onPress={onPress}
       activeOpacity={0.9}
     >
@@ -409,9 +409,9 @@ function TikTokVideoCard({
               setVideoUrl('');
             }}
           />
-        ) : (
+                ) : (
           <Image 
-            source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x400/000000/FFFFFF?text=TikTok' }} 
+            source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x500/000000/FFFFFF?text=TikTok' }} 
             style={{ flex: 1 }}
             resizeMode="cover"
           />
@@ -430,33 +430,52 @@ function TikTokVideoCard({
             <Play size={24} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
           </View>
         )}
-      </View>
-      
-      <View style={{ padding: 12 }}>
-        <Text style={{ 
-          fontSize: 14, 
-          fontFamily: 'Inter-Medium', 
-          color: theme.colors.text, 
-          lineHeight: 18, 
-          marginBottom: 4 
-        }} numberOfLines={2}>
-          {video.title}
-        </Text>
-        <Text style={{ 
-          fontSize: 12, 
-          fontFamily: 'Inter-Regular', 
-          color: theme.colors.textSecondary, 
-          marginBottom: 2 
-        }} numberOfLines={1}>
-          @{video.author}
-        </Text>
-        <Text style={{ 
-          fontSize: 12, 
-          fontFamily: 'Inter-Regular', 
-          color: theme.colors.textSecondary 
+
+        {/* Video Overlay - Bottom Section */}
+        <View style={{ 
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingHorizontal: 8,
+          paddingBottom: 8,
         }}>
-          {video.views} views
-        </Text>
+          {/* Content Details */}
+          <View style={{ 
+            paddingHorizontal: 8,
+            gap: 10,
+          }}>
+            {/* Username */}
+            <Text style={{ 
+              width: 102,
+              height: 17,
+              fontFamily: 'Inter',
+              fontStyle: 'normal',
+              fontWeight: '700',
+              fontSize: 14,
+              lineHeight: 17,
+              color: '#FFFFFF',
+              marginBottom: 0,
+            }}>
+              @{video.author}
+            </Text>
+            
+            {/* Caption */}
+            <Text style={{ 
+              maxWidth: 200,
+              height: 34,
+              fontFamily: 'Inter',
+              fontStyle: 'normal',
+              fontWeight: '400',
+              fontSize: 14,
+              lineHeight: 17,
+              color: '#FFFFFF',
+              marginBottom: 0,
+            }} numberOfLines={2}>
+              {video.title}
+            </Text>
+          </View>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -502,11 +521,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
 
   if (!data.success && data.error) {
     return (
-      <LinearGradient
-        colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientBorder}>
+      <View style={styles.gradientBorder}>
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
@@ -523,7 +538,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
             )}
           </View>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
@@ -533,23 +548,33 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
 
   return (
     <>
-    <LinearGradient
+    <View
         key={reloadKey}
-      colors={theme.gradients.tiktok as unknown as readonly [string, string, ...string[]]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
       style={[styles.gradientBorder, { flex: 1 }]}
     >
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
+            <Image 
+              source={require('@/assets/images/tiktok.png')} 
+              style={styles.tiktokLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>TikTok</Text>
             {!data.success && (
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>Sample</Text>
               </View>
             )}
           </View>
-
+          
+          <TouchableOpacity 
+            style={styles.visitButton}
+            onPress={() => Linking.openURL(`https://www.tiktok.com/search?q=${encodeURIComponent(query)}`)}
+          >
+            <Text style={styles.visitButtonText}>Visit</Text>
+            <ExternalLink size={14} color="#000000" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
 
         {!data.success && data.error && (
@@ -580,7 +605,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
             <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>swipe for more →</Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
 
       {/* Video Modal */}
       {selectedVideoIndex !== -1 && data.videos[selectedVideoIndex] && (
@@ -600,34 +625,86 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
 
 const createStyles = (theme: any) => StyleSheet.create({
   gradientBorder: {
-    borderRadius: 14,
+    borderRadius: 32,
     marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0,
   },
   container: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: 12,
+    paddingHorizontal: 8,
+    gap: 12,
+    width: 374,
+    height: 620,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 39.1,
+    elevation: 8,
+    borderRadius: 32,
   },
   header: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    padding: 0,
+    paddingHorizontal: 8,
+    gap: 64,
+    width: 358,
+    height: 30,
   },
   titleContainer: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 0,
+    gap: 10,
+    width: 76,
+    height: 20,
+  },
+  tiktokLogo: {
+    width: 20,
+    height: 20,
   },
   title: {
+    width: 52,
+    height: 19,
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: '600',
     fontSize: 16,
-    fontFamily: 'Inter-SemiBold',
-    color: theme.colors.text,
-    marginLeft: 8,
+    lineHeight: 19,
+    textAlign: 'center',
+    color: '#000000',
+  },
+  visitButton: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
+    gap: 8,
+    width: 69,
+    height: 30,
+    backgroundColor: 'rgba(35, 35, 35, 0.06)',
+    borderWidth: 0.56,
+    borderColor: 'rgba(69, 69, 69, 0.12)',
+    borderRadius: 20,
+  },
+  visitButtonText: {
+    width: 27,
+    height: 16,
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: '400',
+    fontSize: 13,
+    lineHeight: 16,
+    color: '#000000',
   },
   fallbackIndicator: {
     backgroundColor: theme.colors.indicator.fallback,
@@ -692,7 +769,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginLeft: 20,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: theme.colors.card,
+    backgroundColor: 'transparent',
   },
   firstVideo: {
     marginLeft: 0,

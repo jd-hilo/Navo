@@ -520,9 +520,19 @@ export default function HomeScreen() {
               <Text style={styles.premiumText}>PREMIUM</Text>
             ) : (
               <TouchableOpacity style={styles.searchCounter} onPress={() => setShowPremiumModal(true)}>
-                <Text style={styles.searchCounterText}>
-                  {Math.max(0, 10 - searchCount)} Searches Left
-                </Text>
+                <View style={styles.searchCounterContent}>
+                  <LinearGradient
+                    colors={['#FF8C00', '#0066CC']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.infoIconContainer}
+                  >
+                    <Text style={styles.infoIcon}>i</Text>
+                  </LinearGradient>
+                  <Text style={styles.searchCounterText}>
+                    {Math.max(0, 10 - searchCount)} searches left
+                  </Text>
+                </View>
               </TouchableOpacity>
             )}
           </View>
@@ -766,16 +776,51 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingTop: 0, // No top padding since we're positioned right under search bar
   },
   searchCounter: {
-    backgroundColor: theme.colors.surface,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 4,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: 4,
+    width: 140,
+    height: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.32)',
+    borderRadius: 42,
     marginLeft: 8,
   },
+  searchCounterContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    width: '100%',
+  },
+  infoIconContainer: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 0.875,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoIcon: {
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
   searchCounterText: {
+    width: 106,
+    height: 15,
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: '500',
     fontSize: 12,
-    fontFamily: 'Inter-Medium',
-    color: theme.colors.textSecondary,
+    lineHeight: 15,
+    textAlign: 'center',
+    color: '#D3D3D3',
   },
   addCreditsButton: {
     backgroundColor: theme.colors.surface,

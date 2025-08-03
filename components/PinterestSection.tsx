@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -44,6 +44,7 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPin, setSelectedPin] = useState<PinterestPin | null>(null);
   const [retryLoading, setRetryLoading] = useState(false);
+  const [imageDimensions, setImageDimensions] = useState<{[key: string]: {width: number, height: number}}>({});
 
   const handlePinPress = (pin: PinterestPin) => {
     setSelectedPin(pin);
@@ -73,6 +74,33 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
       return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();
+  };
+
+  // Function to get image dimensions
+  const getImageDimensions = (imageUrl: string, pinId: string) => {
+    if (imageDimensions[pinId]) {
+      return imageDimensions[pinId];
+    }
+    
+    // Default dimensions if not loaded yet
+    return { width: 200, height: 200 };
+  };
+
+  // Function to load image dimensions
+  const loadImageDimensions = (imageUrl: string, pinId: string) => {
+    Image.getSize(imageUrl, (width, height) => {
+      setImageDimensions(prev => ({
+        ...prev,
+        [pinId]: { width, height }
+      }));
+    }, (error) => {
+      console.log('Error loading image dimensions:', error);
+      // Set default dimensions on error
+      setImageDimensions(prev => ({
+        ...prev,
+        [pinId]: { width: 200, height: 200 }
+      }));
+    });
   };
 
   const styles = createStyles(theme);
@@ -181,13 +209,18 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.titleContainer}>
+            <Image 
+              source={require('@/assets/images/pinterest.png')} 
+              style={styles.pinterestLogo}
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Pinterest</Text>
             {!data.success && (
               <View style={styles.fallbackIndicator}>
                 <Text style={styles.fallbackText}>Sample</Text>
               </View>
             )}
           </View>
-
         </View>
 
         {!data.success && data.error && (
@@ -198,55 +231,67 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
 
         <View style={styles.pinsContainer}>
           <View style={styles.leftColumn}>
-            {data.pins.filter((_, index) => index % 2 === 0).map((pin, index) => (
-              <TouchableOpacity
-                key={pin.id}
-                style={styles.pinCard}
-                onPress={() => handlePinPress(pin)}>
-                
-                {pin.image_url && (
-                  <Image 
-                    source={{ uri: pin.image_url }} 
-                    style={[
-                      styles.pinImage,
-                      // Vary image heights for masonry effect
-                      { height: 200 + (index % 4) * 60 } // Heights: 200, 260, 320, 380
-                    ]}
-                    resizeMode="cover"
-                  />
-                )}
-                
-                <Text style={styles.pinTitle} numberOfLines={2} ellipsizeMode="tail">
-                  {typeof pin.title === 'string' ? pin.title : 'Pinterest Pin'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {data.pins.filter((pin) => pin.image_url && pin.image_url.trim() !== '' && pin.image_url !== 'null' && pin.image_url !== 'undefined').filter((_, index) => index % 2 === 0).map((pin, index) => {
+              const dimensions = getImageDimensions(pin.image_url, pin.id);
+              const aspectRatio = dimensions.width / dimensions.height;
+              const calculatedHeight = 160 / aspectRatio; // 160 is the column width
+              
+              // Load dimensions if not already loaded
+              if (pin.image_url && !imageDimensions[pin.id]) {
+                loadImageDimensions(pin.image_url, pin.id);
+              }
+              
+              return (
+                <TouchableOpacity
+                  key={pin.id}
+                  style={styles.pinCard}
+                  onPress={() => handlePinPress(pin)}>
+                  
+                  {pin.image_url && (
+                    <Image 
+                      source={{ uri: pin.image_url }} 
+                      style={[
+                        styles.pinImage,
+                        { height: Math.max(120, Math.min(400, calculatedHeight)) } // Min 120, Max 400
+                      ]}
+                      resizeMode="cover"
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
           
           <View style={styles.rightColumn}>
-            {data.pins.filter((_, index) => index % 2 === 1).map((pin, index) => (
-              <TouchableOpacity
-                key={pin.id}
-                style={styles.pinCard}
-                onPress={() => handlePinPress(pin)}>
-                
-                {pin.image_url && (
-                  <Image 
-                    source={{ uri: pin.image_url }} 
-                    style={[
-                      styles.pinImage,
-                      // Vary image heights for masonry effect
-                      { height: 200 + (index % 4) * 60 } // Heights: 200, 260, 320, 380
-                    ]}
-                    resizeMode="cover"
-                  />
-                )}
-                
-                <Text style={styles.pinTitle} numberOfLines={2} ellipsizeMode="tail">
-                  {typeof pin.title === 'string' ? pin.title : 'Pinterest Pin'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {data.pins.filter((pin) => pin.image_url && pin.image_url.trim() !== '' && pin.image_url !== 'null' && pin.image_url !== 'undefined').filter((_, index) => index % 2 === 1).map((pin, index) => {
+              const dimensions = getImageDimensions(pin.image_url, pin.id);
+              const aspectRatio = dimensions.width / dimensions.height;
+              const calculatedHeight = 160 / aspectRatio; // 160 is the column width
+              
+              // Load dimensions if not already loaded
+              if (pin.image_url && !imageDimensions[pin.id]) {
+                loadImageDimensions(pin.image_url, pin.id);
+              }
+              
+              return (
+                <TouchableOpacity
+                  key={pin.id}
+                  style={styles.pinCard}
+                  onPress={() => handlePinPress(pin)}>
+                  
+                  {pin.image_url && (
+                    <Image 
+                      source={{ uri: pin.image_url }} 
+                      style={[
+                        styles.pinImage,
+                        { height: Math.max(120, Math.min(400, calculatedHeight)) } // Min 120, Max 400
+                      ]}
+                      resizeMode="cover"
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
@@ -335,6 +380,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  pinterestLogo: {
+    width: 20,
+    height: 20,
+    marginRight: 4,
   },
   title: {
     fontSize: 16,
