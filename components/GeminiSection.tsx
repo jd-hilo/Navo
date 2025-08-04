@@ -505,6 +505,7 @@ const styles = StyleSheet.create({
   cardContent: {
     width: '100%',
     paddingHorizontal: 8,
+    flex: 1,
   },
   mainAnswer: {
     fontSize: 18,
@@ -551,6 +552,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: 'rgba(156, 163, 175, 0.2)',
+    flex: 1,
   },
   loadingContainer: {
     flexDirection: 'row',

@@ -162,11 +162,13 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             </View>
             <Text style={styles.redditText}>Reddit</Text>
           </View>
-          <View style={styles.shareButton}>
-            <View style={styles.shareButtonInner}>
-              <Share2 size={16} color="#FFFFFF" strokeWidth={2} />
-            </View>
-          </View>
+          <TouchableOpacity 
+            style={styles.visitButton}
+            onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
+          >
+            <Text style={styles.visitButtonText}>Visit</Text>
+            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
         
         <View style={styles.loadingContainer}>
@@ -188,11 +190,13 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             </View>
             <Text style={styles.redditText}>Reddit</Text>
           </View>
-          <View style={styles.shareButton}>
-            <View style={styles.shareButtonInner}>
-              <Share2 size={16} color="#FFFFFF" strokeWidth={2} />
-            </View>
-          </View>
+          <TouchableOpacity 
+            style={styles.visitButton}
+            onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
+          >
+            <Text style={styles.visitButtonText}>Visit</Text>
+            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
         
         <View style={styles.errorContainer}>
@@ -219,11 +223,13 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             </View>
             <Text style={styles.redditText}>Reddit</Text>
           </View>
-          <View style={styles.shareButton}>
-            <View style={styles.shareButtonInner}>
-              <Share2 size={16} color="#FFFFFF" strokeWidth={2} />
-            </View>
-          </View>
+          <TouchableOpacity 
+            style={styles.visitButton}
+            onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
+          >
+            <Text style={styles.visitButtonText}>Visit</Text>
+            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>No Reddit posts found for this search.</Text>
@@ -253,12 +259,14 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
           />
           <Text style={styles.redditText}>Reddit</Text>
         </View>
-        <View style={styles.shareButton}>
-          <View style={styles.shareButtonInner}>
-            <Share2 size={16} color="#FFFFFF" strokeWidth={2} />
-          </View>
+                  <TouchableOpacity 
+            style={styles.visitButton}
+            onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
+          >
+            <Text style={styles.visitButtonText}>Visit</Text>
+            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
-      </View>
 
       <View style={styles.postsContainer}>
         {data.posts.slice(0, 5).map((post, index) => (
@@ -385,7 +393,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 8,
     gap: 176,
     width: 358,
-    height: 30,
+    height: 32,
   },
   redditBranding: {
     display: 'flex',
@@ -394,8 +402,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 9,
-    width: 75,
-    height: 20,
+    width: 85,
+    height: 22,
   },
   redditLogo: {
     width: 20,
@@ -407,38 +415,40 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: 'bold',
   },
   redditText: {
-    width: 51,
-    height: 19,
+    width: 61,
+    height: 22,
     fontFamily: 'Inter',
     fontStyle: 'normal',
     fontWeight: '600',
     fontSize: 16,
-    lineHeight: 19,
+    lineHeight: 22,
     textAlign: 'center',
     color: '#FFFFFF',
   },
-  shareButton: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 0,
-    gap: 12,
-    width: 32,
-    height: 30,
-  },
-  shareButtonInner: {
+  visitButton: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 2,
     gap: 8,
-    width: 32,
+    width: 75,
     height: 30,
-    backgroundColor: '#232323',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderWidth: 0.56,
-    borderColor: '#454545',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
+    marginRight: 15,
+  },
+  visitButtonText: {
+    width: 33,
+    height: 18,
+    fontFamily: 'Inter',
+    fontStyle: 'normal',
+    fontWeight: '400',
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#FFFFFF',
   },
   postsContainer: {
     flex: 1,
@@ -468,8 +478,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 11,
-    width: 197,
-    height: 16,
+    width: 210,
+    height: 24,
   },
   postMeta: {
     display: 'flex',
@@ -477,26 +487,27 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 0,
-    gap: 11,
+    gap: 5,
   },
   subreddit: {
-    width: 121,
-    height: 16,
+    width: 165,
+    height: 24,
     fontFamily: 'Inter',
     fontStyle: 'normal',
     fontWeight: '500',
     fontSize: 13,
-    lineHeight: 16,
+    lineHeight: 24,
     color: '#FFFFFF',
+    marginLeft:35,
   },
   time: {
-    width: 65,
-    height: 15,
+    width: 80,
+    height: 18,
     fontFamily: 'Inter',
     fontStyle: 'normal',
     fontWeight: '400',
     fontSize: 12,
-    lineHeight: 15,
+    lineHeight: 18,
     color: '#9A9CA9',
   },
   postTitle: {
@@ -614,6 +625,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#9A9CA9',
     marginBottom: 12,
+    lineHeight: 16,
+    minHeight: 16,
   },
   modalBody: {
     fontSize: 17,
@@ -700,17 +713,21 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
     flexWrap: 'wrap',
+    minHeight: 16,
   },
   commentScore: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#9A9CA9',
     marginRight: 8,
+    lineHeight: 16,
   },
   commentTime: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#9A9CA9',
+    lineHeight: 16,
+    flexShrink: 0,
   },
   commentBody: {
     fontSize: 15,

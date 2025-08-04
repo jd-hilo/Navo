@@ -89,7 +89,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     position: 'absolute',
     width: '100%',
-    height: 60,
+    height: 65,
     left: 0,
     bottom: 90, // Move up 10px from 80
     zIndex: 1000,
@@ -115,7 +115,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 2,
-    height: 35,
+    height: 40,
     paddingLeft: 20,
     justifyContent: 'flex-start',
   },
@@ -124,7 +124,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 2,
-    height: 35,
+    height: 40,
     flex: 0,
   },
   filterButtonGradient: {
@@ -144,6 +144,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     elevation: 4,
     backgroundColor: theme.colors.searchBar,
     position: 'relative',
+    minHeight: 36,
   },
   gradientBackground: {
     position: 'absolute',
@@ -169,12 +170,12 @@ const createStyles = (theme: any) => StyleSheet.create({
   filterButtonTextSelected: {
     fontWeight: '500',
     fontSize: 14,
-    lineHeight: 17,
+    lineHeight: 20,
   },
   filterButtonTextUnselected: {
     fontWeight: '400',
     fontSize: 14,
-    lineHeight: 17,
+    lineHeight: 20,
   },
   filterIcon: {
     width: 14,
