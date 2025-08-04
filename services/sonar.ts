@@ -58,6 +58,7 @@ The summary should be:
 • NO bold formatting, bullet points, dashes, or list formatting
 • Be concise but informative
 • Capture the main points clearly
+• MAXIMUM 150 CHARACTERS for the summary part only
 
 The detailed content should be:
 • Well-structured with bullet points
@@ -92,6 +93,7 @@ The summary should be:
 • NO bold formatting, bullet points, dashes, or list formatting
 • Be concise but informative
 • Capture the main points clearly
+• MAXIMUM 150 CHARACTERS for the summary part only
 
 The detailed content should be:
 • Well-structured with bullet points
@@ -266,7 +268,7 @@ The detailed content should be:
 
 export const generateMockSonarResponse = (query: string): string => {
   const responses = [
-    `^^ ${query} is a fascinating topic that encompasses core concepts, key benefits, and current developments in the field. ^^
+    `^^ ${query} is a fascinating topic with core concepts and key benefits. ^^
 
 Quick answer about **${query}**: This is a sample response with proper formatting. Add your Sonar API key for real answers. The full response would include detailed information, explanations, and context about the topic you searched for.
 
@@ -276,7 +278,7 @@ Quick answer about **${query}**: This is a sample response with proper formattin
 • **Benefits**: Why ${query} is important and valuable
 • **Future**: Emerging trends and developments in ${query}`,
     
-    `^^ ${query} encompasses multiple important elements including primary focus areas, key components, and practical applications that make it valuable in real-world scenarios. ^^
+    `^^ ${query} encompasses important elements with key components and practical applications. ^^
 
 **${query}** - Sample response with improved formatting. Configure API key for live Sonar responses. This mock response shows how the real Perplexity Sonar API would format its answers with a well-structured summary at the top and detailed information below.
 
@@ -286,7 +288,7 @@ Quick answer about **${query}**: This is a sample response with proper formattin
 • **Advantages**: Benefits and positive aspects of ${query}
 • **Considerations**: Important factors to keep in mind`,
     
-    `^^ ${query} represents a comprehensive field of study with core principles, modern relevance, and significant future potential that makes it an important area of research and application. ^^
+    `^^ ${query} represents a comprehensive field with core principles and significant future potential. ^^
 
 Regarding **${query}**: This is a placeholder with enhanced formatting. Get real answers by setting up your API key. The actual response would provide comprehensive information about your search query with proper formatting, bullet points, and structure.
 

@@ -107,9 +107,27 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     
     // Fallback if no carets found
     console.log('🔍 No carets found, using fallback');
+    
+    // Clean up the response - remove citation numbers and extra spaces
+    const cleanedResponse = response
+      .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+    
+    // Create a summary from the first few sentences
+    const sentences = cleanedResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    let summary = cleanedResponse;
+    
+    if (sentences.length > 2) {
+      summary = sentences.slice(0, 2).join('. ') + '.';
+    }
+    
+    // Make the summary bold
+    const formattedSummary = `**${summary}**`;
+    
     return { 
-      summary: response, 
-      details: response 
+      summary: formattedSummary, 
+      details: cleanedResponse 
     };
   };
 
@@ -709,7 +727,7 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
     marginVertical: 2,
   },
   strong: {
-    fontSize: 26,
+    fontSize: 24,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
     lineHeight: 32,

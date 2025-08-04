@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const GEMINI_API_CONFIG = {
   baseURL: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-1.5-flash',
-  maxTokens: 100, // Reduced for faster responses
+  maxTokens: 200, // Increased to allow full responses without cutoff
   temperature: 0.3, // Lower temperature for faster, more focused responses
 };
 
@@ -35,11 +35,16 @@ export const searchGemini = async (query: string): Promise<GeminiResponse> => {
       };
     }
 
-    // Ultra-simple request for maximum speed
+    // Request with proper formatting instructions
     const requestBody = {
       contents: [{
         parts: [{
-          text: `Brief answer about: ${query}`
+          text: `Provide a brief answer about: ${query}
+
+Format your response exactly like this:
+^^ Brief summary (2-3 sentences maximum) ^^ Detailed explanation with more information
+
+Keep the summary concise and the details informative.`
         }]
       }],
       generationConfig: {
