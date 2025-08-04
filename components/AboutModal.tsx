@@ -82,7 +82,7 @@ export default function AboutModal({ visible, onClose }: AboutModalProps) {
             style={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.version}>Version 1.5</Text>
+            <Text style={styles.version}>Version 1.9</Text>
             
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>What's New</Text>
