@@ -43,6 +43,7 @@ interface DynamicLayoutEngineProps {
   query: string;
   onRetry?: () => void;
   isLoading?: boolean;
+  showAIOptimizedLayout?: boolean;
 }
 
 interface ModuleState {
@@ -54,7 +55,8 @@ export default function DynamicLayoutEngine({
   searchResults, 
   query, 
   onRetry, 
-  isLoading 
+  isLoading,
+  showAIOptimizedLayout = true
 }: DynamicLayoutEngineProps) {
   const { theme } = useTheme();
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
@@ -71,21 +73,21 @@ export default function DynamicLayoutEngine({
       const config = analyzeSearchLayout(query);
       setLayoutConfig(config);
       
-      // Initialize module states based on layout config
-      const newModuleStates: Record<ModuleType, ModuleState> = {
-        tiktok: { 
-          isExpanded: config.layout.find(m => m.module === 'tiktok')?.display === 'full',
-          isVisible: shouldShowModule(config.layout.find(m => m.module === 'tiktok')?.priority || 'none')
-        },
-        reddit: { 
-          isExpanded: config.layout.find(m => m.module === 'reddit')?.display === 'full',
-          isVisible: shouldShowModule(config.layout.find(m => m.module === 'reddit')?.priority || 'none')
-        },
-        pinterest: { 
-          isExpanded: config.layout.find(m => m.module === 'pinterest')?.display === 'full',
-          isVisible: shouldShowModule(config.layout.find(m => m.module === 'pinterest')?.priority || 'none')
-        },
-      };
+        // Initialize module states - all expanded and visible
+  const newModuleStates: Record<ModuleType, ModuleState> = {
+    tiktok: { 
+      isExpanded: true,
+      isVisible: true
+    },
+    reddit: { 
+      isExpanded: true,
+      isVisible: true
+    },
+    pinterest: { 
+      isExpanded: true,
+      isVisible: true
+    },
+  };
       setModuleStates(newModuleStates);
     }
   }, [query]);
@@ -706,23 +708,23 @@ export default function DynamicLayoutEngine({
 
   return (
     <View style={styles.container}>
-      {/* AI Layout Header */}
-      <View style={styles.aiHeader}>
-        <View style={styles.aiHeaderContent}>
-          <View style={styles.aiHeaderLeft}>
-            <Image 
-              source={require('@/assets/images/organge star.png')} 
-              style={styles.starIcon}
-            />
-            <Text style={styles.aiHeaderTitle}>AI-Optimized Layout</Text>
-            <View style={styles.intentBadge}>
-              <Text style={styles.intentText}>{layoutConfig.intent.replace('_', ' ')}</Text>
+      {/* AI Layout Header - Only show when AI optimized layout is enabled */}
+      {showAIOptimizedLayout && (
+        <View style={styles.aiHeader}>
+          <View style={styles.aiHeaderContent}>
+            <View style={styles.aiHeaderLeft}>
+              <Image 
+                source={require('@/assets/images/organge star.png')} 
+                style={styles.starIcon}
+              />
+              <Text style={styles.aiHeaderTitle}>AI-Optimized Layout</Text>
+              <View style={styles.intentBadge}>
+                <Text style={styles.intentText}>{layoutConfig.intent.replace('_', ' ')}</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
-
-
+      )}
 
       {/* Perplexity Response - Always at top */}
       {searchResults.gemini?.success && searchResults.gemini.response && (
@@ -733,73 +735,45 @@ export default function DynamicLayoutEngine({
 
       {/* Dynamic Results */}
       <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
-        {orderedModules.map((moduleConfig, index) => {
-          const moduleType = moduleConfig.module;
-          const moduleState = moduleStates[moduleType];
-          
-          if (!moduleState.isVisible) return null;
-
-          const hasData = moduleDataMap[moduleType]?.success && 
-            ((moduleType === 'tiktok' && moduleDataMap[moduleType].videos?.length > 0) ||
-             (moduleType === 'reddit' && moduleDataMap[moduleType].posts?.length > 0) ||
-             (moduleType === 'pinterest' && moduleDataMap[moduleType].pins?.length > 0));
-          
-          if (!hasData) return null;
-
-          const explanatoryMessage = getExplanatoryMessage(moduleType, query, moduleDataMap[moduleType]);
-          
-          return (
-            <View key={`${moduleType}-${index}`} style={styles.resultWrapper}>
-              {/* Explanatory Message */}
-              <View style={styles.explanatoryMessage}>
-                <Text style={styles.explanatoryTitle}>{explanatoryMessage.title}</Text>
-                <Text style={styles.explanatoryText}>{explanatoryMessage.message}</Text>
-              </View>
-              
-              {/* Module Header with Controls */}
-              <TouchableOpacity 
-                style={styles.moduleHeader}
-                onPress={() => moduleConfig.display !== 'full' && toggleModuleExpansion(moduleType)}
-                disabled={moduleConfig.display === 'full'}
-                activeOpacity={moduleConfig.display === 'full' ? 1 : 0.7}>
-                <View style={styles.moduleHeaderLeft}>
-                  <Text style={styles.moduleTitle}>
-                    {moduleType.replace('_', ' ').toUpperCase()}
-                  </Text>
-                  <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(moduleConfig.priority) }]} />
-                </View>
-                <View style={styles.moduleControls}>
-                  {moduleConfig.display !== 'full' && (
-                    <View style={styles.controlButton}>
-                      {moduleState.isExpanded ? <ChevronDown size={16} color={theme.colors.textSecondary} /> : <ChevronLeft size={16} color={theme.colors.textSecondary} />}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-
-              {/* Module Content */}
-              {moduleState.isExpanded ? (
+        {showAIOptimizedLayout ? (
+          // AI optimized layout - use ordered modules
+          orderedModules.map((moduleConfig, index) => {
+            const moduleType = moduleConfig.module;
+            
+            const hasData = moduleDataMap[moduleType]?.success && 
+              ((moduleType === 'tiktok' && moduleDataMap[moduleType].videos?.length > 0) ||
+               (moduleType === 'reddit' && moduleDataMap[moduleType].posts?.length > 0) ||
+               (moduleType === 'pinterest' && moduleDataMap[moduleType].pins?.length > 0));
+            
+            if (!hasData) return null;
+            
+            return (
+              <View key={`${moduleType}-${index}`} style={styles.resultWrapper}>
                 <View style={styles.moduleContent}>
                   {getModuleComponent(moduleType, false)}
                 </View>
-              ) : (
-                <TouchableOpacity
-                  style={[styles.moduleContent, styles.collapsedContent]}
-                  onPress={() => toggleModuleExpansion(moduleType)}
-                  activeOpacity={0.7}>
-                  {getModuleComponent(moduleType, true) || (
-                    <View style={styles.collapsedPlaceholder}>
-                      <Text style={styles.collapsedText}>
-                        {moduleType.replace('_', ' ').toUpperCase()} content (collapsed)
-                      </Text>
-                      <Text style={styles.expandHint}>Tap to expand</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          );
-        })}
+              </View>
+            );
+          })
+        ) : (
+          // Simple layout - show all available modules in order
+          (['tiktok', 'reddit', 'pinterest'] as ModuleType[]).map((moduleType) => {
+            const hasData = moduleDataMap[moduleType]?.success && 
+              ((moduleType === 'tiktok' && moduleDataMap[moduleType].videos?.length > 0) ||
+               (moduleType === 'reddit' && moduleDataMap[moduleType].posts?.length > 0) ||
+               (moduleType === 'pinterest' && moduleDataMap[moduleType].pins?.length > 0));
+            
+            if (!hasData) return null;
+            
+            return (
+              <View key={moduleType} style={styles.resultWrapper}>
+                <View style={styles.moduleContent}>
+                  {getModuleComponent(moduleType, false)}
+                </View>
+              </View>
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );

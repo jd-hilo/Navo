@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { X, Search } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import FilterBar, { FilterType } from './FilterBar';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -21,9 +22,20 @@ interface AnimatedSearchBarProps {
   placeholder?: string;
   value?: string;
   onValueChange?: (value: string) => void;
+  onFilterChange?: (filter: FilterType) => void;
+  currentFilter?: FilterType;
+  showFilters?: boolean;
 }
 
-const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValueChange }: AnimatedSearchBarProps) => {
+const AnimatedSearchBar = ({ 
+  onSearch, 
+  placeholder = "Search...", 
+  value, 
+  onValueChange,
+  onFilterChange,
+  currentFilter = 'all',
+  showFilters = false
+}: AnimatedSearchBarProps) => {
   const { theme, isDark } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
   const [searchQuery, setSearchQuery] = useState(value || '');
@@ -150,54 +162,61 @@ const AnimatedSearchBar = ({ onSearch, placeholder = "Search...", value, onValue
   const styles = createStyles(theme);
 
   return (
-    <Animated.View 
-      style={[
-        styles.container,
-        {
-          width: widthInterpolated,
-          bottom: bottomPosition,
-          transform: [{ translateX: translateXInterpolated }],
-          paddingHorizontal: isExpanded ? 16 : 0, // Remove padding when collapsed
-        },
-      ]}
-    >
-      {!isExpanded ? (
-        <TouchableOpacity onPress={toggleSearch} style={styles.fullContainer}>
-          <Search 
-            size={24} 
-            color="#FFFFFF" 
-            strokeWidth={3}
-          />
-        </TouchableOpacity>
-      ) : (
-        <>
-          <View style={styles.searchIcon}>
+    <>
+      <FilterBar
+        onFilterChange={onFilterChange || (() => {})}
+        currentFilter={currentFilter}
+        visible={showFilters && isExpanded}
+      />
+      <Animated.View 
+        style={[
+          styles.container,
+          {
+            width: widthInterpolated,
+            bottom: bottomPosition,
+            transform: [{ translateX: translateXInterpolated }],
+            paddingHorizontal: isExpanded ? 16 : 0, // Remove padding when collapsed
+          },
+        ]}
+      >
+        {!isExpanded ? (
+          <TouchableOpacity onPress={toggleSearch} style={styles.fullContainer}>
             <Search 
               size={24} 
               color="#FFFFFF" 
               strokeWidth={3}
             />
-          </View>
-          
-          <TextInput
-            ref={inputRef}
-            style={styles.input}
-            placeholder={placeholder}
-            placeholderTextColor={theme.colors.textSecondary}
-            value={value !== undefined ? value : searchQuery}
-            onChangeText={handleSearch}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onSubmitEditing={handleSubmit}
-          />
-
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <X size={24} color={theme.colors.textSecondary} strokeWidth={3} />
           </TouchableOpacity>
-        </>
-      )}
-    </Animated.View>
+        ) : (
+          <>
+            <View style={styles.searchIcon}>
+              <Search 
+                size={24} 
+                color="#FFFFFF" 
+                strokeWidth={3}
+              />
+            </View>
+            
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder={placeholder}
+              placeholderTextColor={theme.colors.textSecondary}
+              value={value !== undefined ? value : searchQuery}
+              onChangeText={handleSearch}
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onSubmitEditing={handleSubmit}
+            />
+
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+              <X size={24} color={theme.colors.textSecondary} strokeWidth={3} />
+            </TouchableOpacity>
+          </>
+        )}
+      </Animated.View>
+    </>
   );
 };
 

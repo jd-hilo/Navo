@@ -449,16 +449,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-end',
     padding: 0,
-    gap: 12,
+    gap: 8,
     width: 358,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   postContent: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
     padding: 0,
-    gap: 17,
+    gap: 12,
     width: 358,
   },
   postHeader: {
@@ -501,7 +501,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   postTitle: {
     width: 358,
-    height: 38,
+    height: 32,
     fontFamily: 'Inter',
     fontStyle: 'normal',
     fontWeight: '600',

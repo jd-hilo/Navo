@@ -19,6 +19,7 @@ import { Bookmark, Crown, Plus, Settings } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
 import AnimatedSearchBar from '../../components/AnimatedSearchBar';
+import { FilterType } from '../../components/FilterBar';
 import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
 import LoadingCard from '@/components/LoadingCard';
 import { Search } from 'lucide-react-native';
@@ -73,6 +74,7 @@ export default function HomeScreen() {
   const [isBookmarkSaved, setIsBookmarkSaved] = useState(false);
   const [searchCount, setSearchCount] = useState(0);
   const [showSavedSearchesModal, setShowSavedSearchesModal] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
   const router = useRouter();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
@@ -422,6 +424,42 @@ export default function HomeScreen() {
     router.push('/(auth)/upgrade' as any);
   };
 
+  // Filter search results based on current filter
+  const getFilteredResults = () => {
+    if (!searchResults) return null;
+    
+    if (currentFilter === 'all') {
+      return searchResults;
+    }
+    
+    const filteredResults: any = {};
+    
+    switch (currentFilter) {
+      case 'ai':
+        if (searchResults.gemini) {
+          filteredResults.gemini = searchResults.gemini;
+        }
+        break;
+      case 'tiktok':
+        if (searchResults.tiktok) {
+          filteredResults.tiktok = searchResults.tiktok;
+        }
+        break;
+      case 'reddit':
+        if (searchResults.reddit) {
+          filteredResults.reddit = searchResults.reddit;
+        }
+        break;
+      case 'pinterest':
+        if (searchResults.pinterest) {
+          filteredResults.pinterest = searchResults.pinterest;
+        }
+        break;
+    }
+    
+    return filteredResults;
+  };
+
   // Start loading animations
   useEffect(() => {
     if (isLoading) {
@@ -521,14 +559,9 @@ export default function HomeScreen() {
             ) : (
               <TouchableOpacity style={styles.searchCounter} onPress={() => setShowPremiumModal(true)}>
                 <View style={styles.searchCounterContent}>
-                  <LinearGradient
-                    colors={['#FF8C00', '#0066CC']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.infoIconContainer}
-                  >
+                  <View style={styles.infoIconContainer}>
                     <Text style={styles.infoIcon}>i</Text>
-                  </LinearGradient>
+                  </View>
                   <Text style={styles.searchCounterText}>
                     {Math.max(0, 10 - searchCount)} searches left
                   </Text>
@@ -550,6 +583,9 @@ export default function HomeScreen() {
           onValueChange={setSearchQuery}
           onSearch={setSearchQuery}
           placeholder="Create a search for..."
+          onFilterChange={setCurrentFilter}
+          currentFilter={currentFilter}
+          showFilters={hasSearched && searchResults && Object.keys(searchResults).length > 0}
         />
 
         {/* Bottom Navigation Icons */}
@@ -602,7 +638,7 @@ export default function HomeScreen() {
           <Animated.View
             style={{
               position: 'absolute',
-              top: 100, // Fixed position from top
+              top: 80, // Fixed position from top
               left: 0,
               right: 0,
               zIndex: 1, // Between background (0) and search bar (100)
@@ -619,7 +655,7 @@ export default function HomeScreen() {
                 { paddingBottom: 120, alignItems: 'center' } // Reduced padding since no tab bar
               ]}
             >
-              <View style={{ width: '100%', marginTop: 12 }}>
+              <View style={{ width: '100%', marginTop: 8 }}>
                 {isLoading ? (
                   <View style={styles.loadingScreenContainer}>
                     <View style={styles.loadingContent}>
@@ -660,10 +696,11 @@ export default function HomeScreen() {
                   />
                 ) : searchResults ? (
                   <DynamicLayoutEngine
-                    searchResults={searchResults}
+                    searchResults={getFilteredResults()}
                     query={debouncedQuery}
                     onRetry={handleRetry}
                     isLoading={isLoading}
+                    showAIOptimizedLayout={currentFilter === 'all'}
                   />
                 ) : null}
               </View>
@@ -709,7 +746,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    paddingTop: Platform.OS === 'web' ? 80 : 60,
+    paddingTop: Platform.OS === 'web' ? 60 : 40,
     paddingHorizontal: 32,
   },
   headerTop: {
@@ -739,7 +776,7 @@ const createStyles = (theme: any) => StyleSheet.create({
 
   bookmarkContainer: {
     position: 'absolute',
-    bottom: 120, // Position above search bar
+    bottom: 40, // Position at bottom right
     right: 24,
     zIndex: 20,
   },

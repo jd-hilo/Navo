@@ -44,9 +44,8 @@ interface GeminiSectionProps {
 export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge }: GeminiSectionProps) {
   const { theme } = useTheme();
   const [copyLoading, setCopyLoading] = useState(false);
-  const [showSources, setShowSources] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [sourcesExpanded, setSourcesExpanded] = useState(false);
+  const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
   const [faviconUrls, setFaviconUrls] = useState<Record<string, string>>({});
 
   // Parse the response to extract summary and details
@@ -75,6 +74,9 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         summary = sentences.slice(0, 2).join('. ') + '.';
       }
       
+      // Make the summary bold by wrapping it in markdown bold formatting
+      summary = `**${summary}**`;
+      
       const beforeCarets = response.substring(0, firstCaretIndex).trim();
       const afterCarets = response.substring(secondCaretIndex + 2).trim();
       const details = (beforeCarets + ' ' + afterCarets).trim();
@@ -93,7 +95,8 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .trim();
       
-      const summary = content;
+      // Make the summary bold by wrapping it in markdown bold formatting
+      const summary = `**${content}**`;
       const details = content;
       
       console.log('🔍 Single caret format - Summary:', summary);
@@ -160,7 +163,12 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     setIsExpanded(!isExpanded);
   };
 
-  const markdownStyles = createMarkdownStyles(theme);
+  const toggleSourcesExpanded = () => {
+    setIsSourcesExpanded(!isSourcesExpanded);
+  };
+
+  const summaryMarkdownStyles = createSummaryMarkdownStyles(theme);
+  const contentMarkdownStyles = createContentMarkdownStyles(theme);
 
   // Show loading state
   if (isLoading) {
@@ -285,10 +293,10 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       </View>
 
       <View style={styles.cardContent}>
-        {/* Main answer in large, bold text */}
-        <Text style={styles.mainAnswer}>
+        {/* Main answer with proper markdown formatting */}
+        <MarkdownDisplay style={summaryMarkdownStyles}>
           {summary}
-        </Text>
+        </MarkdownDisplay>
         
         {/* Show more button - only show when not expanded */}
         {!isExpanded && (
@@ -305,9 +313,61 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         {/* Expanded content - shows directly under the summary */}
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <MarkdownDisplay style={markdownStyles}>
+            <MarkdownDisplay style={contentMarkdownStyles}>
               {details}
             </MarkdownDisplay>
+            
+            {/* Sources section - in expanded content */}
+            {data.sources && data.sources.length > 0 && (
+              <View style={styles.sourcesContainer}>
+                <TouchableOpacity 
+                  style={styles.sourcesHeader} 
+                  onPress={toggleSourcesExpanded}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.sourcesTitle}>Sources ({data.sources.length})</Text>
+                  {isSourcesExpanded ? (
+                    <ChevronUp size={16} color="#9CA3AF" strokeWidth={2} />
+                  ) : (
+                    <ChevronDown size={16} color="#9CA3AF" strokeWidth={2} />
+                  )}
+                </TouchableOpacity>
+                
+                {isSourcesExpanded && (
+                  <View style={styles.sourcesList}>
+                    {data.sources.map((source, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.sourceItem}
+                        onPress={() => handleSourcePress(source.url)}
+                      >
+                        <View style={[
+                          styles.sourceIconNew,
+                          faviconUrls[source.domain] && { backgroundColor: 'transparent' }
+                        ]}>
+                          {faviconUrls[source.domain] ? (
+                            <Image 
+                              source={{ uri: faviconUrls[source.domain] }} 
+                              style={styles.faviconImage}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <Text style={styles.sourceDomain}>{source.domain.charAt(0).toUpperCase()}</Text>
+                          )}
+                        </View>
+                        <View style={styles.sourceContent}>
+                          <Text style={styles.sourceTitle} numberOfLines={2}>
+                            {source.title}
+                          </Text>
+                          <Text style={styles.sourceUrl}>{source.domain}</Text>
+                        </View>
+                        <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
             
             {/* Show less button - at bottom of expanded content */}
             <TouchableOpacity style={styles.showMoreButton} onPress={toggleExpanded}>
@@ -321,68 +381,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
           </View>
         )}
       </View>
-
-      {/* Sources section */}
-      {data.sources && data.sources.length > 0 && (
-        <View style={styles.sourcesContainer}>
-          <TouchableOpacity 
-            style={styles.sourcesHeader}
-            onPress={() => setSourcesExpanded(!sourcesExpanded)}
-          >
-            <Text style={styles.sourcesTitle}>Sources</Text>
-            <View style={styles.sourcesToggle}>
-              {sourcesExpanded ? (
-                <ChevronUp size={16} color="#9CA3AF" strokeWidth={2} />
-              ) : (
-                <ChevronDown size={16} color="#9CA3AF" strokeWidth={2} />
-              )}
-            </View>
-          </TouchableOpacity>
-          
-          {sourcesExpanded && (
-            <>
-              {data.sources.map((source, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.sourceItem}
-                  onPress={() => handleSourcePress(source.url)}
-                >
-                  <View style={[
-                    styles.sourceIconNew,
-                    faviconUrls[source.domain] && { backgroundColor: 'transparent' }
-                  ]}>
-                    {faviconUrls[source.domain] ? (
-                      <Image 
-                        source={{ uri: faviconUrls[source.domain] }} 
-                        style={styles.faviconImage}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <Text style={styles.sourceDomain}>{source.domain.charAt(0).toUpperCase()}</Text>
-                    )}
-                  </View>
-                  <View style={styles.sourceContent}>
-                    <Text style={styles.sourceTitle} numberOfLines={2}>
-                      {source.title}
-                    </Text>
-                    <Text style={styles.sourceUrl}>{source.domain}</Text>
-                  </View>
-                  <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
-          
-          {!sourcesExpanded && (
-            <TouchableOpacity 
-              style={styles.showSourcesButton}
-              onPress={() => setSourcesExpanded(true)}
-            >
-              <Text style={styles.showSourcesText}>Show Sources...</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
 
       {/* Usage stats at bottom */}
       {data.success && data.usage && (
@@ -583,6 +581,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  sourcesList: {
+    width: '100%',
+  },
   sourcesTitle: {
     fontSize: 14,
     fontWeight: '600',
@@ -681,34 +682,37 @@ const styles = StyleSheet.create({
   },
 });
 
-const createMarkdownStyles = (theme: any) => StyleSheet.create({
+const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
   body: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
-    lineHeight: 22,
+    lineHeight: 24,
+    marginBottom: 8,
   },
   heading1: {
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
     marginVertical: 4,
   },
   heading2: {
-    fontSize: 15,
+    fontSize: 11,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
     marginVertical: 3,
   },
   heading3: {
-    fontSize: 14,
+    fontSize: 10,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
     marginVertical: 2,
   },
   strong: {
+    fontSize: 26,
     fontFamily: 'Inter-SemiBold',
     color: '#FFFFFF',
+    lineHeight: 32,
   },
   em: {
     fontFamily: 'Inter-Regular',
@@ -719,7 +723,7 @@ const createMarkdownStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Inter-Regular',
   },
   code_block: {
@@ -729,10 +733,78 @@ const createMarkdownStyles = (theme: any) => StyleSheet.create({
     marginVertical: 4,
   },
   list_item: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
-    lineHeight: 22,
+    lineHeight: 24,
+    marginVertical: 1,
+  },
+  bullet_list: {
+    marginVertical: 2,
+  },
+  ordered_list: {
+    marginVertical: 2,
+  },
+  paragraph: {
+    marginVertical: 2,
+  },
+});
+
+const createContentMarkdownStyles = (theme: any) => StyleSheet.create({
+  body: {
+    fontSize: 18,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    lineHeight: 24,
+    marginBottom: 8,
+  },
+  heading1: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+    marginVertical: 4,
+  },
+  heading2: {
+    fontSize: 11,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+    marginVertical: 3,
+  },
+  heading3: {
+    fontSize: 10,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+    marginVertical: 2,
+  },
+  strong: {
+    fontSize: 18, // Same as body text, just bold
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+    lineHeight: 24,
+  },
+  em: {
+    fontFamily: 'Inter-Regular',
+    fontStyle: 'italic',
+  },
+  code_inline: {
+    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+  },
+  code_block: {
+    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    padding: 8,
+    borderRadius: 6,
+    marginVertical: 4,
+  },
+  list_item: {
+    fontSize: 18,
+    fontFamily: 'Inter-Regular',
+    color: '#FFFFFF',
+    lineHeight: 24,
     marginVertical: 1,
   },
   bullet_list: {
