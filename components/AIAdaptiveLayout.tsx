@@ -234,8 +234,6 @@ export default function AIAdaptiveLayout({ searchResults, query, onRetry, isLoad
         style={styles.aiHeader}>
         <View style={styles.aiHeaderContent}>
           <View style={styles.aiHeaderLeft}>
-            <Sparkles size={20} color="#fff" />
-            <Text style={styles.aiHeaderTitle}>AI-Optimized Layout</Text>
           </View>
           <TouchableOpacity
             style={styles.layoutInfoButton}

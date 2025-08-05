@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export type FilterType = 'all' | 'ai' | 'tiktok' | 'reddit' | 'pinterest';
@@ -43,34 +44,54 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
         onPress={() => onFilterChange(filter.id)}
         activeOpacity={0.7}
       >
-        <View style={styles.filterButtonGradient}>
-          {isSelected ? (
+                {isSelected ? (
+          <View style={styles.filterButtonGradient}>
             <LinearGradient
-              colors={['#AE6DC3', '#CC72A1', '#E38B81']}
+              colors={['#00282A', '#006367']}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+              end={{ x: 1, y: 1 }}
               style={styles.gradientBackground}
             />
-          ) : null}
-          <View style={styles.filterButtonContent}>
-            <Text style={[
-              styles.filterButtonText,
-              isSelected ? styles.filterButtonTextSelected : styles.filterButtonTextUnselected
-            ]}>
-              {filter.label}
-            </Text>
-            {filter.icon && (
-              <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
-            )}
+            <View style={styles.filterButtonContent}>
+              <Text style={[
+                styles.filterButtonText,
+                styles.filterButtonTextSelected
+              ]}>
+                {filter.label}
+              </Text>
+              {filter.icon && (
+                <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
+              )}
+            </View>
           </View>
-        </View>
+        ) : (
+          <BlurView intensity={25} style={styles.filterButtonGradient}>
+            <LinearGradient
+              colors={['rgba(0, 40, 42, 0.08)', 'rgba(0, 99, 103, 0.08)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.gradientBackground}
+            />
+            <View style={styles.filterButtonContent}>
+              <Text style={[
+                styles.filterButtonText,
+                styles.filterButtonTextUnselected
+              ]}>
+                {filter.label}
+              </Text>
+              {filter.icon && (
+                <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
+              )}
+            </View>
+          </BlurView>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.filterBar}>
+      <BlurView intensity={25} style={styles.filterBar}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
@@ -80,7 +101,7 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
         >
           {filters.map(renderFilterButton)}
         </ScrollView>
-      </View>
+      </BlurView>
     </View>
   );
 };
@@ -89,9 +110,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     position: 'absolute',
     width: '100%',
-    height: 70,
+    height: 60,
     left: 0,
-    bottom: 90, // Move up 10px from 80
+    top: 70,
     zIndex: 1000,
   },
   filterBar: {
@@ -99,12 +120,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     padding: 8,
-    paddingHorizontal: 20,
     gap: 10,
     width: '100%',
     height: '100%',
-    backgroundColor: 'transparent',
+    borderRadius: 29,
     position: 'relative',
+    overflow: 'hidden',
   },
   scrollView: {
     flex: 1,
@@ -115,8 +136,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 2,
-    height: 45,
-    paddingLeft: 20,
+    height: 40,
     justifyContent: 'flex-start',
   },
   filterButton: {
@@ -124,7 +144,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 0,
     gap: 2,
-    height: 45,
+    height: 40,
     flex: 0,
   },
   filterButtonGradient: {
@@ -135,16 +155,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 12,
     gap: 4,
     borderRadius: 46,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
     elevation: 4,
-    backgroundColor: theme.colors.searchBar,
     position: 'relative',
-    minHeight: 40,
+    minHeight: 38,
+    overflow: 'hidden',
   },
   gradientBackground: {
     position: 'absolute',
@@ -169,13 +187,13 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   filterButtonTextSelected: {
     fontWeight: '500',
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 16,
+    lineHeight: 19,
   },
   filterButtonTextUnselected: {
     fontWeight: '400',
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 18,
   },
   filterIcon: {
     width: 14,

@@ -107,7 +107,10 @@ export default function HomeScreen() {
     refetch,
   } = useQuery({
     queryKey: ['search', debouncedQuery],
-    queryFn: () => searchAllSources(debouncedQuery, isPremium),
+    queryFn: () => {
+      console.log('🚀 Starting new search for:', debouncedQuery);
+      return searchAllSources(debouncedQuery, isPremium);
+    },
     enabled: debouncedQuery.length > 2,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: (failureCount, error) => {
@@ -428,6 +431,8 @@ export default function HomeScreen() {
   const getFilteredResults = () => {
     if (!searchResults) return null;
     
+    console.log('🔍 Filtering results for:', currentFilter, 'Query:', debouncedQuery);
+    
     if (currentFilter === 'all') {
       return searchResults;
     }
@@ -457,6 +462,7 @@ export default function HomeScreen() {
         break;
     }
     
+    console.log('✅ Filtered results:', Object.keys(filteredResults));
     return filteredResults;
   };
 
@@ -655,7 +661,7 @@ export default function HomeScreen() {
                 { paddingBottom: 120, alignItems: 'center' } // Reduced padding since no tab bar
               ]}
             >
-              <View style={{ width: '100%', marginTop: 8 }}>
+              <View style={{ width: '100%', marginTop: currentFilter === 'all' ? 20 : 8 }}>
                 {isLoading ? (
                   <View style={styles.loadingScreenContainer}>
                     <View style={styles.loadingContent}>

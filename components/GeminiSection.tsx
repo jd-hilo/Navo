@@ -729,10 +729,11 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
     marginVertical: 2,
   },
   strong: {
-    fontSize: 24,
-    fontFamily: 'Inter-SemiBold',
+    fontSize: 20,
+    fontFamily: 'Inter',
+    fontWeight: '600',
     color: '#FFFFFF',
-    lineHeight: 32,
+    lineHeight: 25,
   },
   em: {
     fontFamily: 'Inter-Regular',

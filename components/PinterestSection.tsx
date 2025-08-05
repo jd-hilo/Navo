@@ -304,50 +304,72 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <ScrollView>
-                <View style={styles.modalHeaderRow}>
-                  <TouchableOpacity
-                    style={styles.modalLinkButton}
-                    onPress={() => selectedPin && Linking.openURL(selectedPin.link)}
-                    accessibilityLabel="Open in Pinterest"
-                  >
-                    <ExternalLink size={22} color={theme.colors.textSecondary} />
-                  </TouchableOpacity>
-                </View>
-                
-                {selectedPin && (
-                  <>
-                    {selectedPin.image_url && (
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <Image 
+                  source={require('@/assets/images/pinterest.png')} 
+                  style={styles.modalPinterestLogo}
+                  resizeMode="contain"
+                />
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={closeModal}
+                >
+                  <Text style={styles.modalCloseButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {selectedPin && (
+                <>
+                  {/* Image Display Area */}
+                  {selectedPin.image_url && (
+                    <View style={styles.modalImageContainer}>
                       <Image 
                         source={{ uri: selectedPin.image_url }} 
                         style={styles.modalImage}
                         resizeMode="cover"
                       />
-                    )}
-                    
-                    <Text style={styles.modalTitle}>
-                      {typeof selectedPin.title === 'string' ? selectedPin.title : 'Pinterest Pin'}
-                    </Text>
-                    
-                    {selectedPin.description && (
-                      <Text style={styles.modalDescription}>
-                        {typeof selectedPin.description === 'string' ? selectedPin.description : ''}
+                    </View>
+                  )}
+                  
+                  {/* Information Section */}
+                  <View style={styles.modalInfoSection}>
+                    <View style={styles.modalUserInfo}>
+                      <View style={styles.modalUserAvatar}>
+                        <Text style={styles.modalUserAvatarText}>
+                          {selectedPin.user_name ? selectedPin.user_name.charAt(0).toUpperCase() : 'P'}
+                        </Text>
+                      </View>
+                      <Text style={styles.modalUserName}>
+                        {selectedPin.user_name || 'Timeless world'}
                       </Text>
-                    )}
+                    </View>
                     
-                    <View style={styles.modalStats}>
-                      <Text style={styles.modalStat}>{formatNumber(selectedPin.likes)} likes</Text>
-                      <Text style={styles.modalStat}>{formatNumber(selectedPin.saves)} saves</Text>
-                      {selectedPin.board_name && (
-                        <Text style={styles.modalStat}>• {selectedPin.board_name}</Text>
+                    <View style={styles.modalTitleSection}>
+                      <Text style={styles.modalTitle}>
+                        {typeof selectedPin.title === 'string' ? selectedPin.title : 'Pinterest Pin'}
+                      </Text>
+                      
+                      {selectedPin.description && (
+                        <Text style={styles.modalDescription}>
+                          {typeof selectedPin.description === 'string' ? selectedPin.description : ''}
+                        </Text>
                       )}
                     </View>
-                  </>
-                )}
-              </ScrollView>
-              <Pressable style={styles.closeButton} onPress={closeModal}>
-                <Text style={styles.closeButtonText}>Close</Text>
-              </Pressable>
+                  </View>
+                  
+                  {/* Visit Site Button */}
+                  <TouchableOpacity 
+                    style={styles.modalVisitButton}
+                    onPress={() => selectedPin && Linking.openURL(selectedPin.link)}
+                  >
+                    <View style={styles.modalVisitButtonContent}>
+                      <Text style={styles.modalVisitButtonText}>Visit site</Text>
+                      <ExternalLink size={12} color="#020201" strokeWidth={2} />
+                    </View>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         </Modal>
@@ -522,68 +544,127 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: theme.colors.card,
-    borderRadius: 16,
+    backgroundColor: '#000000',
+    borderRadius: 12,
     padding: 24,
-    width: '90%',
-    maxHeight: '80%',
-    shadowColor: theme.colors.shadow,
+    width: 390,
+    height: 694,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
+    shadowOpacity: 0.32,
+    shadowRadius: 31.2,
     elevation: 8,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
-  modalHeaderRow: {
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalPinterestLogo: {
+    width: 50,
+    height: 15,
+  },
+  modalCloseButton: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
+  },
+  modalCloseButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
+  },
+  modalImageContainer: {
+    width: 366,
+    height: 400,
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    flex: 1,
+    marginVertical: 16,
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+  modalInfoSection: {
+    width: 366,
+    height: 120,
+    alignSelf: 'center',
+  },
+  modalUserInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 8,
+    marginBottom: 12,
+    gap: 2,
+  },
+  modalUserAvatar: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#9A9CA9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalUserAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  modalUserName: {
+    fontSize: 13,
+    fontFamily: 'Inter',
+    fontWeight: '500',
+    color: '#FFFFFF',
+    lineHeight: 16,
+  },
+  modalTitleSection: {
+    gap: 4,
+  },
+  modalVisitButton: {
+    width: 366,
+    height: 47,
+    backgroundColor: '#E7E6E1',
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  modalVisitButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalVisitButtonText: {
+    fontSize: 12,
+    fontFamily: 'Inter',
+    fontWeight: '500',
+    color: '#020201',
+    lineHeight: 15,
   },
   modalLinkButton: {
     marginRight: 8,
     padding: 4,
   },
-  modalImage: {
-    width: '100%',
-    height: 250,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
   modalTitle: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.text,
-    marginBottom: 8,
+    fontSize: 16,
+    fontFamily: 'Inter',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    lineHeight: 19,
   },
   modalDescription: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.text,
-    marginBottom: 16,
-    lineHeight: 24,
-  },
-  modalStats: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    flexWrap: 'wrap',
-  },
-  modalStat: {
     fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginRight: 16,
-  },
-  closeButton: {
-    marginTop: 16,
-    alignSelf: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 32,
-  },
-  closeButtonText: {
-    color: theme.colors.background,
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 16,
+    fontFamily: 'Inter',
+    fontWeight: '400',
+    color: '#9A9CA9',
+    lineHeight: 17,
   },
 }); 

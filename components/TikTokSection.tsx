@@ -377,7 +377,7 @@ function TikTokVideoCard({
     <TouchableOpacity 
               style={{ 
           width: 320, 
-          height: 500, 
+          height: 400, 
           borderRadius: 24, 
           overflow: 'hidden', 
           backgroundColor: 'transparent'
@@ -637,8 +637,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 12,
     paddingHorizontal: 8,
     gap: 12,
-    width: 374,
-    height: 620,
+    width: '100%',
+    maxWidth: 374,
+    height: 500,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
@@ -655,7 +656,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 0,
     paddingHorizontal: 8,
     gap: 80,
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
     height: 34,
   },
   titleContainer: {

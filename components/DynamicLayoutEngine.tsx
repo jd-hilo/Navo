@@ -709,21 +709,15 @@ export default function DynamicLayoutEngine({
   return (
     <View style={styles.container}>
       {/* AI Layout Header - Only show when AI optimized layout is enabled */}
-      {showAIOptimizedLayout && (
+      {showAIOptimizedLayout ? (
         <View style={styles.aiHeader}>
           <View style={styles.aiHeaderContent}>
             <View style={styles.aiHeaderLeft}>
-              <Image 
-                source={require('@/assets/images/organge star.png')} 
-                style={styles.starIcon}
-              />
-              <Text style={styles.aiHeaderTitle}>AI-Optimized Layout</Text>
-              <View style={styles.intentBadge}>
-                <Text style={styles.intentText}>{layoutConfig.intent.replace('_', ' ')}</Text>
-              </View>
             </View>
           </View>
         </View>
+      ) : (
+        <View style={styles.aiHeaderSpacer} />
       )}
 
       {/* Perplexity Response - Always at top */}
@@ -814,6 +808,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     alignItems: 'center',
+  },
+  aiHeaderSpacer: {
+    height: 40,
+    marginBottom: 16,
   },
   aiHeaderContent: {
     flexDirection: 'row',

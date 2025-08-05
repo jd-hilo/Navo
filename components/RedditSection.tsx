@@ -175,7 +175,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             <View style={styles.redditLogo}>
               <Text style={styles.redditLogoText}>R</Text>
             </View>
-            <Text style={styles.redditText}>Reddit</Text>
+            <Text style={styles.redditText} numberOfLines={1} ellipsizeMode="tail">Reddit</Text>
           </View>
           <TouchableOpacity 
             style={styles.visitButton}
@@ -396,7 +396,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 24,
     paddingHorizontal: 8,
     gap: 24,
-    width: 374,
+    width: '100%',
+    maxWidth: 374,
     borderRadius: 48,
     backgroundColor: 'transparent',
   },
@@ -408,7 +409,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 0,
     paddingHorizontal: 8,
     gap: 176,
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
     height: 32,
   },
   redditBranding: {
@@ -454,7 +456,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderWidth: 0.56,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
-    marginRight: 15,
+    marginRight: 25,
   },
   visitButtonText: {
     width: 33,
@@ -476,7 +478,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'flex-end',
     padding: 0,
     gap: 8,
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
     marginBottom: 8,
   },
   postContent: {
@@ -485,7 +488,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'flex-start',
     padding: 0,
     gap: 12,
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
   },
   postHeader: {
     display: 'flex',
@@ -514,7 +518,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 13,
     lineHeight: 24,
     color: '#FFFFFF',
-    marginLeft:35,
+    marginLeft: 40,
   },
   time: {
     width: 80,
@@ -527,7 +531,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: '#9A9CA9',
   },
   postTitle: {
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
     height: 32,
     fontFamily: 'Inter',
     fontStyle: 'normal',
@@ -563,7 +568,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: '#9A9CA9',
   },
   divider: {
-    width: 358,
+    width: '100%',
+    maxWidth: 358,
     height: 0,
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.12)',
