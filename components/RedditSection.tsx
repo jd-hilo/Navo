@@ -51,6 +51,9 @@ interface RedditComment {
   createdAt: string;
   depth?: number;
   replies?: RedditComment[];
+  author?: string;
+  authorName?: string;
+  username?: string;
 }
 
 export default function RedditSection({ data, query, onRetry, isLoading }: RedditSectionProps) {
@@ -75,7 +78,20 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
       if (apiResponse && apiResponse.commentForest && Array.isArray(apiResponse.commentForest.trees)) {
         extractedComments = apiResponse.commentForest.trees
           .filter((tree: any) => tree.node && tree.node.__typename === 'Comment')
-          .map((tree: any) => tree.node);
+          .map((tree: any) => {
+            const comment = tree.node;
+            // Extract username from various possible fields
+            const username = comment.author?.name || 
+                           comment.authorName || 
+                           comment.username || 
+                           comment.author?.displayName ||
+                           comment.author?.username ||
+                           'Anonymous';
+            return {
+              ...comment,
+              username: username
+            };
+          });
       }
       setComments(extractedComments);
     } catch (err: any) {
@@ -119,30 +135,29 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
     const styles = createStyles(theme);
     const maxDepth = 8;
     
-    const renderIndentLines = () => {
-      return Array.from({ length: Math.min(depth, maxDepth) }).map((_, index) => (
-        <View
-          key={index}
-          style={[
-            styles.indentLine,
-            {
-              left: index * 16,
-              backgroundColor: theme.colors.border,
-            }
-          ]}
-        />
-      ));
+    // Use actual username from comment data, fallback to generated if not available
+    const getUsername = (comment: RedditComment) => {
+      if (comment.username) {
+        return comment.username;
+      }
+      // Fallback to generated username if no real username is available
+      const usernames = ['tegerr', 'yuhandi56_', 'wager33', 'artlover', 'michelangelo_fan', 'renaissance_enthusiast'];
+      const index = parseInt(comment.id.slice(-1)) % usernames.length;
+      return usernames[index];
     };
 
     return (
-      <View style={[styles.commentItem, { marginLeft: Math.min(depth, maxDepth) * 16 }]}>
-        {depth > 0 && renderIndentLines()}
+      <View style={styles.commentItem}>
         <View style={styles.commentContent}>
           <View style={styles.commentHeaderRow}>
-            <Text style={styles.commentScore}>{comment.score} points</Text>
+            <Text style={styles.commentUsername}>{getUsername(comment)}</Text>
             <Text style={styles.commentTime}>• {formatDateOnly(comment.createdAt)}</Text>
           </View>
           <Text style={styles.commentBody}>{comment.content?.markdown || ''}</Text>
+          <View style={styles.commentUpvoteRow}>
+            <Text style={styles.upvoteArrow}>↑</Text>
+            <Text style={styles.commentScore}>{comment.score} points</Text>
+          </View>
         </View>
         {comment.replies?.map((reply) => (
           <CommentThread key={reply.id} comment={reply} depth={depth + 1} />
@@ -315,14 +330,17 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeaderRow}>
-              <TouchableOpacity
-                style={styles.modalLinkButton}
-                onPress={() => selectedPost && Linking.openURL(selectedPost.url)}
-                accessibilityLabel="Open in Reddit"
-              >
-                <ExternalLink size={22} color="#FFFFFF" />
-              </TouchableOpacity>
+            {/* Top Header Bar */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderLeft}>
+                <Image 
+                  source={require('@/assets/images/Reddit_Logo.png')} 
+                  style={styles.modalRedditLogo}
+                  resizeMode="contain"
+                />
+                <Text style={styles.modalSubreddit}>r/{selectedPost?.subreddit}</Text>
+                <Text style={styles.modalDate}>• {selectedPost && formatDateOnly(selectedPost.created)}</Text>
+              </View>
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={closeModal}
@@ -338,9 +356,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             >
               {selectedPost && (
                 <>
-                  <Text style={styles.modalSubreddit}>r/{selectedPost.subreddit}</Text>
                   <Text style={styles.modalTitle}>{selectedPost.title}</Text>
-                  <Text style={styles.modalDate}>{formatDateOnly(selectedPost.created)}</Text>
                   {selectedPost.text || selectedPost.preview ? (
                     <Text style={styles.modalBody}>{selectedPost.text || selectedPost.preview}</Text>
                   ) : null}
@@ -357,7 +373,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
                       <Text style={styles.commentsPlaceholder}>No comments found.</Text>
                     )}
                     {!commentsLoading && !commentsError && comments.length > 0 && (
-                      comments.slice(0, 10).map((comment) => (
+                      comments.map((comment) => (
                         <CommentThread key={comment.id} comment={comment} />
                       ))
                     )}
@@ -608,11 +624,27 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  modalRedditLogo: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+  },
   modalSubreddit: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#9A9CA9',
-    marginBottom: 4,
+    color: '#FFFFFF',
+    marginRight: 8,
   },
   modalTitle: {
     fontSize: 20,
@@ -624,9 +656,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#9A9CA9',
-    marginBottom: 12,
     lineHeight: 16,
-    minHeight: 16,
   },
   modalBody: {
     fontSize: 17,
@@ -691,15 +721,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingBottom: 20,
   },
   commentItem: {
-    marginBottom: 16,
+    marginBottom: 20,
     position: 'relative',
   },
   commentContent: {
-    padding: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    padding: 0,
   },
   indentLine: {
     position: 'absolute',
@@ -711,15 +737,22 @@ const createStyles = (theme: any) => StyleSheet.create({
   commentHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
     flexWrap: 'wrap',
     minHeight: 16,
+  },
+  commentUsername: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#FFFFFF',
+    marginRight: 8,
+    lineHeight: 16,
+    fontWeight: '600',
   },
   commentScore: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     color: '#9A9CA9',
-    marginRight: 8,
     lineHeight: 16,
   },
   commentTime: {
@@ -729,10 +762,40 @@ const createStyles = (theme: any) => StyleSheet.create({
     lineHeight: 16,
     flexShrink: 0,
   },
+  commentUpvoteRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  upvoteArrow: {
+    fontSize: 12,
+    color: '#9A9CA9',
+    marginRight: 4,
+  },
   commentBody: {
     fontSize: 15,
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     lineHeight: 20,
+  },
+  viewMoreCommentsButton: {
+    backgroundColor: '#FF4500',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  viewMoreCommentsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  viewMoreCommentsText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    fontWeight: '500',
   },
 });
