@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
   Modal,
+  ScrollView,
 } from 'react-native';
 import { Search, ChevronDown, ChevronUp, Bookmark, Trash2, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -187,7 +188,11 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
 
         {/* Expanded Results */}
         {isExpanded && (
-          <View style={styles.expandedContent}>
+          <ScrollView 
+            style={styles.expandedContent}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+          >
             {item.gemini_data && (
               <View style={styles.expandedSection}>
                 <View style={styles.moduleHeader}>
@@ -232,7 +237,7 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
                 />
               </View>
             )}
-          </View>
+          </ScrollView>
         )}
       </View>
     );
@@ -254,6 +259,7 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
       shadowOpacity: 0.15,
       shadowRadius: 20,
       elevation: 10,
+      flexDirection: 'column',
     },
     header: {
       flexDirection: 'row',
@@ -456,23 +462,25 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
               <X size={24} color={theme.colors.text} strokeWidth={2} />
             </TouchableOpacity>
           </View>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading saved searches...</Text>
-            </View>
-          ) : savedSearches.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No saved searches yet</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={savedSearches}
-              renderItem={renderSearchItem}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContainer}
-              showsVerticalScrollIndicator={false}
-            />
-          )}
+          <View style={{ flex: 1 }}>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading saved searches...</Text>
+              </View>
+            ) : savedSearches.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No saved searches yet</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={savedSearches}
+                renderItem={renderSearchItem}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={true}
+              />
+            )}
+          </View>
         </Animated.View>
       </TouchableOpacity>
     </Modal>

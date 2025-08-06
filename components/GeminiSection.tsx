@@ -52,33 +52,44 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   const parseResponse = (response: string) => {
     console.log('🔍 Parsing response:', response);
     
+    // Unescape the response to handle backslashes properly - only remove backslashes before U.S.
+    const unescapedResponse = response.replace(/\\U\.S\./g, 'U.S.');
+    console.log('🔍 Unescaped response:', unescapedResponse);
+    
     // Find the first two carets
-    const firstCaretIndex = response.indexOf("^^");
-    const secondCaretIndex = response.indexOf("^^", firstCaretIndex + 2);
+    const firstCaretIndex = unescapedResponse.indexOf("^^");
+    const secondCaretIndex = unescapedResponse.indexOf("^^", firstCaretIndex + 2);
     
     console.log('🔍 Caret indices:', { firstCaretIndex, secondCaretIndex });
     
     if (firstCaretIndex !== -1 && secondCaretIndex !== -1) {
       // Standard format: ^^ summary ^^ details
-      let summary = response.substring(firstCaretIndex + 2, secondCaretIndex).trim();
+      let summary = unescapedResponse.substring(firstCaretIndex + 2, secondCaretIndex).trim();
       
-      // Clean up the summary - remove citation numbers and limit length
+      // Clean up the summary - remove citation numbers
       summary = summary
         .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .trim();
       
-      // Limit summary to first 2-3 sentences (approximately 200 characters)
-      const sentences = summary.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      if (sentences.length > 2) {
-        summary = sentences.slice(0, 2).join('. ') + '.';
+      // Limit summary to ~1500 characters to stay within token limits
+      if (summary.length > 1500) {
+        summary = summary.substring(0, 1500).trim();
+        // Try to end at a sentence boundary
+        const lastPeriod = summary.lastIndexOf('.');
+        const lastExclamation = summary.lastIndexOf('!');
+        const lastQuestion = summary.lastIndexOf('?');
+        const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion);
+        if (lastSentenceEnd > 1200) { // Only cut at sentence if we have enough content
+          summary = summary.substring(0, lastSentenceEnd + 1);
+        }
       }
       
       // Make the summary bold by wrapping it in markdown bold formatting
       summary = `**${summary}**`;
       
-      const beforeCarets = response.substring(0, firstCaretIndex).trim();
-      const afterCarets = response.substring(secondCaretIndex + 2).trim();
+      const beforeCarets = unescapedResponse.substring(0, firstCaretIndex).trim();
+      const afterCarets = unescapedResponse.substring(secondCaretIndex + 2).trim();
       const details = (beforeCarets + ' ' + afterCarets).trim();
       
       console.log('🔍 Summary:', summary);
@@ -87,13 +98,26 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       return { summary, details };
     } else if (firstCaretIndex !== -1 && secondCaretIndex === -1) {
       // Only one set of carets at the beginning: ^^ content...
-      let content = response.substring(firstCaretIndex + 2).trim();
+      let content = unescapedResponse.substring(firstCaretIndex + 2).trim();
       
       // Clean up the content - remove citation numbers
       content = content
         .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .trim();
+      
+      // Limit content to ~1500 characters to stay within token limits
+      if (content.length > 1500) {
+        content = content.substring(0, 1500).trim();
+        // Try to end at a sentence boundary
+        const lastPeriod = content.lastIndexOf('.');
+        const lastExclamation = content.lastIndexOf('!');
+        const lastQuestion = content.lastIndexOf('?');
+        const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion);
+        if (lastSentenceEnd > 1200) { // Only cut at sentence if we have enough content
+          content = content.substring(0, lastSentenceEnd + 1);
+        }
+      }
       
       // Make the summary bold by wrapping it in markdown bold formatting
       const summary = `**${content}**`;
@@ -109,25 +133,31 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     console.log('🔍 No carets found, using fallback');
     
     // Clean up the response - remove citation numbers and extra spaces
-    const cleanedResponse = response
+    const cleanedResponse = unescapedResponse
       .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .trim();
     
-    // Create a summary from the first few sentences
-    const sentences = cleanedResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    let summary = cleanedResponse;
-    
-    if (sentences.length > 2) {
-      summary = sentences.slice(0, 2).join('. ') + '.';
+    // Limit response to ~1500 characters to stay within token limits
+    let limitedResponse = cleanedResponse;
+    if (limitedResponse.length > 1500) {
+      limitedResponse = limitedResponse.substring(0, 1500).trim();
+      // Try to end at a sentence boundary
+      const lastPeriod = limitedResponse.lastIndexOf('.');
+      const lastExclamation = limitedResponse.lastIndexOf('!');
+      const lastQuestion = limitedResponse.lastIndexOf('?');
+      const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion);
+      if (lastSentenceEnd > 1200) { // Only cut at sentence if we have enough content
+        limitedResponse = limitedResponse.substring(0, lastSentenceEnd + 1);
+      }
     }
     
     // Make the summary bold
-    const formattedSummary = `**${summary}**`;
+    const formattedSummary = `**${limitedResponse}**`;
     
     return { 
       summary: formattedSummary, 
-      details: cleanedResponse 
+      details: limitedResponse 
     };
   };
 

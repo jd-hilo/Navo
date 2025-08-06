@@ -583,6 +583,32 @@ export default function HomeScreen() {
 
         </Animated.View>
 
+        {/* Save Search Button - Above Search Bar */}
+        <Animated.View
+          style={[
+            styles.bookmarkContainer,
+            {
+              opacity: bookmarkOpacity,
+              transform: [{ scale: bookmarkScale }],
+              position: 'absolute',
+              bottom: 120, // Position above search bar
+              right: 20,
+              zIndex: 10,
+            },
+          ]}>
+          <TouchableOpacity
+            style={[styles.bookmarkButton, isBookmarkSaved && styles.bookmarkButtonSaved]}
+            onPress={saveBookmark}
+            activeOpacity={0.8}>
+            <Bookmark 
+              size={24} 
+              color={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : theme.colors.text} 
+              strokeWidth={2}
+              fill={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : 'none'}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+
         {/* Bottom Center Search Bar */}
         <AnimatedSearchBar
           value={searchQuery}
@@ -617,27 +643,7 @@ export default function HomeScreen() {
 
 
 
-        {/* Bookmark Button - Animated */}
-        <Animated.View
-          style={[
-            styles.bookmarkContainer,
-            {
-              opacity: bookmarkOpacity,
-              transform: [{ scale: bookmarkScale }],
-            },
-          ]}>
-          <TouchableOpacity
-            style={[styles.bookmarkButton, isBookmarkSaved && styles.bookmarkButtonSaved]}
-            onPress={saveBookmark}
-            activeOpacity={0.8}>
-            <Bookmark 
-              size={24} 
-              color={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : theme.colors.text} 
-              strokeWidth={2}
-              fill={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : 'none'}
-            />
-          </TouchableOpacity>
-        </Animated.View>
+
 
         {/* Results Container - Absolutely positioned under search bar */}
         {hasSearched && (
@@ -661,7 +667,7 @@ export default function HomeScreen() {
                 { paddingBottom: 120, alignItems: 'center' } // Reduced padding since no tab bar
               ]}
             >
-              <View style={{ width: '100%', marginTop: currentFilter === 'all' ? 20 : 8 }}>
+              <View style={{ width: '100%', marginTop: currentFilter === 'all' ? 35 : 15 }}>
                 {isLoading ? (
                   <View style={styles.loadingScreenContainer}>
                     <View style={styles.loadingContent}>

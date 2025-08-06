@@ -621,7 +621,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   modalContent: {
     backgroundColor: '#1A1A1A',
     borderRadius: 16,
-    padding: 24,
+    padding: 16,
+    paddingTop: 12,
     width: '90%',
     height: '80%',
     shadowColor: '#000000',
@@ -634,7 +635,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
