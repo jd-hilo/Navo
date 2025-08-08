@@ -1,7 +1,7 @@
 {
   "name": "navo-search-app",
   "main": "expo-router/entry",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "scripts": {
     "start": "EXPO_NO_TELEMETRY=1 expo start",
