@@ -482,12 +482,11 @@ function TikTokVideoCard({
 }
 
 export default function TikTokSection({ data, query, onRetry }: TikTokSectionProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme, isDark);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(-1);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-
-  const styles = createStyles(theme);
 
   const handleVideoPress = (video: TikTokVideo, index: number) => {
     setSelectedVideoIndex(index);
@@ -623,7 +622,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 32,
     marginBottom: 16,
@@ -641,11 +640,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     maxWidth: 374,
     height: 500,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
+    shadowColor: isDark ? '#000000' : 'transparent',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 39.1,
-    elevation: 8,
+    shadowOpacity: isDark ? 0.25 : 0,
+    shadowRadius: isDark ? 39.1 : 0,
+    elevation: isDark ? 8 : 0,
     borderRadius: 32,
   },
   header: {

@@ -20,11 +20,11 @@ interface FilterBarProps {
 }
 
 const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) => {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   if (!visible) return null;
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isDark);
 
   const filters = [
     { id: 'all' as FilterType, label: 'All', icon: null },
@@ -106,7 +106,7 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
   );
 };
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   container: {
     position: 'absolute',
     width: '100%',
@@ -183,12 +183,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter',
     fontStyle: 'normal',
     textAlign: 'center',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
   },
   filterButtonTextSelected: {
     fontWeight: '500',
     fontSize: 16,
     lineHeight: 19,
+    color: '#FFFFFF',
   },
   filterButtonTextUnselected: {
     fontWeight: '400',

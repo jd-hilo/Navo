@@ -159,7 +159,7 @@ const AnimatedSearchBar = ({
     outputRange: [40, keyboardHeight > 0 ? keyboardHeight + 15 : 40], // 15px above keyboard when expanded
   });
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isDark);
 
   return (
     <>
@@ -183,7 +183,7 @@ const AnimatedSearchBar = ({
           <TouchableOpacity onPress={toggleSearch} style={styles.fullContainer}>
             <Search 
               size={24} 
-              color="#FFFFFF" 
+              color={isDark ? "#FFFFFF" : "#000000"} 
               strokeWidth={3}
             />
           </TouchableOpacity>
@@ -192,7 +192,7 @@ const AnimatedSearchBar = ({
             <View style={styles.searchIcon}>
               <Search 
                 size={24} 
-                color="#FFFFFF" 
+                color={isDark ? "#FFFFFF" : "#000000"} 
                 strokeWidth={3}
               />
             </View>
@@ -220,7 +220,7 @@ const AnimatedSearchBar = ({
   );
 };
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   container: {
     position: 'absolute',
     left: '50%',
@@ -257,6 +257,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-Regular',
     height: '100%',
+    textShadowColor: isDark ? 'rgba(0, 0, 0, 0.3)' : 'rgba(128, 128, 128, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   closeButton: {
     width: 32,

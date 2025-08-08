@@ -872,7 +872,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     lineHeight: 15,
     textAlign: 'center',
-    color: '#D3D3D3',
+    color: '#808080',
     marginTop: -2,
   },
   addCreditsButton: {

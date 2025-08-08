@@ -42,8 +42,9 @@ interface GeminiSectionProps {
 }
 
 export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge }: GeminiSectionProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [copyLoading, setCopyLoading] = useState(false);
+  const styles = createStyles(theme, isDark);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
   const [faviconUrls, setFaviconUrls] = useState<Record<string, string>>({});
@@ -215,8 +216,8 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     setIsSourcesExpanded(!isSourcesExpanded);
   };
 
-  const summaryMarkdownStyles = createSummaryMarkdownStyles(theme);
-  const contentMarkdownStyles = createContentMarkdownStyles(theme);
+  const summaryMarkdownStyles = createSummaryMarkdownStyles(theme, isDark);
+  const contentMarkdownStyles = createContentMarkdownStyles(theme, isDark);
 
   // Show loading state
   if (isLoading) {
@@ -446,7 +447,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   perplexityCard: {
     display: 'flex',
     flexDirection: 'column',
@@ -455,10 +456,10 @@ const styles = StyleSheet.create({
     gap: 12,
     width: '100%',
     minHeight: 200,
-    backgroundColor: 'rgba(33, 33, 33, 0.32)',
-    shadowColor: '#000000',
+    backgroundColor: isDark ? 'rgba(33, 33, 33, 0.32)' : 'rgba(255, 255, 255, 0.95)',
+    shadowColor: theme.colors.shadow,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: isDark ? 0.25 : 0.15,
     shadowRadius: 39.1,
     borderRadius: 32,
     // Note: backdrop-filter is not supported in React Native
@@ -490,12 +491,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   googleText: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 12,
     fontWeight: 'bold',
   },
   googleLabel: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -517,15 +518,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: -8, // Overlapping effect
     borderWidth: 1,
-    borderColor: 'rgba(156, 163, 175, 0.1)',
+    borderColor: isDark ? 'rgba(156, 163, 175, 0.1)' : 'rgba(0, 0, 0, 0.1)',
   },
   wikiText: {
-    color: '#000000',
+    color: isDark ? '#000000' : '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
   },
   profileText: {
-    color: '#000000',
+    color: isDark ? '#000000' : '#FFFFFF',
     fontSize: 10,
     fontWeight: '500',
   },
@@ -540,20 +541,20 @@ const styles = StyleSheet.create({
   mainAnswer: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
     marginBottom: 8,
   },
   summaryText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: isDark ? '#9CA3AF' : '#6B7280',
     lineHeight: 20,
     marginBottom: 12,
   },
   showMoreButton: {
     width: '100%',
     height: 48,
-    backgroundColor: 'rgba(0, 157, 255, 0.05)',
+    backgroundColor: isDark ? 'rgba(0, 157, 255, 0.05)' : 'rgba(59, 130, 246, 0.1)',
     borderRadius: 28,
     padding: 16,
     marginTop: 12,
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   showMoreText: {
-    color: '#5F9CEB',
+    color: isDark ? '#5F9CEB' : '#3B82F6',
     fontSize: 12,
     fontWeight: '500',
     lineHeight: 15,
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(156, 163, 175, 0.2)',
+    borderTopColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     flex: 1,
   },
   loadingContainer: {
@@ -592,7 +593,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: isDark ? '#9CA3AF' : '#6B7280',
     marginLeft: 8,
   },
   errorContainer: {
@@ -601,7 +602,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: isDark ? '#9CA3AF' : '#6B7280',
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 20,
@@ -637,7 +638,7 @@ const styles = StyleSheet.create({
   sourcesTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
   },
   sourcesToggle: {
     padding: 4,
@@ -645,7 +646,7 @@ const styles = StyleSheet.create({
   showSourcesButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: 'rgba(156, 163, 175, 0.1)',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.1)' : 'rgba(0, 0, 0, 0.05)',
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -720,7 +721,7 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
   },
   modelBadge: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#60A5FA',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -732,37 +733,37 @@ const styles = StyleSheet.create({
   },
 });
 
-const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
+const createSummaryMarkdownStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   body: {
     fontSize: 18,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
     marginBottom: 8,
   },
   heading1: {
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 4,
   },
   heading2: {
     fontSize: 11,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 3,
   },
   heading3: {
     fontSize: 10,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 2,
   },
   strong: {
     fontSize: 20,
     fontFamily: 'Inter',
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 25,
   },
   em: {
@@ -770,7 +771,7 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
     fontStyle: 'italic',
   },
   code_inline: {
-    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
@@ -778,7 +779,7 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
   },
   code_block: {
-    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     padding: 8,
     borderRadius: 6,
     marginVertical: 4,
@@ -786,7 +787,7 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
   list_item: {
     fontSize: 18,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
     marginVertical: 1,
   },
@@ -801,36 +802,36 @@ const createSummaryMarkdownStyles = (theme: any) => StyleSheet.create({
   },
 });
 
-const createContentMarkdownStyles = (theme: any) => StyleSheet.create({
+const createContentMarkdownStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   body: {
     fontSize: 18,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
     marginBottom: 8,
   },
   heading1: {
     fontSize: 12,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 4,
   },
   heading2: {
     fontSize: 11,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 3,
   },
   heading3: {
     fontSize: 10,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginVertical: 2,
   },
   strong: {
     fontSize: 18, // Same as body text, just bold
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
   },
   em: {
@@ -838,7 +839,7 @@ const createContentMarkdownStyles = (theme: any) => StyleSheet.create({
     fontStyle: 'italic',
   },
   code_inline: {
-    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
@@ -846,7 +847,7 @@ const createContentMarkdownStyles = (theme: any) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
   },
   code_block: {
-    backgroundColor: 'rgba(156, 163, 175, 0.2)',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     padding: 8,
     borderRadius: 6,
     marginVertical: 4,
@@ -854,7 +855,7 @@ const createContentMarkdownStyles = (theme: any) => StyleSheet.create({
   list_item: {
     fontSize: 18,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 24,
     marginVertical: 1,
   },

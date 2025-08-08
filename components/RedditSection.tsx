@@ -57,7 +57,8 @@ interface RedditComment {
 }
 
 export default function RedditSection({ data, query, onRetry, isLoading }: RedditSectionProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const styles = createStyles(theme, isDark);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<RedditPost | null>(null);
   const [comments, setComments] = useState<any[]>([]);
@@ -128,11 +129,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
     return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
   };
 
-  const styles = createStyles(theme);
-
   const CommentThread = ({ comment, depth = 0 }: { comment: RedditComment; depth?: number }) => {
-    const { theme } = useTheme();
-    const styles = createStyles(theme);
     const maxDepth = 8;
     
     // Use actual username from comment data, fallback to generated if not available
@@ -187,7 +184,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
         </View>
         
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#FFFFFF" />
+          <ActivityIndicator size="small" color={isDark ? "#FFFFFF" : "#000000"} />
           <Text style={styles.loadingText}>Searching Reddit posts...</Text>
         </View>
       </View>
@@ -210,7 +207,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
           >
             <Text style={styles.visitButtonText}>Visit</Text>
-            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+            <ExternalLink size={14} color={isDark ? "#FFFFFF" : "#000000"} strokeWidth={2} />
           </TouchableOpacity>
         </View>
         
@@ -218,7 +215,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
           <Text style={styles.errorText}>{data.error}</Text>
           {onRetry && (
             <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-              <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
+              <RefreshCw size={16} color={isDark ? "#FFFFFF" : "#000000"} strokeWidth={2} />
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           )}
@@ -243,14 +240,14 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
           >
             <Text style={styles.visitButtonText}>Visit</Text>
-            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+            <ExternalLink size={14} color={isDark ? "#FFFFFF" : "#000000"} strokeWidth={2} />
           </TouchableOpacity>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>No Reddit posts found for this search.</Text>
           {onRetry && (
             <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-              <RefreshCw size={16} color="#FFFFFF" strokeWidth={2} />
+              <RefreshCw size={16} color={isDark ? "#FFFFFF" : "#000000"} strokeWidth={2} />
               <Text style={styles.retryText}>Try Again</Text>
             </TouchableOpacity>
           )}
@@ -261,7 +258,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
 
   return (
     <LinearGradient
-      colors={['#FF45003D', '#0000003D']}
+      colors={isDark ? ['#FF45003D', '#0000003D'] : ['#FFF5F0', '#FFFFFF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}>
@@ -279,7 +276,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
             onPress={() => Linking.openURL(`https://www.reddit.com/search/?q=${encodeURIComponent(query)}`)}
           >
             <Text style={styles.visitButtonText}>Visit</Text>
-            <ExternalLink size={14} color="#FFFFFF" strokeWidth={2} />
+            <ExternalLink size={14} color={isDark ? "#FFFFFF" : "#000000"} strokeWidth={2} />
           </TouchableOpacity>
         </View>
 
@@ -388,7 +385,7 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   container: {
     display: 'flex',
     flexDirection: 'column',
@@ -428,7 +425,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     height: 20,
   },
   redditLogoText: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -441,7 +438,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     lineHeight: 22,
     textAlign: 'center',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
   },
   visitButton: {
     display: 'flex',
@@ -452,9 +449,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     gap: 8,
     width: 75,
     height: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     borderWidth: 0.56,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
     borderRadius: 20,
     marginRight: 25,
   },
@@ -466,7 +463,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '400',
     fontSize: 13,
     lineHeight: 18,
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
   },
   postsContainer: {
     flex: 1,
@@ -517,7 +514,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '500',
     fontSize: 13,
     lineHeight: 24,
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginLeft: 40,
   },
   time: {
@@ -528,7 +525,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 18,
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
   },
   postTitle: {
     width: '100%',
@@ -539,7 +536,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
     lineHeight: 19,
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
   },
   postStats: {
     display: 'flex',
@@ -565,14 +562,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '400',
     fontSize: 12,
     lineHeight: 15,
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
   },
   divider: {
     width: '100%',
     maxWidth: 358,
     height: 0,
     borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)',
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -583,7 +580,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginLeft: 8,
   },
   errorContainer: {
@@ -593,7 +590,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   errorText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     textAlign: 'center',
     marginBottom: 12,
     lineHeight: 20,
@@ -601,7 +598,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
@@ -609,7 +606,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   retryText: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginLeft: 6,
   },
   modalOverlay: {

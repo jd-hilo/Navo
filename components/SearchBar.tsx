@@ -219,6 +219,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 0,
     textAlign: 'center',
     letterSpacing: -0.3,
+    textShadowColor: 'rgba(128, 128, 128, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
   },
   cursor: {
     position: 'absolute',
