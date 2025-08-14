@@ -22,6 +22,9 @@ import { Video as ExpoVideo, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
 import { getTikTokVideoDetails } from '@/services/api';
 
+// In-memory cache for AI suggestions per query
+const tiktokSuggestionCache: Record<string, string[]> = {};
+
 interface TikTokVideo {
   id: string;
   title: string;
@@ -39,6 +42,7 @@ interface TikTokSectionProps {
   };
   query: string;
   onRetry?: () => void;
+  enableSuggestions?: boolean;
 }
 
 const extractTikTokVideoId = (url: string): string | null => {
@@ -335,10 +339,14 @@ function TikTokVideoModal({
 
 function TikTokVideoCard({ 
   video, 
-  onPress 
+  onPress,
+  cardWidth = 320,
+  cardHeight = 400,
 }: { 
   video: TikTokVideo; 
   onPress: () => void; 
+  cardWidth?: number;
+  cardHeight?: number;
 }) {
   const { theme } = useTheme();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -376,8 +384,8 @@ function TikTokVideoCard({
   return (
     <TouchableOpacity 
               style={{ 
-          width: 320, 
-          height: 400, 
+          width: cardWidth, 
+          height: cardHeight, 
           borderRadius: 24, 
           overflow: 'hidden', 
           backgroundColor: 'transparent'
@@ -481,21 +489,78 @@ function TikTokVideoCard({
   );
 }
 
-export default function TikTokSection({ data, query, onRetry }: TikTokSectionProps) {
+export default function TikTokSection({ data, query, onRetry, enableSuggestions = false }: TikTokSectionProps) {
   const { theme, isDark } = useTheme();
   const styles = createStyles(theme, isDark);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(-1);
+  const [selectedVideo, setSelectedVideo] = useState<TikTokVideo | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [extraResults, setExtraResults] = useState<TikTokVideo[] | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState<string | null>(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
-  const handleVideoPress = (video: TikTokVideo, index: number) => {
-    setSelectedVideoIndex(index);
+  useEffect(() => {
+    let mounted = true;
+    const generateSuggestions = async () => {
+      if (!enableSuggestions || !query) return;
+      // Use cache to avoid re-generating on filter toggles
+      if (tiktokSuggestionCache[query]) {
+        if (mounted) setSuggestions(tiktokSuggestionCache[query]);
+        return;
+      }
+      try {
+        setLoadingSuggestions(true);
+        // Use Sonar quick follow-up to produce related TikTok-style search ideas
+        const { quickFollowUp } = await import('@/services/sonar');
+        const res = await quickFollowUp(`Give 3-5 short TikTok search ideas related to: ${query}. Return as comma-separated phrases only.`);
+        const text = (res.response || '').replace(/\n/g, ' ').trim();
+        let items: string[] = [];
+        if (text.includes(',')) {
+          items = text.split(',').map(s => s.trim()).filter(Boolean).slice(0, 5);
+        } else {
+          items = text.split(/\s*[-•]\s*|\s*\d+\.\s*/).map(s => s.trim()).filter(Boolean).slice(0, 5);
+        }
+        tiktokSuggestionCache[query] = items;
+        if (mounted) setSuggestions(items);
+      } catch (e) {
+        if (mounted) setSuggestions([]);
+      }
+      finally {
+        if (mounted) setLoadingSuggestions(false);
+      }
+    };
+    generateSuggestions();
+    return () => { mounted = false; };
+  }, [query]);
+
+  const handleSuggestionPress = async (s: string) => {
+    setActiveSuggestion(s);
+    setLoadingMore(true);
+    try {
+      const { searchTikTok } = await import('@/services/api');
+      const result = await searchTikTok(`${query} ${s}`);
+      if (result?.videos?.length) {
+        setExtraResults(result.videos);
+      } else {
+        setExtraResults([]);
+      }
+    } catch (e) {
+      setExtraResults([]);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleVideoPress = (video: TikTokVideo) => {
+    setSelectedVideo(video);
     setIsModalVisible(true);
   };
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
-    setSelectedVideoIndex(-1);
+    setSelectedVideo(null);
     // Reload the TikTok section when modal is closed
     setReloadKey(prev => prev + 1);
     // Optionally trigger a retry to refresh the data
@@ -506,15 +571,18 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
     }
   };
 
+  const selectedIndex = selectedVideo ? data.videos.findIndex(v => v.id === selectedVideo.id) : -1;
   const handlePreviousVideo = () => {
-    if (selectedVideoIndex > 0) {
-      setSelectedVideoIndex(selectedVideoIndex - 1);
+    if (selectedIndex > 0) {
+      const prev = data.videos[selectedIndex - 1];
+      if (prev) setSelectedVideo(prev);
     }
   };
 
   const handleNextVideo = () => {
-    if (selectedVideoIndex < data.videos.length - 1) {
-      setSelectedVideoIndex(selectedVideoIndex + 1);
+    if (selectedIndex !== -1 && selectedIndex < data.videos.length - 1) {
+      const next = data.videos[selectedIndex + 1];
+      if (next) setSelectedVideo(next);
     }
   };
 
@@ -595,7 +663,7 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
             >
                 <TikTokVideoCard 
                   video={video} 
-                  onPress={() => handleVideoPress(video, idx)}
+                  onPress={() => handleVideoPress(video)}
                 />
             </View>
           ))}
@@ -603,19 +671,79 @@ export default function TikTokSection({ data, query, onRetry }: TikTokSectionPro
         <View style={{ alignItems: 'center', marginTop: 6, marginBottom: 2 }}>
             <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium' }}>swipe for more →</Text>
         </View>
+
+        {enableSuggestions && (
+          loadingSuggestions ? (
+            <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Navo is loading suggestions...</Text>
+            </View>
+          ) : suggestions.length > 0 ? (
+            <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
+              <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium', marginBottom: 6 }}>Suggestions</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {suggestions.map((s, i) => {
+                  const isActive = activeSuggestion === s;
+                  return (
+                    <TouchableOpacity
+                      key={`${s}-${i}`}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 16,
+                        backgroundColor: isActive
+                          ? (isDark ? 'rgba(59,130,246,0.20)' : 'rgba(59,130,246,0.12)')
+                          : 'rgba(35,35,35,0.06)',
+                        borderWidth: 0.75,
+                        borderColor: isActive ? '#3B82F6' : 'rgba(69,69,69,0.12)',
+                        marginRight: 8,
+                      }}
+                      onPress={() => handleSuggestionPress(s)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={{ fontSize: 12, color: isDark ? '#000000' : (isActive ? '#1E3A8A' : theme.colors.text) }}>{s}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : null
+        )}
+
+        {enableSuggestions && (loadingMore || extraResults) && (
+          <View style={{ width: '100%', marginTop: 12 }}>
+            {loadingMore ? (
+              <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+                <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Loading more TikToks…</Text>
+              </View>
+            ) : extraResults && extraResults.length > 0 ? (
+              <>
+                <Text style={{ fontSize: 14, fontFamily: 'Inter-SemiBold', color: theme.colors.text, marginBottom: 8 }}>More like this</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {extraResults.map((video, idx) => (
+                    <View key={`extra-${video.id}-${idx}`} style={[styles.videoCardWrapper, idx === 0 && styles.firstVideo, { marginRight: 12, width: 220 }] }>
+                      <TikTokVideoCard video={video} onPress={() => handleVideoPress(video)} cardWidth={220} cardHeight={300} />
+                    </View>
+                  ))}
+                </ScrollView>
+              </>
+            ) : (
+              <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>No additional results</Text>
+            )}
+          </View>
+        )}
       </View>
     </View>
 
       {/* Video Modal */}
-      {selectedVideoIndex !== -1 && data.videos[selectedVideoIndex] && (
+      {selectedVideo && (
         <TikTokVideoModal
-          video={data.videos[selectedVideoIndex]}
+          video={selectedVideo}
           isVisible={isModalVisible}
           onClose={handleCloseModal}
           onPrevious={handlePreviousVideo}
           onNext={handleNextVideo}
-          hasPrevious={selectedVideoIndex > 0}
-          hasNext={selectedVideoIndex < data.videos.length - 1}
+          hasPrevious={selectedIndex > 0}
+          hasNext={selectedIndex !== -1 && selectedIndex < data.videos.length - 1}
         />
       )}
     </>
@@ -638,7 +766,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     gap: 12,
     width: '100%',
     maxWidth: 374,
-    height: 500,
+    minHeight: 500,
     backgroundColor: '#FFFFFF',
     shadowColor: isDark ? '#000000' : 'transparent',
     shadowOffset: { width: 0, height: 4 },

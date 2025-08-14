@@ -16,6 +16,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { fetchRedditComments } from '@/services/api';
 
+// In-memory cache for Reddit suggestions per query
+const redditSuggestionCache: Record<string, string[]> = {};
 interface RedditPost {
   id: string;
   title: string;
@@ -40,6 +42,7 @@ interface RedditSectionProps {
   query: string;
   onRetry?: () => void;
   isLoading?: boolean;
+  enableSuggestions?: boolean;
 }
 
 interface RedditComment {
@@ -56,7 +59,7 @@ interface RedditComment {
   username?: string;
 }
 
-export default function RedditSection({ data, query, onRetry, isLoading }: RedditSectionProps) {
+export default function RedditSection({ data, query, onRetry, isLoading, enableSuggestions = false }: RedditSectionProps) {
   const { theme, isDark } = useTheme();
   const styles = createStyles(theme, isDark);
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,6 +68,61 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentsError, setCommentsError] = useState<string | null>(null);
   const [modalAnimation, setModalAnimation] = useState<'fade' | 'none'>('fade');
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [activeSuggestion, setActiveSuggestion] = useState<string | null>(null);
+  const [morePosts, setMorePosts] = useState<RedditPost[] | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+    const gen = async () => {
+      if (!enableSuggestions || !query) return;
+      if (redditSuggestionCache[query]) {
+        if (mounted) setSuggestions(redditSuggestionCache[query]);
+        return;
+      }
+      try {
+        setLoadingSuggestions(true);
+        const { quickFollowUp } = await import('@/services/sonar');
+        // Use same prompt format as TikTok suggestions for consistent parsing
+        const res = await quickFollowUp(`Give 3-5 short TikTok search ideas related to: ${query}. Return as comma-separated phrases only.`);
+        const text = (res.response || '').replace(/\n/g, ' ').trim();
+        let items: string[] = [];
+        if (text.includes(',')) {
+          items = text.split(',').map(s => s.trim()).filter(Boolean).slice(0, 5);
+        } else {
+          items = text.split(/\s*[-•]\s*|\s*\d+\.\s*/).map(s => s.trim()).filter(Boolean).slice(0, 5);
+        }
+        redditSuggestionCache[query] = items;
+        if (mounted) setSuggestions(items);
+      } catch (e) {
+        if (mounted) setSuggestions([]);
+      } finally {
+        if (mounted) setLoadingSuggestions(false);
+      }
+    };
+    gen();
+    return () => { mounted = false; };
+  }, [query]);
+
+  const handleSuggestionPress = async (phrase: string) => {
+    setActiveSuggestion(phrase);
+    setLoadingMore(true);
+    try {
+      const { searchReddit } = await import('@/services/api');
+      const result = await searchReddit(`${query} ${phrase}`);
+      if (result?.posts?.length) {
+        setMorePosts(result.posts);
+      } else {
+        setMorePosts([]);
+      }
+    } catch (e) {
+      setMorePosts([]);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handlePostPress = async (post: RedditPost) => {
     setModalAnimation('fade');
@@ -317,6 +375,88 @@ export default function RedditSection({ data, query, onRetry, isLoading }: Reddi
           </TouchableOpacity>
         ))}
       </View>
+
+      {enableSuggestions && (
+        loadingSuggestions ? (
+          <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
+            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Navo is loading suggestions...</Text>
+          </View>
+        ) : suggestions.length > 0 ? (
+          <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
+            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium', marginBottom: 6 }}>Suggestions</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {suggestions.map((s, i) => {
+                const isActive = activeSuggestion === s;
+                return (
+                  <TouchableOpacity
+                    key={`${s}-${i}`}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 16,
+                      backgroundColor: isActive
+                        ? (isDark ? 'rgba(59,130,246,0.20)' : 'rgba(59,130,246,0.12)')
+                        : 'rgba(35,35,35,0.06)',
+                      borderWidth: 0.75,
+                      borderColor: isActive ? '#3B82F6' : 'rgba(69,69,69,0.12)',
+                      marginRight: 8,
+                    }}
+                    onPress={() => handleSuggestionPress(s)}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={{ fontSize: 12, color: isDark ? '#000000' : (isActive ? '#1E3A8A' : theme.colors.text) }}>{s}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null
+      )}
+
+      {enableSuggestions && (loadingMore || morePosts) && (
+        <View style={{ width: '100%', marginTop: 12 }}>
+          {loadingMore ? (
+            <View style={{ paddingVertical: 12, alignItems: 'center' }}>
+              <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Loading more Reddit posts…</Text>
+            </View>
+          ) : morePosts && morePosts.length > 0 ? (
+            <>
+              <Text style={{ fontSize: 14, fontFamily: 'Inter-SemiBold', color: theme.colors.text, marginBottom: 8 }}>More like this</Text>
+              {morePosts.slice(0, 5).map((post, index) => (
+                <TouchableOpacity 
+                  key={`more-${post.id}`} 
+                  style={styles.postContainer}
+                  onPress={() => handlePostPress(post)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.postContent}>
+                    <View style={styles.postHeader}>
+                      <View style={styles.postMeta}>
+                        <Text style={styles.subreddit}>r/{post.subreddit}</Text>
+                        <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.postTitle} numberOfLines={2}>{post.title}</Text>
+                    <View style={styles.postStats}>
+                      <View style={styles.statItem}>
+                        <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                        <Text style={styles.statText}>{formatNumber(post.upvotes)}</Text>
+                      </View>
+                      <View style={styles.statItem}>
+                        <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                        <Text style={styles.statText}>{formatNumber(post.comments)}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  {index < morePosts.length - 1 && <View style={styles.divider} />}
+                </TouchableOpacity>
+              ))}
+            </>
+          ) : (
+            <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>No additional posts</Text>
+          )}
+        </View>
+      )}
 
       {/* Modal for full post and comments */}
       <Modal

@@ -714,6 +714,8 @@ export default function HomeScreen() {
                     isLoading={isLoading}
             showAIOptimizedLayout={currentFilter === 'all'}
             enableFollowUpChat={currentFilter === 'ai'}
+            enableTikTokSuggestions={currentFilter === 'tiktok'}
+            enableRedditSuggestions={currentFilter === 'reddit'}
                   />
                 ) : null}
               </View>

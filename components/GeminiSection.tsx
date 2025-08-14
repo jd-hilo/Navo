@@ -10,8 +10,9 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import { Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Search, ExternalLink, Database } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Search, ExternalLink, Database } from 'lucide-react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -436,9 +437,18 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         {enableFollowUpChat && (
           <View style={styles.chatContainer}>
             {!showChat ? (
-              <TouchableOpacity style={styles.askMoreButton} onPress={() => setShowChat(true)}>
-                <Text style={styles.askMoreText}>Ask more</Text>
-              </TouchableOpacity>
+              <LinearGradient
+                colors={theme.gradients.gemini as unknown as [string, string, ...string[]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.askMoreGradientBorder}
+              >
+                <TouchableOpacity style={styles.askMoreButton} onPress={() => setShowChat(true)} activeOpacity={0.8}>
+                  <View style={styles.askMoreContent}>
+                    <Text style={styles.askMoreText}>Ask more</Text>
+                  </View>
+                </TouchableOpacity>
+              </LinearGradient>
             ) : (
               <View style={styles.chatBox}>
                 {messages.length === 0 && (
@@ -463,6 +473,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                     onPress={async () => {
                       const question = chatInput.trim();
                       if (!question) return;
+                      try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
                       setChatInput('');
                       setMessages(prev => [...prev, { role: 'user', content: question }]);
                       setChatLoading(true);
@@ -652,17 +663,25 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   askMoreButton: {
     alignSelf: 'stretch',
     width: '100%',
-    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.20)' : 'rgba(0, 0, 0, 0.06)',
+    backgroundColor: isDark ? 'rgba(26, 26, 26, 0.92)' : '#FFFFFF',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: isDark ? 'rgba(156, 163, 175, 0.30)' : 'rgba(0, 0, 0, 0.08)',
+  },
+  askMoreGradientBorder: {
+    padding: 2,
+    borderRadius: 18,
+  },
+  askMoreContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
   askMoreText: {
-    color: theme.colors.text,
-    fontFamily: 'Inter-Medium',
-    fontSize: 14,
+    color: isDark ? '#FFFFFF' : '#0F0F0F',
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 15,
     textAlign: 'center',
   },
   chatBox: {
@@ -694,11 +713,11 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   },
   chatUserText: {
     color: isDark ? '#FFFFFF' : '#1F2937',
-    fontSize: 13,
+    fontSize: 14,
   },
   chatAssistantText: {
     color: isDark ? '#FFFFFF' : '#111827',
-    fontSize: 13,
+    fontSize: 14,
   },
   chatInputRow: {
     flexDirection: 'row',

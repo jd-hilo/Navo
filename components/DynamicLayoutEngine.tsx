@@ -45,6 +45,8 @@ interface DynamicLayoutEngineProps {
   isLoading?: boolean;
   showAIOptimizedLayout?: boolean;
   enableFollowUpChat?: boolean;
+  enableTikTokSuggestions?: boolean;
+  enableRedditSuggestions?: boolean;
 }
 
 interface ModuleState {
@@ -59,6 +61,8 @@ export default function DynamicLayoutEngine({
   isLoading,
   showAIOptimizedLayout = true,
   enableFollowUpChat = false,
+  enableTikTokSuggestions = false,
+  enableRedditSuggestions = false,
 }: DynamicLayoutEngineProps) {
   const { theme } = useTheme();
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
@@ -123,9 +127,9 @@ export default function DynamicLayoutEngine({
 
     switch (moduleType) {
       case 'tiktok':
-        return <TikTokSection data={data} query={query} onRetry={onRetry} />;
+        return <TikTokSection data={data} query={query} onRetry={onRetry} enableSuggestions={enableTikTokSuggestions} />;
       case 'reddit':
-        return <RedditSection data={data} query={query} onRetry={onRetry} />;
+        return <RedditSection data={data} query={query} onRetry={onRetry} isLoading={isLoading} enableSuggestions={enableRedditSuggestions} />;
       case 'pinterest':
         return <PinterestSection data={data} query={query} onRetry={onRetry} />;
       default:

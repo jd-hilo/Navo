@@ -5,8 +5,17 @@ import { extractDomain } from '@/utils/faviconUtils';
 const SONAR_API_CONFIG = {
   baseURL: 'https://api.perplexity.ai/chat/completions',
   model: 'sonar', // Use sonar-medium-online model for web search
-  maxTokens: 150, // Reduced for faster responses
+  maxTokens: 300, // Cap total tokens to 300
   temperature: 0.1, // Lower temperature for faster, more focused responses
+};
+
+// Enforce hard content limits regardless of model behavior
+const MAX_WORDS = 200;
+const clampToWords = (input: string, maxWords: number = MAX_WORDS): string => {
+  if (!input) return '';
+  const words = input.trim().split(/\s+/);
+  if (words.length <= maxWords) return input.trim();
+  return words.slice(0, maxWords).join(' ') + '…';
 };
 
 interface SonarResponse {
@@ -65,7 +74,11 @@ The detailed content should be:
 • Use **bold** for key terms and concepts
 • Include proper spacing and formatting
 • Be comprehensive but concise
-• Complete the full response within token limit`
+• Complete the full response within token limit
+
+Absolute constraints:
+• Keep the entire response under 200 words
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words`
         }
       ],
       max_tokens: 300,
@@ -100,7 +113,11 @@ The detailed content should be:
 • Use **bold** for key terms and concepts
 • Include proper spacing and formatting
 • Be comprehensive but concise
-• Complete the full response within token limit`
+• Complete the full response within token limit
+
+Absolute constraints:
+• Keep the entire response under 200 words
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words`
         }
       ],
       max_tokens: 300, // Complete response within token limit
@@ -134,7 +151,7 @@ The detailed content should be:
         if (fastData?.choices?.[0]?.message?.content) {
           console.log('⚡ Fast response successful');
           return {
-            response: fastData.choices[0].message.content.trim(),
+            response: clampToWords(fastData.choices[0].message.content.trim()),
             success: true,
             usage: fastData.usage ? {
               promptTokenCount: fastData.usage.prompt_tokens || 0,
@@ -231,7 +248,7 @@ The detailed content should be:
     console.log('🔍 Extracted sources:', sources);
 
     return {
-      response: content.trim(),
+      response: clampToWords(content.trim()),
       success: true,
       usage: data.usage ? {
         promptTokenCount: data.usage.prompt_tokens || 0,
@@ -332,8 +349,8 @@ export const quickFollowUp = async (
 
   const makeRequest = async (model: string, timeoutMs: number) => {
     const prompt = context
-      ? `Context: ${context}\n\nAnswer concisely in 2-4 sentences. No markdown, no lists, no sources.\nQuestion: ${question}`
-      : `Answer concisely in 2-4 sentences. No markdown, no lists, no sources.\nQuestion: ${question}`;
+      ? `Context: ${context}\n\nAnswer concisely in 2-4 sentences. Keep under 200 words. No markdown, no lists, no sources. Do not exceed 300 tokens.\nQuestion: ${question}`
+      : `Answer concisely in 2-4 sentences. Keep under 200 words. No markdown, no lists, no sources. Do not exceed 300 tokens.\nQuestion: ${question}`;
 
     const body: any = {
       model,
@@ -343,7 +360,7 @@ export const quickFollowUp = async (
           content: prompt,
         },
       ],
-      max_tokens: 120,
+      max_tokens: 300,
       temperature: 0.2,
       top_p: 0.5,
       stream: false,
@@ -372,7 +389,7 @@ export const quickFollowUp = async (
       const data = await response.json();
       const content = data?.choices?.[0]?.message?.content?.trim() || '';
       return {
-        response: content || 'No answer available.',
+        response: clampToWords(content || 'No answer available.'),
         success: true,
         usage: data.usage
           ? {
@@ -399,11 +416,10 @@ export const quickFollowUp = async (
       } as SonarResponse;
     }
 
-    // Attempt 1: online model, short timeout
-    let result = await makeRequest('sonar-medium-online', 10000);
-    // Attempt 2: fallback to non-online model
+    // Use valid model names per current Perplexity docs
+    let result = await makeRequest('sonar', 10000);
     if (!result) {
-      result = await makeRequest('sonar', 12000);
+      result = await makeRequest('sonar-pro', 12000);
     }
     // Final fallback: return a concise mock response to avoid UX dead-end
     if (!result) {
@@ -423,5 +439,133 @@ export const quickFollowUp = async (
       success: true,
       hasWebSearch: false,
     } as SonarResponse;
+  }
+};
+
+// Streaming Sonar (SSE) helper – web-friendly, graceful native fallback
+export type SonarStreamHandlers = {
+  onToken?: (text: string) => void; // Called for each incremental text token
+  onDone?: (fullText: string) => void; // Called when stream completes
+  onError?: (error: any) => void; // Called on error
+};
+
+export const searchSonarStream = async (
+  prompt: string,
+  handlers: SonarStreamHandlers = {},
+  options?: { model?: string; controller?: AbortController }
+) => {
+  const apiKey = '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';
+
+  const { onToken, onDone, onError } = handlers;
+  const controller = options?.controller ?? new AbortController();
+  const model = options?.model ?? 'sonar-pro';
+
+  const body = {
+    model,
+    messages: [{ role: 'user', content: prompt }],
+    stream: true,
+  } as const;
+
+  try {
+    const response = await fetch(SONAR_API_CONFIG.baseURL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    // If streaming body is not available (common on native), fall back
+    const supportsStreaming = !!(response as any)?.body?.getReader;
+    if (!supportsStreaming) {
+      const nonStream = await searchSonar(prompt);
+      const limited = clampToWords(nonStream.response);
+      onToken?.(limited);
+      onDone?.(limited);
+      return { cancel: () => controller.abort() };
+    }
+
+    const reader = (response as any).body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let buffer = '';
+    let fullText = '';
+    let finished = false;
+
+    while (!done) {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      if (value) {
+        buffer += decoder.decode(value, { stream: true });
+
+        // SSE frames are separated by double newlines
+        const parts = buffer.split('\n\n');
+        // Keep the last partial frame in buffer
+        buffer = parts.pop() || '';
+
+        for (const part of parts) {
+          const lines = part.split('\n');
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const dataStr = trimmed.replace(/^data:\s?/, '');
+            if (dataStr === '[DONE]') {
+              done = true;
+              break;
+            }
+            try {
+              const json = JSON.parse(dataStr);
+              // Try OpenAI-like delta, then other shapes
+              const delta = json?.choices?.[0]?.delta?.content
+                ?? json?.choices?.[0]?.message?.content
+                ?? json?.output
+                ?? '';
+              if (delta) {
+                if (finished) continue;
+                // Enforce 200-word cap incrementally
+                const currentWords = fullText.trim().length === 0 ? 0 : fullText.trim().split(/\s+/).length;
+                const remaining = MAX_WORDS - currentWords;
+                if (remaining <= 0) {
+                  finished = true;
+                  controller.abort();
+                  const limited = clampToWords(fullText);
+                  onDone?.(limited);
+                  break;
+                }
+                // Find how many words from delta we can still take
+                const deltaWords = delta.split(/\s+/);
+                const take = Math.min(deltaWords.length, remaining);
+                const accepted = deltaWords.slice(0, take).join(' ');
+                fullText = (fullText + (fullText.endsWith(' ') || fullText.length === 0 ? '' : ' ') + accepted).trim();
+                onToken?.(accepted);
+                if (take < deltaWords.length) {
+                  finished = true;
+                  controller.abort();
+                  const limited = clampToWords(fullText);
+                  onDone?.(limited);
+                  break;
+                }
+              }
+            } catch (_) {
+              // Not JSON, ignore
+            }
+          }
+        }
+      }
+    }
+
+    onDone?.(clampToWords(fullText));
+    return { cancel: () => controller.abort() };
+  } catch (error) {
+    onError?.(error);
+    try {
+      const fallback = await searchSonar(prompt);
+      const limited = clampToWords(fallback.response);
+      onToken?.(limited);
+      onDone?.(limited);
+    } catch {}
+    return { cancel: () => controller.abort() };
   }
 };
