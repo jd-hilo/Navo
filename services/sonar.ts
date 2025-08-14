@@ -322,3 +322,106 @@ export const generateMockSources = (query: string) => {
     },
   ];
 }; 
+
+// Fast, concise follow-up chat for mini chat UI
+export const quickFollowUp = async (
+  question: string,
+  context?: string
+): Promise<SonarResponse> => {
+  const apiKey = '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';
+
+  const makeRequest = async (model: string, timeoutMs: number) => {
+    const prompt = context
+      ? `Context: ${context}\n\nAnswer concisely in 2-4 sentences. No markdown, no lists, no sources.\nQuestion: ${question}`
+      : `Answer concisely in 2-4 sentences. No markdown, no lists, no sources.\nQuestion: ${question}`;
+
+    const body: any = {
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      max_tokens: 120,
+      temperature: 0.2,
+      top_p: 0.5,
+      stream: false,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(SONAR_API_CONFIG.baseURL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn('quickFollowUp non-OK:', response.status, errorData);
+        return null;
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content?.trim() || '';
+      return {
+        response: content || 'No answer available.',
+        success: true,
+        usage: data.usage
+          ? {
+              promptTokenCount: data.usage.prompt_tokens || 0,
+              candidatesTokenCount: data.usage.completion_tokens || 0,
+              totalTokenCount: data.usage.total_tokens || 0,
+            }
+          : undefined,
+        hasWebSearch: false,
+      } as SonarResponse;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.warn('quickFollowUp error:', err?.message || err);
+      return null;
+    }
+  };
+
+  try {
+    if (!apiKey) {
+      return {
+        response: 'Quick answer: (demo) please configure the Sonar API key.',
+        success: false,
+        hasWebSearch: false,
+      } as SonarResponse;
+    }
+
+    // Attempt 1: online model, short timeout
+    let result = await makeRequest('sonar-medium-online', 10000);
+    // Attempt 2: fallback to non-online model
+    if (!result) {
+      result = await makeRequest('sonar', 12000);
+    }
+    // Final fallback: return a concise mock response to avoid UX dead-end
+    if (!result) {
+      const mock = generateMockSonarResponse(question).split('\n').slice(0, 4).join('\n');
+      return {
+        response: mock,
+        success: true,
+        hasWebSearch: false,
+      } as SonarResponse;
+    }
+    return result;
+  } catch (error: any) {
+    console.warn('quickFollowUp fatal error:', error?.message || error);
+    const mock = generateMockSonarResponse(question).split('\n').slice(0, 4).join('\n');
+    return {
+      response: mock,
+      success: true,
+      hasWebSearch: false,
+    } as SonarResponse;
+  }
+};

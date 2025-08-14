@@ -712,7 +712,8 @@ export default function HomeScreen() {
                     query={debouncedQuery}
                     onRetry={handleRetry}
                     isLoading={isLoading}
-                    showAIOptimizedLayout={currentFilter === 'all'}
+            showAIOptimizedLayout={currentFilter === 'all'}
+            enableFollowUpChat={currentFilter === 'ai'}
                   />
                 ) : null}
               </View>

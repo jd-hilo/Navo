@@ -44,6 +44,7 @@ interface DynamicLayoutEngineProps {
   onRetry?: () => void;
   isLoading?: boolean;
   showAIOptimizedLayout?: boolean;
+  enableFollowUpChat?: boolean;
 }
 
 interface ModuleState {
@@ -56,7 +57,8 @@ export default function DynamicLayoutEngine({
   query, 
   onRetry, 
   isLoading,
-  showAIOptimizedLayout = true
+  showAIOptimizedLayout = true,
+  enableFollowUpChat = false,
 }: DynamicLayoutEngineProps) {
   const { theme } = useTheme();
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig | null>(null);
@@ -723,7 +725,12 @@ export default function DynamicLayoutEngine({
       {/* Perplexity Response - Always at top */}
       {searchResults.gemini?.success && searchResults.gemini.response && (
         <View style={styles.perplexitySection}>
-          <GeminiSection data={searchResults.gemini} query={query} onRetry={onRetry} />
+          <GeminiSection 
+            data={searchResults.gemini} 
+            query={query} 
+            onRetry={onRetry}
+            enableFollowUpChat={enableFollowUpChat}
+          />
         </View>
       )}
 

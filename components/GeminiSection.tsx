@@ -8,12 +8,14 @@ import {
   ActivityIndicator,
   Linking,
   Image,
+  TextInput,
 } from 'react-native';
 import { Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Search, ExternalLink, Database } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Clipboard from '@react-native-clipboard/clipboard';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { useTheme } from '@/contexts/ThemeContext';
+import { quickFollowUp } from '@/services/sonar';
 import { getFaviconUrlSync } from '@/utils/faviconUtils';
 
 interface GeminiSectionProps {
@@ -39,14 +41,19 @@ interface GeminiSectionProps {
   isLoading?: boolean;
   cached?: boolean;
   cacheAge?: number;
+  enableFollowUpChat?: boolean;
 }
 
-export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge }: GeminiSectionProps) {
+export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge, enableFollowUpChat = false }: GeminiSectionProps) {
   const { theme, isDark } = useTheme();
   const [copyLoading, setCopyLoading] = useState(false);
   const styles = createStyles(theme, isDark);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSourcesExpanded, setIsSourcesExpanded] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [faviconUrls, setFaviconUrls] = useState<Record<string, string>>({});
 
   // Parse the response to extract summary and details
@@ -365,8 +372,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
             <MarkdownDisplay style={contentMarkdownStyles}>
               {details}
             </MarkdownDisplay>
-            
-            {/* Sources section - in expanded content */}
             {data.sources && data.sources.length > 0 && (
               <View style={styles.sourcesContainer}>
                 <TouchableOpacity 
@@ -381,7 +386,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                     <ChevronDown size={16} color="#9CA3AF" strokeWidth={2} />
                   )}
                 </TouchableOpacity>
-                
                 {isSourcesExpanded && (
                   <View style={styles.sourcesList}>
                     {data.sources.map((source, index) => (
@@ -417,8 +421,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                 )}
               </View>
             )}
-            
-            {/* Show less button - at bottom of expanded content */}
             <TouchableOpacity style={styles.showMoreButton} onPress={toggleExpanded}>
               <View style={styles.showMoreContent}>
                 <View style={styles.showMoreTextContainer}>
@@ -427,6 +429,65 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                 </View>
               </View>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Follow-up mini chat placed under Gemini section regardless of expansion */}
+        {enableFollowUpChat && (
+          <View style={styles.chatContainer}>
+            {!showChat ? (
+              <TouchableOpacity style={styles.askMoreButton} onPress={() => setShowChat(true)}>
+                <Text style={styles.askMoreText}>Ask more</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.chatBox}>
+                {messages.length === 0 && (
+                  <Text style={styles.chatHint}>Ask a follow-up about "{query}"</Text>
+                )}
+                {messages.map((m, idx) => (
+                  <View key={idx} style={[styles.chatMessage, m.role === 'user' ? styles.chatUser : styles.chatAssistant]}>
+                    <Text style={m.role === 'user' ? styles.chatUserText : styles.chatAssistantText}>{m.content}</Text>
+                  </View>
+                ))}
+                <View style={styles.chatInputRow}>
+                  <TextInput
+                    style={styles.chatInput}
+                    value={chatInput}
+                    onChangeText={setChatInput}
+                    placeholder="Type a follow-up..."
+                    placeholderTextColor={theme.colors.textSecondary}
+                  />
+                  <TouchableOpacity
+                    style={[styles.chatSendButton, (!chatInput.trim() || chatLoading) && { opacity: 0.5 }]}
+                    disabled={!chatInput.trim() || chatLoading}
+                    onPress={async () => {
+                      const question = chatInput.trim();
+                      if (!question) return;
+                      setChatInput('');
+                      setMessages(prev => [...prev, { role: 'user', content: question }]);
+                      setChatLoading(true);
+                      try {
+                        // Use fast follow-up for quick responses
+                        const res = await quickFollowUp(question, query);
+                        const answer = res.response || 'No answer available.';
+                        setMessages(prev => [...prev, { role: 'assistant', content: answer }]);
+                      } catch (e) {
+                        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong.' }]);
+                      } finally {
+                        setChatLoading(false);
+                      }
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    {chatLoading ? (
+                      <Text style={styles.typingText}>Navo is typing...</Text>
+                    ) : (
+                      <Text style={styles.chatSendText}>Send</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -584,6 +645,94 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     flex: 1,
+  },
+  chatContainer: {
+    marginTop: 12,
+  },
+  askMoreButton: {
+    alignSelf: 'stretch',
+    width: '100%',
+    backgroundColor: isDark ? 'rgba(156, 163, 175, 0.20)' : 'rgba(0, 0, 0, 0.06)',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(156, 163, 175, 0.30)' : 'rgba(0, 0, 0, 0.08)',
+  },
+  askMoreText: {
+    color: theme.colors.text,
+    fontFamily: 'Inter-Medium',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  chatBox: {
+    backgroundColor: isDark ? 'rgba(17, 24, 39, 0.6)' : 'rgba(243, 244, 246, 0.8)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+    padding: 12,
+  },
+  chatHint: {
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  chatMessage: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginBottom: 6,
+    maxWidth: '85%',
+  },
+  chatUser: {
+    alignSelf: 'flex-end',
+    backgroundColor: isDark ? 'rgba(37, 99, 235, 0.45)' : 'rgba(59, 130, 246, 0.2)',
+  },
+  chatAssistant: {
+    alignSelf: 'flex-start',
+    backgroundColor: isDark ? 'rgba(75, 85, 99, 0.4)' : 'rgba(209, 213, 219, 0.6)',
+  },
+  chatUserText: {
+    color: isDark ? '#FFFFFF' : '#1F2937',
+    fontSize: 13,
+  },
+  chatAssistantText: {
+    color: isDark ? '#FFFFFF' : '#111827',
+    fontSize: 13,
+  },
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  chatInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: isDark ? 'rgba(31, 41, 55, 0.8)' : '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: isDark ? 'rgba(156, 163, 175, 0.2)' : 'rgba(0, 0, 0, 0.08)',
+    color: theme.colors.text,
+  },
+  chatSendButton: {
+    height: 40,
+    paddingHorizontal: 14,
+    backgroundColor: theme.colors.text,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatSendText: {
+    color: theme.colors.background,
+    fontFamily: 'Inter-Medium',
+    fontSize: 13,
+  },
+  typingText: {
+    color: theme.colors.background,
+    fontFamily: 'Inter-Medium',
+    fontSize: 13,
   },
   loadingContainer: {
     flexDirection: 'row',

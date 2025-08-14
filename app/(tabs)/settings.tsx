@@ -196,7 +196,6 @@ export default function SettingsScreen() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Settings</Text>
-          <Text style={styles.subtitle}>Customize your Navo experience</Text>
         </View>
         <TouchableOpacity
           style={styles.closeButton}

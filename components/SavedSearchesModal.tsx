@@ -10,6 +10,7 @@ import {
   Dimensions,
   Modal,
   ScrollView,
+  Easing,
 } from 'react-native';
 import { Search, ChevronDown, ChevronUp, Bookmark, Trash2, X } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -47,22 +48,30 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
 
   // Load saved searches when modal becomes visible
   useEffect(() => {
-    if (visible && user?.id) {
-      loadSavedSearches();
-      // Animate in from bottom
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    }
+    const prepareAndShowModal = async () => {
+      if (visible && user?.id) {
+        // Start loading data
+        await loadSavedSearches();
+        
+        // Once data is loaded, animate the modal
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 400,
+          easing: Easing.bezier(0.16, 1, 0.3, 1),
+          useNativeDriver: true,
+        }).start();
+      }
+    };
+
+    prepareAndShowModal();
   }, [visible, user?.id]);
 
   const handleClose = () => {
-    // Animate out to bottom
+    // Animate out to bottom with timing animation
     Animated.timing(slideAnim, {
       toValue: screenHeight,
-      duration: 300,
+      duration: 350,
+      easing: Easing.bezier(0.4, 0, 0.6, 1), // Custom bezier curve for smooth exit
       useNativeDriver: true,
     }).start(() => {
       onClose();
@@ -73,14 +82,11 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
     if (!user?.id) return;
     
     try {
-      setLoading(true);
       const searches = await SavedSearchesService.getSavedSearches(user.id);
       setSavedSearches(searches);
     } catch (error) {
       console.error('Error loading saved searches:', error);
       setSavedSearches([]);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -246,7 +252,6 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
   const styles = StyleSheet.create({
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'transparent',
       justifyContent: 'flex-end',
     },
     container: {
@@ -446,6 +451,10 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
             styles.container,
             {
               transform: [{ translateY: slideAnim }],
+              opacity: slideAnim.interpolate({
+                inputRange: [0, screenHeight],
+                outputRange: [1, 0.3],
+              })
             },
           ]}
         >
