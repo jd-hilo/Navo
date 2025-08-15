@@ -8,13 +8,13 @@
     "scheme": "navo",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/logo in dark.png",
+      "image": "./assets/images/magnifying glass and stars.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000",
       "imageResizeMode": "contain",
       "imageStyle": {
-        "width": "50%",
-        "height": "50%"
+        "width": "200px",
+        "height": "200px"
       }
     },
     "newArchEnabled": true,
