@@ -86,7 +86,7 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
         setLoadingSuggestions(true);
         const { quickFollowUp } = await import('@/services/sonar');
         // Use same prompt format as TikTok suggestions for consistent parsing
-        const res = await quickFollowUp(`Give 3-5 short TikTok search ideas related to: ${query}. Return as comma-separated phrases only.`);
+        const res = await quickFollowUp(`Give 3-5 short Reddit search ideas related to: ${query}. Return as comma-separated phrases only.`);
         const text = (res.response || '').replace(/\n/g, ' ').trim();
         let items: string[] = [];
         if (text.includes(',')) {
@@ -104,7 +104,7 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
     };
     gen();
     return () => { mounted = false; };
-  }, [query]);
+  }, [query, enableSuggestions]);
 
   const handleSuggestionPress = async (phrase: string) => {
     setActiveSuggestion(phrase);
@@ -377,40 +377,61 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
       </View>
 
       {enableSuggestions && (
-        loadingSuggestions ? (
-          <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
+        <View style={{ width: '100%', marginTop: 8, marginBottom: 16 }}>
+          {loadingSuggestions ? (
             <Text style={{ fontSize: 12, color: theme.colors.textSecondary }}>Navo is loading suggestions...</Text>
-          </View>
-        ) : suggestions.length > 0 ? (
-          <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
-            <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium', marginBottom: 6 }}>Suggestions</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {suggestions.map((s, i) => {
-                const isActive = activeSuggestion === s;
-                return (
-                  <TouchableOpacity
-                    key={`${s}-${i}`}
-                    style={{
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      borderRadius: 16,
-                      backgroundColor: isActive
-                        ? (isDark ? 'rgba(59,130,246,0.20)' : 'rgba(59,130,246,0.12)')
-                        : 'rgba(35,35,35,0.06)',
-                      borderWidth: 0.75,
-                      borderColor: isActive ? '#3B82F6' : 'rgba(69,69,69,0.12)',
-                      marginRight: 8,
-                    }}
-                    onPress={() => handleSuggestionPress(s)}
-                    activeOpacity={0.85}
-                  >
-                    <Text style={{ fontSize: 12, color: isDark ? '#000000' : (isActive ? '#1E3A8A' : theme.colors.text) }}>{s}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          </View>
-        ) : null
+          ) : suggestions.length > 0 ? (
+            <>
+              <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium', marginBottom: 8 }}>Suggestions</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingRight: 16 }}
+                nestedScrollEnabled
+                directionalLockEnabled
+                keyboardShouldPersistTaps="handled"
+                scrollEventThrottle={16}
+                bounces={false}
+                removeClippedSubviews
+              >
+                {suggestions.map((s, i) => {
+                  const isActive = activeSuggestion === s;
+                  const sanitizedSuggestion = s.trim().substring(0, 50); // Truncate long suggestions
+                  return (
+                    <TouchableOpacity
+                      key={`${s}-${i}`}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 16,
+                        backgroundColor: isActive
+                          ? (isDark ? 'rgba(59,130,246,0.20)' : 'rgba(59,130,246,0.12)')
+                          : (isDark ? 'rgba(128,128,128,0.3)' : 'rgba(35,35,35,0.06)'),
+                        borderWidth: 0.75,
+                        borderColor: isActive ? '#3B82F6' : (isDark ? 'rgba(128,128,128,0.5)' : 'rgba(69,69,69,0.12)'),
+                        marginRight: 8,
+                        minWidth: 80,
+                      }}
+                      onPress={() => handleSuggestionPress(s)}
+                      activeOpacity={0.85}
+                    >
+                      <Text 
+                        style={{ 
+                          fontSize: 12, 
+                          color: isDark ? '#FFFFFF' : (isActive ? '#1E3A8A' : theme.colors.text),
+                          textAlign: 'center'
+                        }}
+                        numberOfLines={2}
+                      >
+                        {sanitizedSuggestion}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          ) : null}
+        </View>
       )}
 
       {enableSuggestions && (loadingMore || morePosts) && (
@@ -535,6 +556,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     gap: 24,
     width: '100%',
     maxWidth: 374,
+    minHeight: 500,
     borderRadius: 48,
     backgroundColor: 'transparent',
   },
@@ -606,8 +628,8 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     color: isDark ? '#FFFFFF' : '#000000',
   },
   postsContainer: {
-    flex: 1,
     width: '100%',
+    marginBottom: 16,
   },
   postContainer: {
     display: 'flex',

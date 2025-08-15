@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   Linking,
   Image,
   TextInput,
+  Keyboard,
+  Animated,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -56,6 +59,32 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   const [chatLoading, setChatLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
   const [faviconUrls, setFaviconUrls] = useState<Record<string, string>>({});
+  const [chatFocused, setChatFocused] = useState(false);
+  const cardOffsetY = useRef(new Animated.Value(0)).current;
+
+  // Simple keyboard-aware shift when chat input is focused
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+      if (!chatFocused) return;
+      const shift = Platform.OS === 'ios' ? -220 : -220;
+      Animated.timing(cardOffsetY, {
+        toValue: shift,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
+    });
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+      Animated.timing(cardOffsetY, {
+        toValue: 0,
+        duration: 180,
+        useNativeDriver: true,
+      }).start();
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [chatFocused, cardOffsetY]);
 
   // Parse the response to extract summary and details
   const parseResponse = (response: string) => {
@@ -305,7 +334,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   }
 
   return (
-    <View style={styles.perplexityCard}>
+    <Animated.View style={[styles.perplexityCard, { transform: [{ translateY: cardOffsetY }] }]}>
       <View style={styles.cardHeader}>
         <View style={styles.headerLeft}>
           <Image 
@@ -466,6 +495,8 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                     onChangeText={setChatInput}
                     placeholder="Type a follow-up..."
                     placeholderTextColor={theme.colors.textSecondary}
+                    onFocus={() => setChatFocused(true)}
+                    onBlur={() => setChatFocused(false)}
                   />
                   <TouchableOpacity
                     style={[styles.chatSendButton, (!chatInput.trim() || chatLoading) && { opacity: 0.5 }]}
@@ -515,7 +546,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
           </View>
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
