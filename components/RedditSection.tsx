@@ -162,12 +162,10 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
 
   const closeModal = () => {
     setModalVisible(false);
-    setTimeout(() => {
-      setSelectedPost(null);
-      setComments([]);
-      setCommentsError(null);
-      setCommentsLoading(false);
-    }, 300);
+    setSelectedPost(null);
+    setComments([]);
+    setCommentsError(null);
+    setCommentsLoading(false);
   };
 
   const formatNumber = (num: number): string => {
@@ -348,26 +346,40 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
           >
             <View style={styles.postContent}>
               <View style={styles.postHeader}>
-                <View style={styles.postMeta}>
-                  <Text style={styles.subreddit}>r/{post.subreddit}</Text>
-                  <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
-                </View>
+                <Text style={styles.subreddit}>r/{post.subreddit}</Text>
+                <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
               </View>
               
-              <Text style={styles.postTitle} numberOfLines={2}>
-                {post.title}
-              </Text>
-              
-              <View style={styles.postStats}>
-                <View style={styles.statItem}>
-                  <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
-                  <Text style={styles.statText}>{formatNumber(post.upvotes)}</Text>
+              <View style={styles.postMainContent}>
+                <View style={styles.postTextContent}>
+                  <Text style={styles.postTitle} numberOfLines={2}>
+                    {post.title}
+                  </Text>
+                  
+                  <View style={styles.postStats}>
+                    <View style={styles.statItem}>
+                      <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                      <Text style={styles.statText}>{formatNumber(post.upvotes)}</Text>
+                    </View>
+                    
+                    <View style={styles.statItem}>
+                      <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                      <Text style={styles.statText}>{formatNumber(post.comments)}</Text>
+                    </View>
+                  </View>
                 </View>
                 
-                <View style={styles.statItem}>
-                  <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
-                  <Text style={styles.statText}>{formatNumber(post.comments)}</Text>
-                </View>
+                {/* Display media/image if available on the right */}
+                {(post.media || post.thumbnail) && (
+                  <View style={styles.mediaContainer}>
+                    <Image 
+                      source={{ uri: post.media || post.thumbnail || '' }} 
+                      style={styles.postImage}
+                      resizeMode="cover"
+                      onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
+                    />
+                  </View>
+                )}
               </View>
             </View>
             
@@ -452,21 +464,37 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                 >
                   <View style={styles.postContent}>
                     <View style={styles.postHeader}>
-                      <View style={styles.postMeta}>
-                        <Text style={styles.subreddit}>r/{post.subreddit}</Text>
-                        <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
-                      </View>
+                      <Text style={styles.subreddit}>r/{post.subreddit}</Text>
+                      <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
                     </View>
-                    <Text style={styles.postTitle} numberOfLines={2}>{post.title}</Text>
-                    <View style={styles.postStats}>
-                      <View style={styles.statItem}>
-                        <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
-                        <Text style={styles.statText}>{formatNumber(post.upvotes)}</Text>
+                    
+                    <View style={styles.postMainContent}>
+                      <View style={styles.postTextContent}>
+                        <Text style={styles.postTitle} numberOfLines={2}>{post.title}</Text>
+                        
+                        <View style={styles.postStats}>
+                          <View style={styles.statItem}>
+                            <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                            <Text style={styles.statText}>{formatNumber(post.upvotes)}</Text>
+                          </View>
+                          <View style={styles.statItem}>
+                            <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
+                            <Text style={styles.statText}>{formatNumber(post.comments)}</Text>
+                          </View>
+                        </View>
                       </View>
-                      <View style={styles.statItem}>
-                        <ChevronDown size={14} color="#9A9CA9" strokeWidth={1.26} />
-                        <Text style={styles.statText}>{formatNumber(post.comments)}</Text>
-                      </View>
+                      
+                      {/* Display media/image if available on the right */}
+                      {(post.media || post.thumbnail) && (
+                        <View style={styles.mediaContainer}>
+                          <Image 
+                            source={{ uri: post.media || post.thumbnail || '' }} 
+                            style={styles.postImage}
+                            resizeMode="cover"
+                            onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
+                          />
+                        </View>
+                      )}
                     </View>
                   </View>
                   {index < morePosts.length - 1 && <View style={styles.divider} />}
@@ -518,6 +546,16 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                   {selectedPost.text || selectedPost.preview ? (
                     <Text style={styles.modalBody}>{selectedPost.text || selectedPost.preview}</Text>
                   ) : null}
+                  {(selectedPost.media || selectedPost.thumbnail) && (
+                    <View style={styles.modalMediaContainer}>
+                      <Image 
+                        source={{ uri: selectedPost.media || selectedPost.thumbnail || '' }} 
+                        style={styles.modalPostImage}
+                        resizeMode="cover"
+                        onError={() => console.log('Failed to load image:', selectedPost.media || selectedPost.thumbnail)}
+                      />
+                    </View>
+                  )}
                   <View style={styles.modalStats}>
                     <Text style={styles.modalStat}>{formatNumber(selectedPost.upvotes)} upvotes</Text>
                     <Text style={styles.modalStat}>{formatNumber(selectedPost.comments)} comments</Text>
@@ -652,32 +690,21 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   },
   postHeader: {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     padding: 0,
-    gap: 11,
-    width: 210,
-    height: 24,
-  },
-  postMeta: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 0,
-    gap: 5,
+    gap: 4,
+    width: '100%',
+    marginBottom: 8,
   },
   subreddit: {
-    width: 165,
-    height: 24,
+    width: '100%',
     fontFamily: 'Inter',
     fontStyle: 'normal',
     fontWeight: '500',
     fontSize: 13,
-    lineHeight: 24,
+    lineHeight: 16,
     color: isDark ? '#FFFFFF' : '#000000',
-    marginLeft: 40,
   },
   time: {
     width: 80,
@@ -963,5 +990,41 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Medium',
     fontWeight: '500',
+  },
+  mediaContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  postImage: {
+    width: '100%',
+    height: '100%',
+  },
+  postMainContent: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    width: '100%',
+  },
+  postTextContent: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+  },
+  modalMediaContainer: {
+    width: '100%',
+    height: 300,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginTop: 12,
+    marginBottom: 16,
+  },
+  modalPostImage: {
+    width: '100%',
+    height: '100%',
   },
 });

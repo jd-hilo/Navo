@@ -319,57 +319,63 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                 </TouchableOpacity>
               </View>
               
-              {selectedPin && (
-                <>
-                  {/* Image Display Area */}
-                  {selectedPin.image_url && (
-                    <View style={styles.modalImageContainer}>
-                      <Image 
-                        source={{ uri: selectedPin.image_url }} 
-                        style={styles.modalImage}
-                        resizeMode="cover"
-                      />
-                    </View>
-                  )}
-                  
-                  {/* Information Section */}
-                  <View style={styles.modalInfoSection}>
-                    <View style={styles.modalUserInfo}>
-                      <View style={styles.modalUserAvatar}>
-                        <Text style={styles.modalUserAvatarText}>
-                          {selectedPin.user_name ? selectedPin.user_name.charAt(0).toUpperCase() : 'P'}
+              <ScrollView 
+                style={styles.modalScrollView}
+                showsVerticalScrollIndicator={true}
+                contentContainerStyle={styles.modalScrollContent}
+              >
+                {selectedPin && (
+                  <>
+                    {/* Image Display Area */}
+                    {selectedPin.image_url && (
+                      <View style={styles.modalImageContainer}>
+                        <Image 
+                          source={{ uri: selectedPin.image_url }} 
+                          style={styles.modalImage}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    )}
+                    
+                    {/* Information Section */}
+                    <View style={styles.modalInfoSection}>
+                      <View style={styles.modalUserInfo}>
+                        <View style={styles.modalUserAvatar}>
+                          <Text style={styles.modalUserAvatarText}>
+                            {selectedPin.user_name ? selectedPin.user_name.charAt(0).toUpperCase() : 'P'}
+                          </Text>
+                        </View>
+                        <Text style={styles.modalUserName}>
+                          {selectedPin.user_name || 'Timeless world'}
                         </Text>
                       </View>
-                      <Text style={styles.modalUserName}>
-                        {selectedPin.user_name || 'Timeless world'}
-                      </Text>
+                      
+                      <View style={styles.modalTitleSection}>
+                        <Text style={styles.modalTitle}>
+                          {typeof selectedPin.title === 'string' ? selectedPin.title : 'Pinterest Pin'}
+                        </Text>
+                        
+                        {selectedPin.description && (
+                          <Text style={styles.modalDescription}>
+                            {typeof selectedPin.description === 'string' ? selectedPin.description : ''}
+                          </Text>
+                        )}
+                      </View>
                     </View>
                     
-                    <View style={styles.modalTitleSection}>
-                      <Text style={styles.modalTitle}>
-                        {typeof selectedPin.title === 'string' ? selectedPin.title : 'Pinterest Pin'}
-                      </Text>
-                      
-                      {selectedPin.description && (
-                        <Text style={styles.modalDescription}>
-                          {typeof selectedPin.description === 'string' ? selectedPin.description : ''}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  
-                  {/* Visit Site Button */}
-                  <TouchableOpacity 
-                    style={styles.modalVisitButton}
-                    onPress={() => selectedPin && Linking.openURL(selectedPin.link)}
-                  >
-                    <View style={styles.modalVisitButtonContent}>
-                      <Text style={styles.modalVisitButtonText}>Visit site</Text>
-                      <ExternalLink size={12} color="#020201" strokeWidth={2} />
-                    </View>
-                  </TouchableOpacity>
-                </>
-              )}
+                    {/* Visit Site Button */}
+                    <TouchableOpacity 
+                      style={styles.modalVisitButton}
+                      onPress={() => selectedPin && Linking.openURL(selectedPin.link)}
+                    >
+                      <View style={styles.modalVisitButtonContent}>
+                        <Text style={styles.modalVisitButtonText}>Visit site</Text>
+                        <ExternalLink size={12} color="#020201" strokeWidth={2} />
+                      </View>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -548,14 +554,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: 12,
     padding: 24,
     width: 390,
-    height: 694,
+    height: '80%',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.32,
     shadowRadius: 31.2,
     elevation: 8,
     flexDirection: 'column',
-    justifyContent: 'space-between',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -581,12 +586,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     lineHeight: 20,
   },
   modalImageContainer: {
-    width: 366,
-    height: 400,
+    width: '100%',
+    height: 300,
     borderRadius: 16,
     overflow: 'hidden',
-    alignSelf: 'center',
-    flex: 1,
     marginVertical: 16,
   },
   modalImage: {
@@ -595,9 +598,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: 16,
   },
   modalInfoSection: {
-    width: 366,
-    height: 120,
-    alignSelf: 'center',
+    width: '100%',
+    marginBottom: 16,
   },
   modalUserInfo: {
     flexDirection: 'row',
@@ -629,13 +631,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     gap: 4,
   },
   modalVisitButton: {
-    width: 366,
+    width: '100%',
     height: 47,
     backgroundColor: '#E7E6E1',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    alignSelf: 'center',
   },
   modalVisitButtonContent: {
     flexDirection: 'row',
@@ -666,5 +667,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '400',
     color: '#9A9CA9',
     lineHeight: 17,
+  },
+  modalScrollView: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 20,
   },
 }); 

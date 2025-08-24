@@ -442,6 +442,159 @@ export const quickFollowUp = async (
   }
 };
 
+// AI Generation Follow-up with Chat History
+export const aiFollowUp = async (
+  question: string,
+  chatHistory: Array<{role: 'user' | 'assistant', content: string}> = [],
+  options?: {
+    maxTokens?: number;
+    temperature?: number;
+    includeWebSearch?: boolean;
+  }
+): Promise<SonarResponse> => {
+  try {
+    console.log('🤖 AI Follow-up request:', question);
+    console.log('📝 Chat history length:', chatHistory.length);
+    
+    const apiKey = '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';
+    
+    if (!apiKey) {
+      return {
+        response: 'Please configure the Sonar API key for AI follow-up responses.',
+        success: false,
+        error: 'API key not configured.',
+        hasWebSearch: false,
+      };
+    }
+
+    const maxTokens = options?.maxTokens || 400;
+    const temperature = options?.temperature || 0.3;
+    const includeWebSearch = options?.includeWebSearch || false;
+
+    // Build conversation context from chat history
+    const conversationContext = chatHistory.length > 0 
+      ? chatHistory.slice(-6).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+      : '';
+
+    // Create the prompt for conversational follow-up
+    const prompt = `You are a helpful AI assistant having a conversation with a user. 
+
+${conversationContext ? `Previous conversation context:\n${conversationContext}\n\n` : ''}Current question: ${question}
+
+Please provide a conversational and concise response that:
+- Answers the user's question directly and helpfully
+- Is written in a natural, conversational tone
+- Keeps the response concise (under 200 words)
+- Can be about any topic the user asks about
+- Maintains context from the conversation if relevant
+- Uses a friendly, helpful personality
+
+Respond naturally as if you're having a friendly chat.`;
+
+    const requestBody = {
+      model: includeWebSearch ? 'sonar-medium-online' : 'sonar',
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: maxTokens,
+      temperature: temperature,
+      top_p: 0.7,
+      stream: false,
+      search_domain: includeWebSearch ? 'all' : 'none',
+      return_citations: includeWebSearch,
+      return_images: false,
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    
+    const response = await fetch(SONAR_API_CONFIG.baseURL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('❌ AI Follow-up error:', response.status, errorData);
+      
+      return {
+        response: 'I apologize, but I\'m having trouble responding right now. Could you try rephrasing your question?',
+        success: false,
+        error: 'API request failed.',
+        hasWebSearch: false,
+      };
+    }
+
+    const data = await response.json();
+
+    if (!data?.choices?.[0]?.message?.content) {
+      return {
+        response: 'I received an empty response. Could you try asking your question again?',
+        success: false,
+        error: 'Invalid response from API.',
+        hasWebSearch: false,
+      };
+    }
+
+    const content = data.choices[0].message.content;
+    
+    // Extract sources if web search was enabled
+    let sources: Array<{title: string; url: string; domain: string}> = [];
+    
+    if (includeWebSearch && data.choices[0].message.tool_calls) {
+      sources = data.choices[0].message.tool_calls
+        .filter((call: any) => call.type === 'web_search')
+        .flatMap((call: any) => call.web_search?.results || [])
+        .map((result: any) => ({
+          title: result.title || 'Unknown',
+          url: result.url || '',
+          domain: extractDomain(result.url || ''),
+        }));
+    }
+
+    return {
+      response: clampToWords(content.trim()),
+      success: true,
+      usage: data.usage ? {
+        promptTokenCount: data.usage.prompt_tokens || 0,
+        candidatesTokenCount: data.usage.completion_tokens || 0,
+        totalTokenCount: data.usage.total_tokens || 0,
+      } : undefined,
+      hasWebSearch: includeWebSearch,
+      sources: sources.length > 0 ? sources : undefined,
+    };
+
+  } catch (error: any) {
+    console.error('❌ AI Follow-up error:', error.message);
+    
+    if (error.name === 'AbortError') {
+      return {
+        response: 'I\'m taking a bit longer than expected to respond. Could you try again?',
+        success: false,
+        error: 'Request timed out.',
+        hasWebSearch: false,
+      };
+    }
+    
+    return {
+      response: 'I\'m experiencing some technical difficulties. Please try again in a moment.',
+      success: false,
+      error: 'Network error.',
+      hasWebSearch: false,
+    };
+  }
+};
+
 // Streaming Sonar (SSE) helper – web-friendly, graceful native fallback
 export type SonarStreamHandlers = {
   onToken?: (text: string) => void; // Called for each incremental text token

@@ -383,46 +383,64 @@ function TikTokVideoCard({
   
   return (
     <TouchableOpacity 
-              style={{ 
-          width: cardWidth, 
-          height: cardHeight, 
-          borderRadius: 24, 
-          overflow: 'hidden', 
-          backgroundColor: 'transparent'
-        }} 
+      style={{ 
+        width: cardWidth, 
+        height: cardHeight, 
+        borderRadius: 24, 
+        overflow: 'hidden', 
+        backgroundColor: 'transparent'
+      }} 
       onPress={onPress}
       activeOpacity={0.9}
     >
       <View style={{ flex: 1, position: 'relative' }}>
-        {isLoadingVideo ? (
+        {/* Always show thumbnail as background */}
+        <Image 
+          source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x500/000000/FFFFFF?text=TikTok' }} 
+          style={{ flex: 1 }}
+          resizeMode="cover"
+        />
+        
+        {/* Loading overlay */}
+        {isLoadingVideo && (
           <View style={{ 
-            flex: 1, 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             justifyContent: 'center', 
             alignItems: 'center',
-            backgroundColor: theme.colors.surface 
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            pointerEvents: 'none' // Allow scroll events to pass through
           }}>
-            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <ActivityIndicator size="small" color="#FFFFFF" />
           </View>
-        ) : videoUrl ? (
-          <WebView
-            source={{ uri: videoUrl }}
-            style={{ flex: 1 }}
-            allowsInlineMediaPlayback={true}
-            mediaPlaybackRequiresUserAction={false}
-            scrollEnabled={false}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            onError={() => {
-              // Fallback to thumbnail if video fails to load
-              setVideoUrl('');
-            }}
-          />
-                ) : (
-          <Image 
-            source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x500/000000/FFFFFF?text=TikTok' }} 
-            style={{ flex: 1 }}
-            resizeMode="cover"
-          />
+        )}
+        
+        {/* Video overlay when loaded */}
+        {videoUrl && (
+          <View style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}>
+            <WebView
+              source={{ uri: videoUrl }}
+              style={{ flex: 1 }}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+              scrollEnabled={false}
+              showsHorizontalScrollIndicator={false}
+              showsVerticalScrollIndicator={false}
+              onError={() => {
+                // Fallback to thumbnail if video fails to load
+                setVideoUrl('');
+              }}
+            />
+          </View>
         )}
         
         {!videoUrl && (
@@ -651,7 +669,19 @@ export default function TikTokSection({ data, query, onRetry, enableSuggestions 
         )}
 
           {/* TikTok video cards */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.videosContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.videosContainer}
+          scrollEnabled={true}
+          alwaysBounceHorizontal={true}
+          contentContainerStyle={{ 
+            flexGrow: 1,
+            minWidth: '100%',
+            alignItems: 'flex-start'
+          }}
+          nestedScrollEnabled={true}
+        >
           {data.videos.map((video, idx) => (
             <View 
                 key={`${video.id}-${reloadKey}`}
@@ -680,7 +710,12 @@ export default function TikTokSection({ data, query, onRetry, enableSuggestions 
           ) : suggestions.length > 0 ? (
             <View style={{ width: '100%', marginTop: 8, marginBottom: 12 }}>
               <Text style={{ fontSize: 13, color: theme.colors.textSecondary, fontFamily: 'Inter-Medium', marginBottom: 6 }}>Suggestions</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                scrollEnabled={true}
+                alwaysBounceHorizontal={true}
+              >
                 {suggestions.map((s, i) => {
                   const isActive = activeSuggestion === s;
                   return (
@@ -718,7 +753,12 @@ export default function TikTokSection({ data, query, onRetry, enableSuggestions 
             ) : extraResults && extraResults.length > 0 ? (
               <>
                 <Text style={{ fontSize: 14, fontFamily: 'Inter-SemiBold', color: theme.colors.text, marginBottom: 8 }}>More like this</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  scrollEnabled={true}
+                  alwaysBounceHorizontal={true}
+                >
                   {extraResults.map((video, idx) => (
                     <View key={`extra-${video.id}-${idx}`} style={[styles.videoCardWrapper, idx === 0 && styles.firstVideo, { marginRight: 12, width: 220 }] }>
                       <TikTokVideoCard video={video} onPress={() => handleVideoPress(video)} cardWidth={220} cardHeight={300} />
@@ -892,6 +932,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   },
   videosContainer: {
     paddingRight: 80,
+    minHeight: 400, // Ensure minimum height for scrolling
   },
   videoCardWrapper: {
     width: 320,
