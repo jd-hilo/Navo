@@ -74,7 +74,7 @@ export default function UpgradeScreen() {
   };
 
   const handleTermsPress = () => {
-    Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-Navo-e0c8a2c1c8c94c0c9c0c8a2c1c8c94c0');
+    Linking.openURL('https://pastoral-supply-662.notion.site/Terms-of-Service-Navo-21c2cec59ddf8021a5d5da8c483c267a?source=copy_link');
   };
 
   const getPrice = () => {
