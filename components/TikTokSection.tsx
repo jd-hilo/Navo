@@ -58,61 +58,30 @@ const extractTikTokVideoId = (url: string): string | null => {
 };
 
 function TikTokVideoModal({ 
-  video, 
+  videos,
+  initialIndex = 0,
   isVisible, 
   onClose,
-  onPrevious,
-  onNext,
-  hasPrevious,
-  hasNext
 }: { 
-  video: TikTokVideo; 
+  videos: TikTokVideo[];
+  initialIndex?: number;
   isVisible: boolean; 
   onClose: () => void;
-  onPrevious?: () => void;
-  onNext?: () => void;
-  hasPrevious?: boolean;
-  hasNext?: boolean;
 }) {
   const { theme } = useTheme();
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string>('');
-  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
-  const [videoError, setVideoError] = useState<string>('');
-  const videoRef = useRef<any>(null);
+  const [currentIndex, setCurrentIndex] = useState<number>(Math.max(0, Math.min(initialIndex, videos.length - 1)));
+  const listRef = useRef<any>(null);
+  const screenWidth = Dimensions.get('window').width;
 
   useEffect(() => {
-    if (isVisible && video.url) {
-      setIsLoadingVideo(true);
-      const videoId = extractTikTokVideoId(video.url);
-      if (videoId) {
-        const embedUrl = `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&loop=1&mute=0&controls=1`;
-        setVideoUrl(embedUrl);
-        setVideoError('');
-      } else {
-        setVideoUrl('');
-        setVideoError('Invalid TikTok URL format');
-      }
-      setIsLoadingVideo(false);
-    }
-  }, [isVisible, video.url]);
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-  };
-
-  const handleShare = () => {
-    Linking.openURL(video.url);
-  };
-
-  const handleMuteToggle = () => {
-    setIsMuted(!isMuted);
-  };
+    setCurrentIndex(Math.max(0, Math.min(initialIndex, videos.length - 1)));
+  }, [initialIndex, videos.length]);
 
   const handleOpenInBrowser = () => {
-    Linking.openURL(video.url);
+    const current = videos[currentIndex];
+    if (current?.url) {
+      Linking.openURL(current.url);
+    }
     onClose();
   };
 
@@ -126,81 +95,13 @@ function TikTokVideoModal({
       <StatusBar hidden />
       <SafeAreaView style={{ flex: 1, backgroundColor: 'black' }}>
         <View style={{ flex: 1 }}>
-          {isLoadingVideo ? (
-            <View style={{ 
-              flex: 1, 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              backgroundColor: '#000000' 
-            }}>
-              <ActivityIndicator size="large" color="#FFFFFF" />
-              <Text style={{ 
-                color: '#FFFFFF', 
-                marginTop: 16, 
-                fontSize: 16, 
-                fontFamily: 'Inter-Medium' 
-              }}>
-                Loading TikTok video...
-              </Text>
-              {videoError && (
-                <Text style={{ 
-                  color: '#FF6B6B', 
-                  marginTop: 8, 
-                  fontSize: 14, 
-                  fontFamily: 'Inter-Regular',
-                  textAlign: 'center',
-                  paddingHorizontal: 20
-                }}>
-                  {videoError}
-                </Text>
-              )}
-            </View>
-          ) : videoError ? (
-            // Fallback when video URL is not available - show error
-            <View style={{ 
-              flex: 1, 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              backgroundColor: '#000000' 
-            }}>
-              <Image 
-                source={{ uri: video.thumbnail || 'https://via.placeholder.com/400x600/000000/FFFFFF?text=TikTok' }} 
-                style={{ 
-                  width: '80%', 
-                  height: '60%', 
-                  borderRadius: 12,
-                  marginBottom: 20
-                }}
-                resizeMode="cover"
-              />
-              <Text style={{ 
-                color: '#FFFFFF', 
-                fontSize: 18, 
-                fontFamily: 'Inter-SemiBold',
-                textAlign: 'center',
-                marginBottom: 8
-              }}>
-                Video Preview
-              </Text>
-              <Text style={{ 
-                color: '#CCCCCC', 
-                fontSize: 14, 
-                fontFamily: 'Inter-Regular',
-                textAlign: 'center',
-                paddingHorizontal: 40,
-                lineHeight: 20
-              }}>
-                Tap "Open in TikTok" to watch the full video
-              </Text>
-            </View>
-          ) : videoUrl ? (
-            <View style={{ 
-              flex: 1, 
-              justifyContent: 'center', 
-              alignItems: 'center',
-              backgroundColor: '#000000'
-            }}>
-              {/* Top Controls */}
+          <View style={{ 
+            flex: 1, 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            backgroundColor: '#000000'
+          }}>
+            {/* Top Controls */}
               <View style={{ 
                 position: 'absolute',
                 top: -10,
@@ -241,96 +142,72 @@ function TikTokVideoModal({
                   <ExternalLink size={16} color="#FFFFFF" strokeWidth={2} />
                 </TouchableOpacity>
               </View>
-
-              {/* Video Player */}
-              <View style={{ 
-                width: '85%', 
-                aspectRatio: 9/16, 
-                borderRadius: 12, 
-                overflow: 'hidden',
-                backgroundColor: '#000000',
-                marginTop: -20
-              }}>
-                <WebView
-                  source={{ uri: videoUrl }}
-                  style={{ flex: 1 }}
-                  javaScriptEnabled={true}
-                  domStorageEnabled={true}
-                  allowsInlineMediaPlayback={true}
-                  mediaPlaybackRequiresUserAction={false}
-                  useWebKit={true}
-                  scrollEnabled={false}
-                  startInLoadingState
-                  renderLoading={() => (
-                    <View style={{ 
-                      flex: 1, 
-                      justifyContent: 'center', 
-                      alignItems: 'center',
-                      backgroundColor: '#000000'
-                    }}>
-                      <ActivityIndicator size="large" color="#FFFFFF" />
-                    </View>
-                  )}
-                  onLoad={() => console.log('✅ TikTok embed loaded')}
-                  onError={(e) => {
-                    console.log('❌ TikTok embed error', e);
-                    setVideoError('Failed to load video');
+              {/* Swipeable Video List */}
+              <View style={{ flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                <ScrollView
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  contentOffset={{ x: currentIndex * screenWidth, y: 0 }}
+                  onMomentumScrollEnd={(e) => {
+                    const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+                    setCurrentIndex(index);
                   }}
-                />
+                  style={{ flex: 1, width: '100%' }}
+                >
+                  {videos.map((item, idx) => {
+                    const isActive = idx === currentIndex;
+                    const videoId = extractTikTokVideoId(item.url);
+                    const embedUrl = isActive && videoId ? `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&loop=1&mute=0&controls=1` : '';
+                    return (
+                      <View key={item.id || String(idx)} style={{ width: screenWidth, alignItems: 'center', justifyContent: 'center' }}>
+                        <View style={{ 
+                          width: '85%', 
+                          aspectRatio: 9/16, 
+                          borderRadius: 12, 
+                          overflow: 'hidden',
+                          backgroundColor: '#000000',
+                          marginTop: -20
+                        }}>
+                          {embedUrl ? (
+                            <WebView
+                              source={{ uri: embedUrl }}
+                              style={{ flex: 1 }}
+                              javaScriptEnabled={true}
+                              domStorageEnabled={true}
+                              allowsInlineMediaPlayback={true}
+                              mediaPlaybackRequiresUserAction={false}
+                              useWebKit={true}
+                              scrollEnabled={false}
+                              startInLoadingState
+                              renderLoading={() => (
+                                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000' }}>
+                                  <ActivityIndicator size="large" color="#FFFFFF" />
+                                </View>
+                              )}
+                            />
+                          ) : (
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000' }}>
+                              <Image 
+                                source={{ uri: item.thumbnail || 'https://via.placeholder.com/400x600/000000/FFFFFF?text=TikTok' }} 
+                                style={{ width: '100%', height: '100%' }}
+                                resizeMode="cover"
+                              />
+                              <Text style={{ position: 'absolute', color: '#FFFFFF', bottom: 16, fontFamily: 'Inter-Medium' }}>Open in TikTok to watch</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </ScrollView>
               </View>
 
-              {/* Bottom Navigation Controls */}
-              <View style={{
-                position: 'absolute',
-                bottom: 28,
-                left: 0,
-                right: 0,
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 20,
-                paddingHorizontal: 16
-              }}>
-                {hasPrevious && onPrevious && (
-                  <TouchableOpacity 
-                    onPress={onPrevious}
-                    style={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                      padding: 12,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 8
-                    }}
-                  >
-                    <ChevronLeft size={24} color="#FFFFFF" strokeWidth={2} />
-                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter-Medium' }}>
-                      Previous
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                {hasNext && onNext && (
-                  <TouchableOpacity 
-                    onPress={onNext}
-                    style={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                      padding: 12,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 8
-                    }}
-                  >
-                    <Text style={{ color: '#FFFFFF', fontSize: 14, fontFamily: 'Inter-Medium' }}>
-                      Next
-                    </Text>
-                    <ChevronRight size={24} color="#FFFFFF" strokeWidth={2} />
-                  </TouchableOpacity>
-                )}
+              {/* Bottom hint */}
+              <View style={{ position: 'absolute', bottom: 18, left: 0, right: 0, alignItems: 'center' }}>
+                <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontFamily: 'Inter-Medium' }}>Swipe → next   •   Swipe ← previous</Text>
               </View>
             </View>
-          ) : null}
         </View>
       </SafeAreaView>
     </Modal>
@@ -777,13 +654,10 @@ export default function TikTokSection({ data, query, onRetry, enableSuggestions 
       {/* Video Modal */}
       {selectedVideo && (
         <TikTokVideoModal
-          video={selectedVideo}
+          videos={data.videos}
+          initialIndex={selectedIndex}
           isVisible={isModalVisible}
           onClose={handleCloseModal}
-          onPrevious={handlePreviousVideo}
-          onNext={handleNextVideo}
-          hasPrevious={selectedIndex > 0}
-          hasNext={selectedIndex !== -1 && selectedIndex < data.videos.length - 1}
         />
       )}
     </>

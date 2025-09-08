@@ -82,11 +82,14 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
     if (!user?.id) return;
     
     try {
+      setLoading(true);
       const searches = await SavedSearchesService.getSavedSearches(user.id);
       setSavedSearches(searches);
     } catch (error) {
       console.error('Error loading saved searches:', error);
       setSavedSearches([]);
+    } finally {
+      setLoading(false);
     }
   };
 

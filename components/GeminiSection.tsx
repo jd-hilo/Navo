@@ -522,7 +522,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                     activeOpacity={0.8}
                   >
                     {chatLoading ? (
-                      <Text style={styles.typingText}>Navo is typing...</Text>
+                      <Text style={styles.typingText}>Navo is searching...</Text>
                     ) : (
                       <Text style={styles.chatSendText}>Send</Text>
                     )}

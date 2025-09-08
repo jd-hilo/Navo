@@ -25,6 +25,7 @@ interface AnimatedSearchBarProps {
   onFilterChange?: (filter: FilterType) => void;
   currentFilter?: FilterType;
   showFilters?: boolean;
+  onExpandedChange?: (isExpanded: boolean) => void;
 }
 
 const AnimatedSearchBar = ({ 
@@ -34,7 +35,8 @@ const AnimatedSearchBar = ({
   onValueChange,
   onFilterChange,
   currentFilter = 'all',
-  showFilters = false
+  showFilters = false,
+  onExpandedChange
 }: AnimatedSearchBarProps) => {
   const { theme, isDark } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -67,6 +69,13 @@ const AnimatedSearchBar = ({
       keyboardWillHide?.remove();
     };
   }, []);
+
+  // Notify parent when expanded state changes
+  useEffect(() => {
+    if (onExpandedChange) {
+      onExpandedChange(isExpanded);
+    }
+  }, [isExpanded, onExpandedChange]);
 
   const toggleSearch = () => {
     if (isExpanded) {

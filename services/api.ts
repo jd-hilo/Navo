@@ -17,7 +17,7 @@ interface SearchResults {
       totalTokenCount: number;
     };
     hasWebSearch?: boolean;
-    sources?: string[];
+    sources?: { title: string; url: string; domain: string; }[];
   };
   tiktok: {
     videos: Array<{
@@ -71,7 +71,7 @@ interface SearchResults {
 const TIKTOK_API_CONFIG = {
   baseURL: 'https://tiktok-api23.p.rapidapi.com',
   headers: {
-    'x-rapidapi-key': '19ffbf4d65mshc2e303da6ae4289p1a9576jsn8520dc154989',
+    'x-rapidapi-key': 'fa3806034bmsh7a72ea7083c5df1p187831jsnf10fca94f426',
     'x-rapidapi-host': 'tiktok-api23.p.rapidapi.com',
   },
 };
@@ -80,7 +80,7 @@ const TIKTOK_API_CONFIG = {
 const REDDIT_API_CONFIG = {
   baseURL: 'https://reddit-com.p.rapidapi.com',
   headers: {
-    'x-rapidapi-key': '19ffbf4d65mshc2e303da6ae4289p1a9576jsn8520dc154989',
+    'x-rapidapi-key': 'fa3806034bmsh7a72ea7083c5df1p187831jsnf10fca94f426',
     'x-rapidapi-host': 'reddit-com.p.rapidapi.com',
   },
 };
@@ -89,7 +89,7 @@ const REDDIT_API_CONFIG = {
 const PINTEREST_API_CONFIG = {
   baseURL: 'https://unofficial-pinterest-api.p.rapidapi.com',
   headers: {
-    'x-rapidapi-key': '19ffbf4d65mshc2e303da6ae4289p1a9576jsn8520dc154989',
+    'x-rapidapi-key': 'fa3806034bmsh7a72ea7083c5df1p187831jsnf10fca94f426',
     'x-rapidapi-host': 'unofficial-pinterest-api.p.rapidapi.com',
   },
 };
@@ -575,24 +575,41 @@ export const searchPinterest = async (query: string) => {
 // Fetch top 5 Reddit posts for a subreddit or query using RapidAPI
 export const searchRedditRapidAPI = async (query: string) => {
   try {
+    console.log('🔍 Making Reddit API request for:', query);
     // Use the correct endpoint for searching Reddit posts
     const url = `${REDDIT_API_CONFIG.baseURL}/posts/search-posts?query=${encodeURIComponent(query)}&sort=relevance&time=all`;
+    console.log('🔗 Reddit API URL:', url);
     const response = await fetch(url, {
       method: 'GET',
       headers: REDDIT_API_CONFIG.headers,
     });
+    console.log('📦 Reddit API Response Status:', response.status);
     if (!response.ok) {
       throw new Error(`Reddit RapidAPI returned status ${response.status}`);
     }
     const data = await response.json();
+    console.log('📦 Reddit API Response Data Structure:', {
+      dataKeys: Object.keys(data),
+      dataType: typeof data,
+      hasData: !!data.data,
+      dataLength: data.data?.length || 0
+    });
     const posts = (data.data || []).slice(0, 5).map((item: any, idx: number) => {
-      // Media extraction
+      // Media extraction - prioritize high quality images
       let mediaUrl = null;
-      if (item.media?.still?.source?.url) {
+      // First try to get high resolution images from previews
+      if (item.preview?.images?.[0]?.source?.url) {
+        mediaUrl = item.preview.images[0].source.url.replace(/&amp;/g, '&');
+      } else if (item.preview?.images?.[0]?.resolutions?.length > 0) {
+        // Get the highest resolution available
+        const highestRes = item.preview.images[0].resolutions[item.preview.images[0].resolutions.length - 1];
+        mediaUrl = highestRes.url.replace(/&amp;/g, '&');
+      } else if (item.media?.still?.source?.url) {
         mediaUrl = item.media.still.source.url;
       } else if (item.url && item.url.match(/\.(jpg|jpeg|png|gif|mp4|webm)$/)) {
         mediaUrl = item.url;
-      } else if (item.thumbnail?.url) {
+      } else if (item.thumbnail?.url && !item.thumbnail.url.includes('default')) {
+        // Only use thumbnail if it's not a default placeholder
         mediaUrl = item.thumbnail.url;
       }
 
@@ -602,6 +619,27 @@ export const searchRedditRapidAPI = async (query: string) => {
       else if (item.content?.markdown) text = item.content.markdown;
       else if (item.content?.html) text = item.content.html;
       else text = '';
+
+      console.log(`📝 Reddit Post ${idx + 1} Text Data:`, {
+        title: item.postTitle || '',
+        hasContent: !!item.content,
+        contentKeys: item.content ? Object.keys(item.content) : [],
+        preview: item.content?.preview || '',
+        markdown: item.content?.markdown || '',
+        html: item.content?.html || '',
+        extractedText: text,
+        textLength: text.length
+      });
+
+      console.log(`🖼️ Reddit Post ${idx + 1} Image Data:`, {
+        hasPreview: !!item.preview,
+        previewImages: item.preview?.images?.length || 0,
+        hasMedia: !!item.media,
+        hasThumbnail: !!item.thumbnail,
+        thumbnailUrl: item.thumbnail?.url || '',
+        extractedMediaUrl: mediaUrl,
+        url: item.url || ''
+      });
 
       // URL
       let postUrl = item.permalink

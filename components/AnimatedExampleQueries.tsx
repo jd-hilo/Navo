@@ -171,7 +171,7 @@ export default function AnimatedExampleQueries({ onQueryPress }: AnimatedExample
       // Type the query character by character
       for (let i = 0; i <= currentQuery.query.length; i++) {
         setDisplayedText(currentQuery.query.slice(0, i));
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 80));
       }
 
       // Show outputs after typing is complete
@@ -194,16 +194,16 @@ export default function AnimatedExampleQueries({ onQueryPress }: AnimatedExample
             Animated.parallel([
               Animated.timing(outputAnimations[index].opacity, {
                 toValue: 1,
-                duration: 600,
+                duration: 400,
                 useNativeDriver: true,
               }),
               Animated.timing(outputAnimations[index].translateY, {
                 toValue: 0,
-                duration: 600,
+                duration: 400,
                 useNativeDriver: true,
               }),
             ]).start();
-          }, index * 800); // 800ms delay between each output
+          }, index * 400); // 400ms delay between each output
         });
 
         // Keep hint text hidden after results are shown

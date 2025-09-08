@@ -125,6 +125,13 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
   };
 
   const handlePostPress = async (post: RedditPost) => {
+    console.log('🔍 Reddit Post Data:', {
+      title: post.title,
+      text: post.text,
+      preview: post.preview,
+      hasText: !!post.text,
+      hasPreview: !!post.preview
+    });
     setModalAnimation('fade');
     setSelectedPost(post);
     setModalVisible(true);
@@ -199,8 +206,36 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
       return usernames[index];
     };
 
+    // Calculate indentation for threading
+    const indentWidth = Math.min(depth * 16, maxDepth * 16); // 16px per level
+    const hasReplies = comment.replies && comment.replies.length > 0;
+
+    // Different colors for different levels to create visual hierarchy
+    const getLevelColor = (depth: number) => {
+      const colors = [
+        'transparent', // Level 0 - no border
+        'rgba(255, 69, 0, 0.4)',     // Level 1 - Reddit orange
+        'rgba(74, 144, 226, 0.4)',   // Level 2 - Blue
+        'rgba(255, 107, 107, 0.4)',  // Level 3 - Red
+        'rgba(78, 205, 196, 0.4)',   // Level 4 - Teal
+        'rgba(69, 183, 209, 0.4)',   // Level 5 - Light blue
+      ];
+      return colors[Math.min(depth, colors.length - 1)];
+    };
+
     return (
-      <View style={styles.commentItem}>
+      <View style={[
+        styles.commentItem,
+        {
+          marginLeft: depth > 0 ? indentWidth : 0,
+          borderLeftWidth: depth > 0 ? 2 : 0,
+          borderLeftColor: getLevelColor(depth),
+          paddingLeft: depth > 0 ? 12 : 0,
+          backgroundColor: depth > 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
+          borderRadius: depth > 0 ? 6 : 0,
+          marginBottom: depth > 0 ? 8 : 12,
+        }
+      ]}>
         <View style={styles.commentContent}>
           <View style={styles.commentHeaderRow}>
             <Text style={styles.commentUsername}>{getUsername(comment)}</Text>
@@ -212,9 +247,15 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
             <Text style={styles.commentScore}>{comment.score} points</Text>
           </View>
         </View>
-        {comment.replies?.map((reply) => (
-          <CommentThread key={reply.id} comment={reply} depth={depth + 1} />
-        ))}
+        
+        {/* Render replies with proper threading */}
+        {hasReplies && comment.replies && (
+          <View style={styles.repliesContainer}>
+            {comment.replies.map((reply) => (
+              <CommentThread key={reply.id} comment={reply} depth={depth + 1} />
+            ))}
+          </View>
+        )}
       </View>
     );
   };
@@ -373,7 +414,10 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                 {(post.media || post.thumbnail) && (
                   <View style={styles.mediaContainer}>
                     <Image 
-                      source={{ uri: post.media || post.thumbnail || '' }} 
+                      source={{ 
+                        uri: post.media || post.thumbnail || '',
+                        cache: 'force-cache'
+                      }} 
                       style={styles.postImage}
                       resizeMode="cover"
                       onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
@@ -488,7 +532,10 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                       {(post.media || post.thumbnail) && (
                         <View style={styles.mediaContainer}>
                           <Image 
-                            source={{ uri: post.media || post.thumbnail || '' }} 
+                            source={{ 
+                              uri: post.media || post.thumbnail || '',
+                              cache: 'force-cache'
+                            }} 
                             style={styles.postImage}
                             resizeMode="cover"
                             onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
@@ -527,32 +574,41 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                 <Text style={styles.modalSubreddit}>r/{selectedPost?.subreddit}</Text>
                 <Text style={styles.modalDate}>• {selectedPost && formatDateOnly(selectedPost.created)}</Text>
               </View>
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={closeModal}
-              >
-                <Text style={styles.modalCloseButtonText}>×</Text>
-              </TouchableOpacity>
             </View>
+            <Pressable
+              style={styles.modalCloseButton}
+              onPressIn={closeModal}
+            >
+              <Text style={styles.modalCloseButtonText}>×</Text>
+            </Pressable>
             
             <ScrollView 
               style={styles.modalScrollView}
               showsVerticalScrollIndicator={true}
               contentContainerStyle={styles.modalScrollContent}
+              keyboardShouldPersistTaps="always"
             >
               {selectedPost && (
                 <>
                   <Text style={styles.modalTitle}>{selectedPost.title}</Text>
-                  {selectedPost.text || selectedPost.preview ? (
+                  {(selectedPost.text || selectedPost.preview) && (
                     <Text style={styles.modalBody}>{selectedPost.text || selectedPost.preview}</Text>
-                  ) : null}
+                  )}
                   {(selectedPost.media || selectedPost.thumbnail) && (
                     <View style={styles.modalMediaContainer}>
                       <Image 
-                        source={{ uri: selectedPost.media || selectedPost.thumbnail || '' }} 
+                        source={{ 
+                          uri: selectedPost.media || selectedPost.thumbnail || '',
+                          cache: 'force-cache'
+                        }} 
                         style={styles.modalPostImage}
-                        resizeMode="cover"
+                        resizeMode="contain"
                         onError={() => console.log('Failed to load image:', selectedPost.media || selectedPost.thumbnail)}
+                        onLoad={(event) => {
+                          console.log('Image loaded successfully:', selectedPost.media || selectedPost.thumbnail);
+                          const { width, height } = event.nativeEvent.source;
+                          console.log('Image dimensions:', { width, height });
+                        }}
                       />
                     </View>
                   )}
@@ -821,7 +877,8 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingTop: 40,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
@@ -844,6 +901,8 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
     marginBottom: 8,
+    lineHeight: 26,
+    flexShrink: 0,
   },
   modalDate: {
     fontSize: 12,
@@ -856,6 +915,8 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#FFFFFF',
     marginBottom: 16,
+    lineHeight: 24,
+    flexShrink: 0,
   },
   modalStats: {
     flexDirection: 'row',
@@ -894,31 +955,39 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     padding: 4,
   },
   modalCloseButton: {
-    padding: 4,
+    position: 'absolute',
+    top: 20,
+    right: 16,
     width: 32,
     height: 32,
-    alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    padding: 4,
+    zIndex: 2,
   },
   modalCloseButtonText: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
     color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
   },
   modalScrollView: {
     flex: 1,
   },
   modalScrollContent: {
+    paddingTop: 8,
     paddingBottom: 20,
   },
   commentItem: {
-    marginBottom: 20,
+    marginBottom: 12,
     position: 'relative',
   },
   commentContent: {
     padding: 0,
+  },
+  repliesContainer: {
+    marginTop: 8,
+    position: 'relative',
   },
   indentLine: {
     position: 'absolute',
@@ -1017,14 +1086,14 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   },
   modalMediaContainer: {
     width: '100%',
-    height: 300,
     borderRadius: 16,
     overflow: 'hidden',
     marginTop: 12,
     marginBottom: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
   modalPostImage: {
     width: '100%',
-    height: '100%',
+    aspectRatio: 1, // This will maintain aspect ratio, adjust as needed
   },
 });

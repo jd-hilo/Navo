@@ -24,6 +24,7 @@ import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
 import LoadingCard from '@/components/LoadingCard';
 import { Search } from 'lucide-react-native';
 import ErrorCard from '@/components/ErrorCard';
+import AnimatedExampleQueries from '@/components/AnimatedExampleQueries';
 import { searchAllSources } from '@/services/api';
 import { debounce } from '@/utils/debounce';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -75,6 +76,7 @@ export default function HomeScreen() {
   const [searchCount, setSearchCount] = useState(0);
   const [showSavedSearchesModal, setShowSavedSearchesModal] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<FilterType>('all');
+  const [isSearchBarExpanded, setIsSearchBarExpanded] = useState(false);
   const router = useRouter();
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
@@ -427,6 +429,10 @@ export default function HomeScreen() {
     router.push('/(auth)/upgrade' as any);
   };
 
+  const handleSearchBarExpandedChange = (expanded: boolean) => {
+    setIsSearchBarExpanded(expanded);
+  };
+
   // Filter search results based on current filter
   const getFilteredResults = () => {
     if (!searchResults) return null;
@@ -583,6 +589,13 @@ export default function HomeScreen() {
 
         </Animated.View>
 
+        {/* Animated Example Queries - Only show when no search and search bar is not expanded */}
+        {!hasSearched && !isSearchBarExpanded && (
+          <AnimatedExampleQueries 
+            onQueryPress={handleSuggestionPress}
+          />
+        )}
+
         {/* Save Search Button - Above Search Bar */}
         <Animated.View
           style={[
@@ -618,6 +631,7 @@ export default function HomeScreen() {
           onFilterChange={setCurrentFilter}
           currentFilter={currentFilter}
           showFilters={hasSearched && searchResults && Object.keys(searchResults).length > 0}
+          onExpandedChange={handleSearchBarExpandedChange}
         />
 
         {/* Bottom Navigation Icons */}
