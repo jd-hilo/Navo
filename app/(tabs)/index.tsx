@@ -22,7 +22,7 @@ import AnimatedSearchBar from '../../components/AnimatedSearchBar';
 import { FilterType } from '../../components/FilterBar';
 import DynamicLayoutEngine from '@/components/DynamicLayoutEngine';
 import LoadingCard from '@/components/LoadingCard';
-import { Search } from 'lucide-react-native';
+import { Search, Play, Users, Globe } from 'lucide-react-native';
 import ErrorCard from '@/components/ErrorCard';
 import AnimatedExampleQueries from '@/components/AnimatedExampleQueries';
 import { searchAllSources } from '@/services/api';
@@ -81,6 +81,9 @@ export default function HomeScreen() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countedSearches = useRef<Set<string>>(new Set());
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [scanTikTokCount, setScanTikTokCount] = useState(0);
+  const [scanRedditCount, setScanRedditCount] = useState(0);
+  const [scanWebPercent, setScanWebPercent] = useState(0);
 
   // Animation values
   const headerOpacity = useRef(new Animated.Value(1)).current;
@@ -183,19 +186,14 @@ export default function HomeScreen() {
     }
   }, [searchCount, isPremium, debouncedQuery]);
 
+  // Only search on submit; when cleared, reset state and animations
   useEffect(() => {
-    if (searchQuery.trim().length > 2) {
-      debouncedSearch(searchQuery);
-      if (!hasSearched) {
-        setHasSearched(true);
-        animateToSearchMode();
-      }
-    } else {
+    if (searchQuery.trim().length === 0) {
       setDebouncedQuery('');
-        setHasSearched(false);
-        animateToInitialMode();
+      setHasSearched(false);
+      animateToInitialMode();
     }
-  }, [searchQuery, debouncedSearch, hasSearched]);
+  }, [searchQuery]);
 
   // Load recent searches on mount
   useEffect(() => {
@@ -413,14 +411,23 @@ export default function HomeScreen() {
   }, [refetch]);
 
   const handleSuggestionPress = (suggestion: string) => {
+    // Fill the search bar and expand it; do NOT start searching yet
     setSearchQuery(suggestion);
-    // This will trigger the useEffect and start the search
-    if (suggestion.trim().length > 2) {
-      debouncedSearch(suggestion);
+    // Ensure results are hidden until user submits
+    setHasSearched(false);
+    setDebouncedQuery('');
+    animateToInitialMode();
+  };
+
+  const handleSubmitSearch = (query: string) => {
+    const trimmed = (query || '').trim();
+    if (trimmed.length > 2) {
+      setSearchQuery(trimmed);
+      setDebouncedQuery(trimmed); // trigger actual search
       if (!hasSearched) {
         setHasSearched(true);
-        animateToSearchMode();
       }
+      animateToSearchMode();
     }
   };
 
@@ -475,8 +482,6 @@ export default function HomeScreen() {
   // Start loading animations
   useEffect(() => {
     if (isLoading) {
-
-
       // Loading bar animation
       const barAnimation = Animated.loop(
         Animated.sequence([
@@ -493,13 +498,29 @@ export default function HomeScreen() {
         ])
       );
 
+      // Initialize mock scan counters
+      setScanTikTokCount(Math.floor(Math.random() * 12) + 8); // 8-19
+      setScanRedditCount(Math.floor(Math.random() * 10) + 6); // 6-15
+      setScanWebPercent(Math.floor(Math.random() * 15) + 10); // 10-24
 
+      const tiktokInterval = setInterval(() => {
+        setScanTikTokCount((v) => (v < 100 ? v + 1 : 100));
+      }, 60);
+      const redditInterval = setInterval(() => {
+        setScanRedditCount((v) => (v < 100 ? v + 1 : 100));
+      }, 75);
+      const webInterval = setInterval(() => {
+        setScanWebPercent((v) => (v < 100 ? v + 1 : 100));
+      }, 50);
 
-      // Start all animations
+      // Start animations
       barAnimation.start();
 
       return () => {
         barAnimation.stop();
+        clearInterval(tiktokInterval);
+        clearInterval(redditInterval);
+        clearInterval(webInterval);
       };
     }
   }, [isLoading]);
@@ -626,7 +647,7 @@ export default function HomeScreen() {
         <AnimatedSearchBar
           value={searchQuery}
           onValueChange={setSearchQuery}
-          onSearch={setSearchQuery}
+          onSearch={handleSubmitSearch}
           placeholder="Create a search for..."
           onFilterChange={setCurrentFilter}
           currentFilter={currentFilter}
@@ -639,7 +660,7 @@ export default function HomeScreen() {
           {/* Bookmark Icon - Bottom Left */}
           <TouchableOpacity
             style={styles.bottomIcon}
-            onPress={() => setShowSavedSearchesModal(true)}
+            onPress={() => router.push('/saved-searches' as any)}
             activeOpacity={0.7}
           >
             <Bookmark size={24} color={theme.colors.textSecondary} strokeWidth={2} />
@@ -685,33 +706,55 @@ export default function HomeScreen() {
                 {isLoading ? (
                   <View style={styles.loadingScreenContainer}>
                     <View style={styles.loadingContent}>
-                      {/* Animated Loading Bar */}
-                      <View style={styles.loadingBarContainer}>
-                        <Animated.View 
-                          style={[
-                            styles.loadingBar, 
-                            { 
-                              width: loadingProgress.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: ['0%', '100%']
-                              })
-                            }
-                          ]} 
-                        >
-                          <LinearGradient
-                            colors={['#FF8FA3', '#4A90E2']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 0 }}
-                            style={styles.loadingBarGradient}
-                          />
-                        </Animated.View>
-                      </View>
-                      
-                      {/* Fun Loading Text */}
-                      <Text style={styles.loadingTitle}>Searching Navo</Text>
-                      <Text style={styles.loadingSubtitle}>{getFunLoadingMessage()}</Text>
-                      
+                      <View style={styles.loadingCard}>
+                        <Text style={styles.loadingTitle}>Scanning sources</Text>
+                        <Text style={styles.loadingSubtitle}>Finding the best results for “{debouncedQuery}”</Text>
 
+                        <View style={styles.loadingStatRow}>
+                          <View style={styles.loadingStatLeft}>
+                            <Play size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+                            <Text style={styles.loadingStatText}>Analyzing TikToks</Text>
+                          </View>
+                          <Text style={styles.loadingStatValue}>{scanTikTokCount} / 100</Text>
+                        </View>
+
+                        <View style={styles.loadingStatRow}>
+                          <View style={styles.loadingStatLeft}>
+                            <Users size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+                            <Text style={styles.loadingStatText}>Reading Reddit threads</Text>
+                          </View>
+                          <Text style={styles.loadingStatValue}>{scanRedditCount} / 100</Text>
+                        </View>
+
+                        <View style={styles.loadingStatRow}>
+                          <View style={styles.loadingStatLeft}>
+                            <Globe size={14} color={theme.colors.textSecondary} strokeWidth={2} />
+                            <Text style={styles.loadingStatText}>Scanning the web</Text>
+                          </View>
+                          <Text style={styles.loadingStatValue}>{scanWebPercent}%</Text>
+                        </View>
+
+                        <View style={styles.loadingBarContainer}>
+                          <Animated.View 
+                            style={[
+                              styles.loadingBar, 
+                              { 
+                                width: loadingProgress.interpolate({
+                                  inputRange: [0, 1],
+                                  outputRange: ['0%', '100%']
+                                })
+                              }
+                            ]} 
+                          >
+                            <LinearGradient
+                              colors={['#00C0C8', '#E3538D', '#F2A403']}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 0 }}
+                              style={styles.loadingBarGradient}
+                            />
+                          </Animated.View>
+                        </View>
+                      </View>
                     </View>
                   </View>
                 ) : error ? (
@@ -744,10 +787,7 @@ export default function HomeScreen() {
         onUpgrade={handleUpgrade}
       />
       
-      <SavedSearchesModal
-        visible={showSavedSearchesModal}
-        onClose={() => setShowSavedSearchesModal(false)}
-      />
+      {/* SavedSearchesModal removed in favor of dedicated screen */}
     </LinearGradient>
   );
 }
@@ -943,6 +983,30 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  loadingCard: {
+    width: Math.min(screenWidth * 0.9, 360),
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  loadingBrand: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  loadingBrandLogo: {
+    width: 110,
+    height: 32,
+    opacity: 0.95,
+  },
   loadingIconContainer: {
     width: 70,
     height: 70,
@@ -968,14 +1032,35 @@ const createStyles = (theme: any) => StyleSheet.create({
     height: 4,
     backgroundColor: theme.colors.border,
     borderRadius: 2,
-    marginTop: 40,
-    marginBottom: 20,
+    marginTop: 16,
+    marginBottom: 0,
     overflow: 'hidden',
   },
   loadingBar: {
     height: '100%',
     borderRadius: 2,
     overflow: 'hidden',
+  },
+  loadingStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  loadingStatLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingStatText: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: theme.colors.textSecondary,
+  },
+  loadingStatValue: {
+    fontSize: 12,
+    fontFamily: 'Inter-SemiBold',
+    color: theme.colors.text,
   },
   loadingBarGradient: {
     width: '100%',
@@ -991,7 +1076,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 20,
     marginBottom: 30,
   },

@@ -12,6 +12,7 @@ import {
   Image,
 } from 'react-native';
 import { X, Search } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/contexts/ThemeContext';
 import FilterBar, { FilterType } from './FilterBar';
 
@@ -77,6 +78,36 @@ const AnimatedSearchBar = ({
     }
   }, [isExpanded, onExpandedChange]);
 
+  // Auto-expand when a non-empty value is provided from parent (e.g., example click)
+  useEffect(() => {
+    const externalValue = value ?? searchQuery;
+    if (!isExpanded && externalValue && externalValue.trim().length > 0) {
+      // Expand without triggering onSearch
+      setIsExpanded(true);
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+
+      Animated.parallel([
+        Animated.spring(animation, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: false,
+        }),
+        Animated.spring(positionAnimation, {
+          toValue: 1,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    }
+  }, [value]);
+
   const toggleSearch = () => {
     if (isExpanded) {
       // Collapse search bar
@@ -102,6 +133,9 @@ const AnimatedSearchBar = ({
     } else {
       // Expand search bar with bouncy animation
       setIsExpanded(true);
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       // Focus immediately to open keyboard right away
       setTimeout(() => {
         inputRef.current?.focus();

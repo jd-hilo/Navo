@@ -40,7 +40,7 @@ interface PinterestSectionProps {
 }
 
 export default function PinterestSection({ data, query, onRetry, isLoading }: PinterestSectionProps) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPin, setSelectedPin] = useState<PinterestPin | null>(null);
   const [retryLoading, setRetryLoading] = useState(false);
@@ -103,7 +103,7 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
     });
   };
 
-  const styles = createStyles(theme);
+  const styles = createStyles(theme, isDark);
 
   // Show loading state
   if (isLoading) {
@@ -384,7 +384,7 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   gradientBorder: {
     borderRadius: 14,
     marginBottom: 16,
@@ -550,7 +550,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#000000',
+    backgroundColor: isDark ? '#000000' : '#FFFFFF',
     borderRadius: 12,
     padding: 24,
     width: 390,
@@ -580,7 +580,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: 2,
   },
   modalCloseButtonText: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 20,
@@ -611,12 +611,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#9A9CA9',
+    backgroundColor: isDark ? '#9A9CA9' : '#6B7280',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalUserAvatarText: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 10,
     fontWeight: 'bold',
   },
@@ -624,7 +624,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 13,
     fontFamily: 'Inter',
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 16,
   },
   modalTitleSection: {
@@ -658,14 +658,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter',
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 19,
   },
   modalDescription: {
     fontSize: 14,
     fontFamily: 'Inter',
     fontWeight: '400',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
     lineHeight: 17,
   },
   modalScrollView: {

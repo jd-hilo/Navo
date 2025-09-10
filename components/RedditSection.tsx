@@ -861,7 +861,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: isDark ? '#1A1A1A' : '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     paddingTop: 12,
@@ -893,13 +893,13 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   modalSubreddit: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginRight: 8,
   },
   modalTitle: {
     fontSize: 20,
     fontFamily: 'Inter-Bold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginBottom: 8,
     lineHeight: 26,
     flexShrink: 0,
@@ -907,13 +907,13 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   modalDate: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
     lineHeight: 16,
   },
   modalBody: {
     fontSize: 17,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginBottom: 16,
     lineHeight: 24,
     flexShrink: 0,
@@ -925,25 +925,25 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   modalStat: {
     fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
     marginRight: 16,
   },
   commentsSection: {
     marginTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    borderTopColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.1)',
     paddingTop: 12,
   },
   commentsTitle: {
     fontSize: 17,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginBottom: 8,
   },
   commentsPlaceholder: {
     fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -966,7 +966,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     zIndex: 2,
   },
   modalCloseButtonText: {
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 20,
@@ -1006,7 +1006,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   commentUsername: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     marginRight: 8,
     lineHeight: 16,
     fontWeight: '600',
@@ -1014,13 +1014,13 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   commentScore: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
     lineHeight: 16,
   },
   commentTime: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: '#9A9CA9',
+    color: isDark ? '#9A9CA9' : '#6B7280',
     lineHeight: 16,
     flexShrink: 0,
   },
@@ -1038,7 +1038,7 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   commentBody: {
     fontSize: 15,
     fontFamily: 'Inter-Regular',
-    color: '#FFFFFF',
+    color: isDark ? '#FFFFFF' : '#000000',
     lineHeight: 20,
   },
   viewMoreCommentsButton: {

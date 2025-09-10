@@ -201,6 +201,11 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
             style={styles.expandedContent}
             showsVerticalScrollIndicator={true}
             nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="handled"
+            scrollEventThrottle={16}
+            directionalLockEnabled={true}
+            bounces={false}
+            contentContainerStyle={{ paddingBottom: 12 }}
           >
             {item.gemini_data && (
               <View style={styles.expandedSection}>
@@ -490,6 +495,9 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={true}
+                nestedScrollEnabled
+                scrollEnabled={expandedItems.size === 0}
+                keyboardShouldPersistTaps="handled"
               />
             )}
           </View>

@@ -62,6 +62,27 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   const [chatFocused, setChatFocused] = useState(false);
   const cardOffsetY = useRef(new Animated.Value(0)).current;
 
+  const getDomainFromUrl = (url?: string): string | null => {
+    if (!url || typeof url !== 'string') return null;
+    try {
+      const u = new URL(url);
+      return u.hostname || null;
+    } catch {
+      // Fallback simple regex
+      const match = url.match(/https?:\/\/([^/]+)/i);
+      return match && match[1] ? match[1] : null;
+    }
+  };
+
+  const getSafeDomain = (source: any): string | null => {
+    if (!source) return null;
+    const raw = typeof source.domain === 'string' && source.domain.length > 0
+      ? source.domain
+      : getDomainFromUrl(source.url);
+    if (!raw) return null;
+    return String(raw).trim();
+  };
+
   // Simple keyboard-aware shift when chat input is focused
   useEffect(() => {
     const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
@@ -203,13 +224,16 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
 
   // Generate favicon URLs when sources change
   useEffect(() => {
-    if (data.sources && data.sources.length > 0) {
-      const newFaviconUrls: Record<string, string> = {};
-      data.sources.forEach(source => {
-        const faviconUrl = getFaviconUrlSync(source.domain, source.url);
-        newFaviconUrls[source.domain] = faviconUrl;
+    if (Array.isArray(data.sources) && data.sources.length > 0) {
+      const next: Record<string, string> = {};
+      data.sources.forEach((source: any) => {
+        const domain = getSafeDomain(source);
+        if (domain) {
+          const key = domain.toLowerCase();
+          next[key] = getFaviconUrlSync(domain, source?.url);
+        }
       });
-      setFaviconUrls(newFaviconUrls);
+      setFaviconUrls(next);
     }
   }, [data.sources]);
 
@@ -346,19 +370,25 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         
         <View style={styles.headerRight}>
           <View style={styles.sourceIcons}>
-            {data.sources && data.sources.slice(0, 3).map((source, index) => (
-              <View key={index} style={styles.sourceIcon}>
-                {faviconUrls[source.domain] ? (
-                  <Image 
-                    source={{ uri: faviconUrls[source.domain] }} 
-                    style={styles.headerFaviconImage}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Text style={styles.sourceDomainText}>{source.domain.charAt(0).toUpperCase()}</Text>
-                )}
-              </View>
-            ))}
+            {Array.isArray(data.sources) && data.sources.slice(0, 3).map((src: any, index: number) => {
+              const domain = getSafeDomain(src);
+              if (!domain) return null;
+              const key = domain.toLowerCase();
+              const favicon = faviconUrls[key];
+              return (
+                <View key={index} style={styles.sourceIcon}>
+                  {favicon ? (
+                    <Image 
+                      source={{ uri: favicon }} 
+                      style={styles.headerFaviconImage}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <Text style={styles.sourceDomainText}>{domain.charAt(0).toUpperCase()}</Text>
+                  )}
+                </View>
+              );
+            })}
             {data.sources && data.sources.length > 3 && (
               <View style={styles.sourceIcon}>
                 <Text style={styles.profileText}>+{data.sources.length - 3}</Text>
@@ -418,35 +448,38 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
                 </TouchableOpacity>
                 {isSourcesExpanded && (
                   <View style={styles.sourcesList}>
-                    {data.sources.map((source, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.sourceItem}
-                        onPress={() => handleSourcePress(source.url)}
-                      >
-                        <View style={[
-                          styles.sourceIconNew,
-                          faviconUrls[source.domain] && { backgroundColor: 'transparent' }
-                        ]}>
-                          {faviconUrls[source.domain] ? (
-                            <Image 
-                              source={{ uri: faviconUrls[source.domain] }} 
-                              style={styles.faviconImage}
-                              resizeMode="contain"
-                            />
-                          ) : (
-                            <Text style={styles.sourceDomain}>{source.domain.charAt(0).toUpperCase()}</Text>
-                          )}
-                        </View>
-                        <View style={styles.sourceContent}>
-                          <Text style={styles.sourceTitle} numberOfLines={2}>
-                            {source.title}
-                          </Text>
-                          <Text style={styles.sourceUrl}>{source.domain}</Text>
-                        </View>
-                        <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
-                      </TouchableOpacity>
-                    ))}
+                    {Array.isArray(data.sources) && data.sources.map((src: any, index: number) => {
+                      const domain = getSafeDomain(src);
+                      if (!domain) return null;
+                      const key = domain.toLowerCase();
+                      const favicon = faviconUrls[key];
+                      return (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.sourceItem}
+                          onPress={() => src.url && handleSourcePress(src.url)}
+                        >
+                          <View style={[styles.sourceIconNew, favicon && { backgroundColor: 'transparent' }]}>
+                            {favicon ? (
+                              <Image 
+                                source={{ uri: favicon }} 
+                                style={styles.faviconImage}
+                                resizeMode="contain"
+                              />
+                            ) : (
+                              <Text style={styles.sourceDomain}>{domain.charAt(0).toUpperCase()}</Text>
+                            )}
+                          </View>
+                          <View style={styles.sourceContent}>
+                            <Text style={styles.sourceTitle} numberOfLines={2}>
+                              {src.title || domain}
+                            </Text>
+                            <Text style={styles.sourceUrl}>{domain}</Text>
+                          </View>
+                          <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 )}
               </View>

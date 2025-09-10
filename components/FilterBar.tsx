@@ -44,7 +44,7 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
         onPress={() => onFilterChange(filter.id)}
         activeOpacity={0.7}
       >
-                {isSelected ? (
+        {isSelected ? (
           <View style={styles.filterButtonGradient}>
             <LinearGradient
               colors={['#00282A', '#006367']}
@@ -65,25 +65,41 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
             </View>
           </View>
         ) : (
-          <BlurView intensity={25} style={styles.filterButtonGradient}>
-            <LinearGradient
-              colors={['rgba(0, 40, 42, 0.08)', 'rgba(0, 99, 103, 0.08)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.gradientBackground}
-            />
-            <View style={styles.filterButtonContent}>
-              <Text style={[
-                styles.filterButtonText,
-                styles.filterButtonTextUnselected
-              ]}>
-                {filter.label}
-              </Text>
-              {filter.icon && (
-                <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
-              )}
+          isDark ? (
+            <BlurView intensity={25} style={styles.filterButtonGradient}>
+              <LinearGradient
+                colors={['rgba(0, 40, 42, 0.08)', 'rgba(0, 99, 103, 0.08)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.gradientBackground}
+              />
+              <View style={styles.filterButtonContent}>
+                <Text style={[
+                  styles.filterButtonText,
+                  styles.filterButtonTextUnselected
+                ]}>
+                  {filter.label}
+                </Text>
+                {filter.icon && (
+                  <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
+                )}
+              </View>
+            </BlurView>
+          ) : (
+            <View style={[styles.filterButtonGradient, styles.filterButtonLightChip]}>
+              <View style={styles.filterButtonContent}>
+                <Text style={[
+                  styles.filterButtonText,
+                  styles.filterButtonTextUnselected
+                ]}>
+                  {filter.label}
+                </Text>
+                {filter.icon && (
+                  <Image source={filter.icon} style={styles.filterIcon} resizeMode="contain" />
+                )}
+              </View>
             </View>
-          </BlurView>
+          )
         )}
       </TouchableOpacity>
     );
@@ -91,17 +107,31 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={25} style={styles.filterBar}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-          style={styles.scrollView}
-          contentInsetAdjustmentBehavior="automatic"
-        >
-          {filters.map(renderFilterButton)}
-        </ScrollView>
-      </BlurView>
+      {isDark ? (
+        <BlurView intensity={25} style={styles.filterBar}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+            style={styles.scrollView}
+            contentInsetAdjustmentBehavior="automatic"
+          >
+            {filters.map(renderFilterButton)}
+          </ScrollView>
+        </BlurView>
+      ) : (
+        <View style={[styles.filterBar, { backgroundColor: 'transparent' }] }>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+            style={styles.scrollView}
+            contentInsetAdjustmentBehavior="automatic"
+          >
+            {filters.map(renderFilterButton)}
+          </ScrollView>
+        </View>
+      )}
     </View>
   );
 };
@@ -163,6 +193,12 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     position: 'relative',
     minHeight: 38,
     overflow: 'hidden',
+  },
+  filterButtonLightChip: {
+    backgroundColor: theme.colors.searchBar,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowOpacity: 0,
   },
   gradientBackground: {
     position: 'absolute',
