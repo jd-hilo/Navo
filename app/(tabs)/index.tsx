@@ -191,7 +191,27 @@ export default function HomeScreen() {
     if (searchQuery.trim().length === 0) {
       setDebouncedQuery('');
       setHasSearched(false);
-      animateToInitialMode();
+      // Force reset to initial mode to ensure header/logo reappear
+      headerOpacity.stopAnimation();
+      cardsOpacity.stopAnimation();
+      cardsTranslateY.stopAnimation();
+      Animated.parallel([
+        Animated.timing(headerOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardsTranslateY, {
+          toValue: screenHeight,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(cardsOpacity, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
   }, [searchQuery]);
 
@@ -439,6 +459,22 @@ export default function HomeScreen() {
   const handleSearchBarExpandedChange = (expanded: boolean) => {
     setIsSearchBarExpanded(expanded);
   };
+
+  // Ensure header/logo reliably return when search is closed or cleared
+  useEffect(() => {
+    const noActiveQuery = !debouncedQuery || debouncedQuery.length === 0;
+    if (!isSearchBarExpanded && noActiveQuery && !hasSearched) {
+      // Stop any ongoing animations and reset to initial state
+      headerOpacity.stopAnimation();
+      cardsOpacity.stopAnimation();
+      cardsTranslateY.stopAnimation();
+      Animated.parallel([
+        Animated.timing(headerOpacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(cardsTranslateY, { toValue: screenHeight, duration: 200, useNativeDriver: true }),
+        Animated.timing(cardsOpacity, { toValue: 0, duration: 150, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [isSearchBarExpanded, debouncedQuery, hasSearched, headerOpacity, cardsOpacity, cardsTranslateY]);
 
   // Filter search results based on current filter
   const getFilteredResults = () => {
