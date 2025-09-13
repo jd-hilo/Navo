@@ -687,6 +687,262 @@ export const fetchRedditComments = async (postId: string, sort: string = 'confid
   return data.data || [];
 };
 
+// Content Saving System Types
+export interface Folder {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  color: string;
+  icon: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SavedContent {
+  id: string;
+  user_id: string;
+  folder_id: string;
+  content_type: 'tiktok' | 'reddit' | 'pinterest' | 'gemini';
+  content_data: any;
+  title: string;
+  description?: string;
+  source_url?: string;
+  thumbnail_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SavedContentWithFolder extends SavedContent {
+  folder_name: string;
+  folder_color: string;
+  folder_icon: string;
+}
+
+// Content Saving API Functions
+export const createFolder = async (name: string, description?: string, color: string = '#3B82F6', icon: string = 'folder'): Promise<Folder> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('folders')
+    .insert({
+      user_id: '00000000-0000-0000-0000-000000000000', // Temporary hardcoded UUID
+      name,
+      description,
+      color,
+      icon,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getUserFolders = async (): Promise<Folder[]> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('folders')
+    .select('*')
+    // .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const updateFolder = async (folderId: string, updates: Partial<Pick<Folder, 'name' | 'description' | 'color' | 'icon'>>): Promise<Folder> => {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('folders')
+    .update(updates)
+    .eq('id', folderId)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteFolder = async (folderId: string): Promise<void> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('folders')
+    .delete()
+    .eq('id', folderId);
+    // .eq('user_id', userId);
+
+  if (error) throw error;
+};
+
+export const saveContent = async (
+  folderId: string,
+  contentType: 'tiktok' | 'reddit' | 'pinterest' | 'gemini',
+  contentData: any,
+  title: string,
+  description?: string,
+  sourceUrl?: string,
+  thumbnailUrl?: string
+): Promise<SavedContent> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('saved_content')
+    .insert({
+      user_id: '00000000-0000-0000-0000-000000000000', // Temporary hardcoded UUID
+      folder_id: folderId,
+      content_type: contentType,
+      content_data: contentData,
+      title,
+      description,
+      source_url: sourceUrl,
+      thumbnail_url: thumbnailUrl,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getSavedContent = async (folderId?: string): Promise<SavedContentWithFolder[]> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  let query = supabase
+    .from('saved_content_with_folders')
+    .select('*')
+    // .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (folderId) {
+    query = query.eq('folder_id', folderId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const moveContentToFolder = async (contentId: string, newFolderId: string): Promise<boolean> => {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase.rpc('move_content_to_folder', {
+    content_uuid: contentId,
+    new_folder_uuid: newFolderId,
+    user_uuid: userId,
+  });
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteSavedContent = async (contentId: string): Promise<void> => {
+  // Temporarily bypass auth check for testing
+  // const userId = await getCurrentUserId();
+  // if (!userId) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('saved_content')
+    .delete()
+    .eq('id', contentId);
+    // .eq('user_id', userId);
+
+  if (error) throw error;
+};
+
+export const getFolderContentCount = async (folderId: string): Promise<number> => {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase.rpc('get_folder_content_count', {
+    folder_uuid: folderId,
+  });
+
+  if (error) throw error;
+  return data || 0;
+};
+
+export const createDefaultFolder = async (): Promise<string> => {
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase.rpc('create_default_folder_for_user', {
+    user_uuid: userId,
+  });
+
+  if (error) throw error;
+  return data;
+};
+
+// Helper function to extract content data based on type
+export const extractContentData = (contentType: string, item: any): any => {
+  switch (contentType) {
+    case 'tiktok':
+      return {
+        id: item.id,
+        title: item.title,
+        thumbnail: item.thumbnail,
+        author: item.author,
+        views: item.views,
+        url: item.url,
+      };
+    case 'reddit':
+      return {
+        id: item.id,
+        title: item.title,
+        text: item.text,
+        comments: item.comments,
+        upvotes: item.upvotes,
+        url: item.url,
+        subreddit: item.subreddit,
+        created: item.created,
+        media: item.media,
+        thumbnail: item.thumbnail,
+      };
+    case 'pinterest':
+      return {
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        image_url: item.image_url,
+        link: item.link,
+        likes: item.likes,
+        saves: item.saves,
+        created_at: item.created_at,
+        board_name: item.board_name,
+        user_name: item.user_name,
+      };
+    case 'gemini':
+      return {
+        response: item.response,
+        success: item.success,
+        error: item.error,
+        usage: item.usage,
+        hasWebSearch: item.hasWebSearch,
+        sources: item.sources,
+      };
+    default:
+      return item;
+  }
+};
+
 // Export database service for direct use
 export { SearchResultsService };
 

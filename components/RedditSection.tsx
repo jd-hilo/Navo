@@ -14,7 +14,8 @@ import {
 import { MessageCircle, ArrowUp, Award, ExternalLink, RefreshCw, Share2, ChevronDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
-import { fetchRedditComments } from '@/services/api';
+import { fetchRedditComments, extractContentData } from '@/services/api';
+import { SaveButton } from './SaveButton';
 
 // In-memory cache for Reddit suggestions per query
 const redditSuggestionCache: Record<string, string[]> = {};
@@ -387,8 +388,20 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
           >
             <View style={styles.postContent}>
               <View style={styles.postHeader}>
-                <Text style={styles.subreddit}>r/{post.subreddit}</Text>
-                <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
+                <View style={styles.postHeaderLeft}>
+                  <Text style={styles.subreddit}>r/{post.subreddit}</Text>
+                  <Text style={styles.time}>{formatDateOnly(post.created)}</Text>
+                </View>
+                <SaveButton
+                  contentType="reddit"
+                  contentData={extractContentData('reddit', post)}
+                  title={post.title}
+                  description={post.text || `Reddit post from r/${post.subreddit}`}
+                  sourceUrl={post.url}
+                  thumbnailUrl={post.media || post.thumbnail || undefined}
+                  size="small"
+                  variant="icon"
+                />
               </View>
               
               <View style={styles.postMainContent}>
@@ -746,12 +759,19 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   },
   postHeader: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
     padding: 0,
     gap: 4,
     width: '100%',
     marginBottom: 8,
+  },
+  postHeaderLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    flex: 1,
   },
   subreddit: {
     width: '100%',

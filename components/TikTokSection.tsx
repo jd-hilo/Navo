@@ -20,7 +20,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Video as ExpoVideo, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
-import { getTikTokVideoDetails } from '@/services/api';
+import { getTikTokVideoDetails, extractContentData } from '@/services/api';
+import { SaveButton } from './SaveButton';
 
 // In-memory cache for AI suggestions per query
 const tiktokSuggestionCache: Record<string, string[]> = {};
@@ -333,6 +334,24 @@ function TikTokVideoCard({
             <Play size={24} color="#FFFFFF" fill="#FFFFFF" strokeWidth={2} />
           </View>
         )}
+
+        {/* Save Button - Top Right */}
+        <View style={{ 
+          position: 'absolute',
+          top: 12,
+          right: 12,
+        }}>
+          <SaveButton
+            contentType="tiktok"
+            contentData={extractContentData('tiktok', video)}
+            title={video.title}
+            description={`TikTok video by @${video.author}`}
+            sourceUrl={video.url}
+            thumbnailUrl={video.thumbnail}
+            size="small"
+            variant="icon"
+          />
+        </View>
 
         {/* Video Overlay - Bottom Section */}
         <View style={{ 

@@ -21,6 +21,8 @@ import MarkdownDisplay from 'react-native-markdown-display';
 import { useTheme } from '@/contexts/ThemeContext';
 import { quickFollowUp } from '@/services/sonar';
 import { getFaviconUrlSync } from '@/utils/faviconUtils';
+import { extractContentData } from '@/services/api';
+import { SaveButton } from './SaveButton';
 
 interface GeminiSectionProps {
   data: {
@@ -395,6 +397,16 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               </View>
             )}
           </View>
+          
+          <SaveButton
+            contentType="gemini"
+            contentData={extractContentData('gemini', data)}
+            title={`AI Response: ${query}`}
+            description={summary}
+            size="small"
+            variant="icon"
+          />
+          
           <TouchableOpacity 
             style={styles.copyButton} 
             onPress={handleCopy}
