@@ -8,7 +8,6 @@
     "dev": "EXPO_NO_TELEMETRY=1 expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint",
-
     "ios": "expo run:ios"
   },
   "dependencies": {
@@ -44,6 +43,7 @@
     "expo-tracking-transparency": "~5.2.4",
     "expo-web-browser": "~14.2.0",
     "lucide-react-native": "^0.475.0",
+    "mixpanel-react-native": "^3.1.2",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.4",

@@ -34,6 +34,7 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { GeneralSearchesService } from '@/services/database';
 import { useRouter } from 'expo-router';
 import AboutModal from '@/components/AboutModal';
+import { mixpanel } from '../_layout';
 
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -61,6 +62,7 @@ export default function SettingsScreen() {
   };
 
   const handleUpgrade = () => {
+    mixpanel.track('Premium page visited');
     router.push('/(auth)/upgrade' as any);
   };
 
@@ -74,7 +76,9 @@ export default function SettingsScreen() {
   };
 
   const showPrivacyInfo = () => {
-    Linking.openURL('https://www.notion.so/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f?source=copy_link');
+    Linking.openURL(
+      'https://www.notion.so/Privacy-Policy-Navo-21c2cec59ddf80af8976cfc4e5c9c30f?source=copy_link'
+    );
   };
 
   const showAbout = () => {
@@ -123,9 +127,11 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             if (!user?.id) return;
-            
+
             try {
-              const success = await GeneralSearchesService.clearSearchHistory(user.id);
+              const success = await GeneralSearchesService.clearSearchHistory(
+                user.id
+              );
               if (success) {
                 Alert.alert('Success', 'Cache cleared successfully');
               } else {
@@ -231,7 +237,11 @@ export default function SettingsScreen() {
               <View style={styles.subscriptionIcon}>
                 <Crown
                   size={24}
-                  color={isPremium ? theme.colors.primary : theme.colors.textSecondary}
+                  color={
+                    isPremium
+                      ? theme.colors.primary
+                      : theme.colors.textSecondary
+                  }
                   strokeWidth={2}
                 />
               </View>
@@ -240,17 +250,24 @@ export default function SettingsScreen() {
                   {isPremium ? 'Premium Plan' : 'Free Plan'}
                 </Text>
                 <Text style={styles.subscriptionStatus}>
-                  {isPremium ? 'Active subscription' : 'Upgrade for more searches'}
+                  {isPremium
+                    ? 'Active subscription'
+                    : 'Upgrade for more searches'}
                 </Text>
                 {isPremium && (
                   <Text style={styles.premiumDetails}>
-                    Unlimited searches • 500 saved searches • Faster loading times
+                    Unlimited searches • 500 saved searches • Faster loading
+                    times
                   </Text>
                 )}
               </View>
               {isPremium && (
                 <View style={styles.premiumBadge}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
                 </View>
               )}
             </View>
@@ -262,28 +279,58 @@ export default function SettingsScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.upgradeButtonText}>Upgrade to Premium</Text>
-                <ChevronRight size={20} color={theme.colors.surface} strokeWidth={2} />
+                <ChevronRight
+                  size={20}
+                  color={theme.colors.surface}
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
             )}
 
             {isPremium && (
               <View style={styles.premiumFeatures}>
-                <Text style={styles.premiumFeaturesTitle}>Your Premium Benefits:</Text>
+                <Text style={styles.premiumFeaturesTitle}>
+                  Your Premium Benefits:
+                </Text>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Unlimited searches</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    Unlimited searches
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>500 saved searches</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    500 saved searches
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Faster loading times</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    Faster loading times
+                  </Text>
                 </View>
                 <View style={styles.premiumFeatureItem}>
-                  <CheckCircle size={16} color={theme.colors.success} strokeWidth={2} />
-                  <Text style={styles.premiumFeatureText}>Custom search settings</Text>
+                  <CheckCircle
+                    size={16}
+                    color={theme.colors.success}
+                    strokeWidth={2}
+                  />
+                  <Text style={styles.premiumFeatureText}>
+                    Custom search settings
+                  </Text>
                 </View>
               </View>
             )}
@@ -295,7 +342,11 @@ export default function SettingsScreen() {
               onPress={handleRestorePurchases}
               disabled={isLoading}
             >
-              <RefreshCw size={16} color={theme.colors.primary} strokeWidth={2} />
+              <RefreshCw
+                size={16}
+                color={theme.colors.primary}
+                strokeWidth={2}
+              />
               <Text style={styles.restoreButtonText}>Restore Purchases</Text>
             </TouchableOpacity>
           )}
@@ -329,11 +380,7 @@ export default function SettingsScreen() {
             title="Privacy Policy"
             onPress={showPrivacyInfo}
           />
-          <SettingRow 
-            icon={Info} 
-            title="About Navo" 
-            onPress={showAbout} 
-          />
+          <SettingRow icon={Info} title="About Navo" onPress={showAbout} />
           <SettingRow
             icon={Trash2}
             title="Clear Cache"
@@ -365,7 +412,7 @@ export default function SettingsScreen() {
           />
         </View>
       </ScrollView>
-      <AboutModal 
+      <AboutModal
         visible={showAboutModal}
         onClose={() => setShowAboutModal(false)}
       />

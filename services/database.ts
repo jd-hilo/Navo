@@ -1,3 +1,4 @@
+import { mixpanel } from '@/app/_layout';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -52,7 +53,10 @@ export interface SavedSearchRow {
 // Database service for search results
 export class SearchResultsService {
   // Check if search results exist in cache and are still valid
-  static async getCachedResults(query: string, userId?: string): Promise<CachedSearchResults | null> {
+  static async getCachedResults(
+    query: string,
+    userId?: string
+  ): Promise<CachedSearchResults | null> {
     try {
       if (!userId) {
         console.log('No user ID provided, skipping cache check');
@@ -81,8 +85,12 @@ export class SearchResultsService {
 
       if (data) {
         const cacheAge = Date.now() - new Date(data.created_at).getTime();
-        console.log(`Found cached results for "${query}" (${Math.round(cacheAge / 1000 / 60)} minutes old)`);
-        
+        console.log(
+          `Found cached results for "${query}" (${Math.round(
+            cacheAge / 1000 / 60
+          )} minutes old)`
+        );
+
         return {
           gemini: data.gemini_data,
           tiktok: data.tiktok_data,
@@ -101,8 +109,8 @@ export class SearchResultsService {
 
   // Save search results to cache
   static async saveResults(
-    query: string, 
-    results: { gemini: any; tiktok: any; reddit: any }, 
+    query: string,
+    results: { gemini: any; tiktok: any; reddit: any },
     userId?: string
   ): Promise<boolean> {
     try {
@@ -112,7 +120,7 @@ export class SearchResultsService {
       }
 
       const normalizedQuery = query.trim().toLowerCase();
-      
+
       // Check if results already exist for this query
       const { data: existing } = await supabase
         .from('search_results')
@@ -141,19 +149,19 @@ export class SearchResultsService {
           console.error('Error updating cached results:', error);
           return false;
         }
-        
+
         console.log(`Updated cached results for "${query}"`);
       } else {
         // Insert new record
         const { error } = await supabase
           .from('search_results')
           .insert([searchData]);
-
+        mixpanel.track('Search saved');
         if (error) {
           console.error('Error saving cached results:', error);
           return false;
         }
-        
+
         console.log(`Saved new cached results for "${query}"`);
       }
 
@@ -182,12 +190,14 @@ export class SearchResultsService {
           console.log('ℹ️ No existing profile found, creating new one');
           const { error: insertError } = await supabase
             .from('user_profiles')
-            .insert([{
-              user_id: userId,
-              search_count: 1,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }]);
+            .insert([
+              {
+                user_id: userId,
+                search_count: 1,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              },
+            ]);
 
           if (insertError) {
             console.error('❌ Error creating new profile:', insertError);
@@ -204,13 +214,15 @@ export class SearchResultsService {
       // Profile exists, update the count
       const currentCount = profile?.search_count || 0;
       const newCount = currentCount + 1;
-      console.log(`📈 Current count: ${currentCount}, New count will be: ${newCount}`);
+      console.log(
+        `📈 Current count: ${currentCount}, New count will be: ${newCount}`
+      );
 
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({ 
+        .update({
           search_count: newCount,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);
 
@@ -219,12 +231,14 @@ export class SearchResultsService {
         console.error('Error details:', {
           code: updateError.code,
           message: updateError.message,
-          details: updateError.details
+          details: updateError.details,
         });
         return false;
       }
 
-      console.log(`✅ Successfully incremented search count from ${currentCount} to ${newCount} for user: ${userId}`);
+      console.log(
+        `✅ Successfully incremented search count from ${currentCount} to ${newCount} for user: ${userId}`
+      );
       return true;
     } catch (error) {
       console.error('❌ Unexpected error in incrementSearchCount:', error);
@@ -232,7 +246,7 @@ export class SearchResultsService {
         console.error('Error details:', {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         });
       }
       return false;
@@ -243,7 +257,7 @@ export class SearchResultsService {
   static async getSearchCount(userId: string): Promise<number> {
     try {
       const { data, error } = await supabase.rpc('get_search_count', {
-        p_user_id: userId
+        p_user_id: userId,
       });
 
       if (error) {
@@ -284,7 +298,10 @@ export class SearchResultsService {
   }
 
   // Get user's search history
-  static async getSearchHistory(userId: string, limit: number = 20): Promise<SearchResultsRow[]> {
+  static async getSearchHistory(
+    userId: string,
+    limit: number = 20
+  ): Promise<SearchResultsRow[]> {
     try {
       const { data, error } = await supabase
         .from('search_results')
@@ -306,7 +323,10 @@ export class SearchResultsService {
   }
 
   // Delete a specific search result
-  static async deleteSearchResult(id: string, userId: string): Promise<boolean> {
+  static async deleteSearchResult(
+    id: string,
+    userId: string
+  ): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('search_results')
@@ -330,7 +350,7 @@ export class SearchResultsService {
   static async cleanupExpiredResults(): Promise<void> {
     try {
       const { error } = await supabase.rpc('cleanup_expired_search_results');
-      
+
       if (error) {
         console.error('Error cleaning up expired results:', error);
       } else {
@@ -363,9 +383,9 @@ export class SearchResultsService {
         return { totalCached: 0, oldestCache: null, newestCache: null };
       }
 
-      const dates = data.map(row => new Date(row.created_at));
-      const oldest = new Date(Math.min(...dates.map(d => d.getTime())));
-      const newest = new Date(Math.max(...dates.map(d => d.getTime())));
+      const dates = data.map((row) => new Date(row.created_at));
+      const oldest = new Date(Math.min(...dates.map((d) => d.getTime())));
+      const newest = new Date(Math.max(...dates.map((d) => d.getTime())));
 
       return {
         totalCached: data.length,
@@ -379,15 +399,16 @@ export class SearchResultsService {
   }
 
   // Update user's search count
-  static async updateSearchCount(userId: string, count: number): Promise<boolean> {
+  static async updateSearchCount(
+    userId: string,
+    count: number
+  ): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: userId,
-          search_count: count,
-          updated_at: new Date().toISOString()
-        });
+      const { error } = await supabase.from('user_profiles').upsert({
+        user_id: userId,
+        search_count: count,
+        updated_at: new Date().toISOString(),
+      });
 
       if (error) {
         console.error('Error updating search count:', error);
@@ -409,7 +430,7 @@ export const GeneralSearchesService = {
   async trackSearch(userId: string, query: string): Promise<boolean> {
     try {
       const normalizedQuery = query.trim().toLowerCase();
-      
+
       // First, try to find existing search
       const { data: existingData, error: selectError } = await supabase
         .from('general_searches')
@@ -418,7 +439,8 @@ export const GeneralSearchesService = {
         .eq('query', normalizedQuery)
         .single();
 
-      if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (selectError && selectError.code !== 'PGRST116') {
+        // PGRST116 = no rows returned
         console.error('Error checking existing search:', selectError);
         return false;
       }
@@ -427,9 +449,9 @@ export const GeneralSearchesService = {
         // Update existing search count
         const { error: updateError } = await supabase
           .from('general_searches')
-          .update({ 
+          .update({
             search_count: existingData.search_count + 1,
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', existingData.id);
 
@@ -441,10 +463,10 @@ export const GeneralSearchesService = {
         // Insert new search
         const { error: insertError } = await supabase
           .from('general_searches')
-          .insert({ 
+          .insert({
             user_id: userId,
             query: normalizedQuery,
-            search_count: 1
+            search_count: 1,
           });
 
         if (insertError) {
@@ -480,25 +502,25 @@ export const GeneralSearchesService = {
           totalSearches: 0,
           uniqueQueries: 0,
           mostSearched: [],
-          recentSearches: []
+          recentSearches: [],
         };
       }
 
-      const totalSearches = data?.reduce((sum, item) => sum + item.search_count, 0) || 0;
+      const totalSearches =
+        data?.reduce((sum, item) => sum + item.search_count, 0) || 0;
       const uniqueQueries = data?.length || 0;
-      const mostSearched = data
-        ?.sort((a, b) => b.search_count - a.search_count)
-        .slice(0, 5)
-        .map(item => item.query) || [];
-      const recentSearches = data
-        ?.slice(0, 10)
-        .map(item => item.query) || [];
+      const mostSearched =
+        data
+          ?.sort((a, b) => b.search_count - a.search_count)
+          .slice(0, 5)
+          .map((item) => item.query) || [];
+      const recentSearches = data?.slice(0, 10).map((item) => item.query) || [];
 
       return {
         totalSearches,
         uniqueQueries,
         mostSearched,
-        recentSearches
+        recentSearches,
       };
     } catch (error) {
       console.error('Error in getUserSearchStats:', error);
@@ -506,13 +528,15 @@ export const GeneralSearchesService = {
         totalSearches: 0,
         uniqueQueries: 0,
         mostSearched: [],
-        recentSearches: []
+        recentSearches: [],
       };
     }
   },
 
   // Get popular searches across all users (for admin)
-  async getPopularSearches(limit: number = 20): Promise<Array<{ query: string; total_count: number }>> {
+  async getPopularSearches(
+    limit: number = 20
+  ): Promise<Array<{ query: string; total_count: number }>> {
     try {
       const { data, error } = await supabase
         .from('general_searches')
@@ -527,7 +551,7 @@ export const GeneralSearchesService = {
 
       // Group by query and sum search counts
       const queryMap = new Map<string, number>();
-      data?.forEach(item => {
+      data?.forEach((item) => {
         const current = queryMap.get(item.query) || 0;
         queryMap.set(item.query, current + item.search_count);
       });
@@ -562,7 +586,7 @@ export const GeneralSearchesService = {
       console.error('Error in clearSearchHistory:', error);
       return false;
     }
-  }
+  },
 };
 
 // Saved Searches Service
@@ -641,7 +665,10 @@ export class SavedSearchesService {
   }
 
   // Delete a saved search
-  static async deleteSavedSearch(userId: string, searchId: string): Promise<boolean> {
+  static async deleteSavedSearch(
+    userId: string,
+    searchId: string
+  ): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('saved_searches')
@@ -672,7 +699,8 @@ export class SavedSearchesService {
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') { // No rows found
+        if (error.code === 'PGRST116') {
+          // No rows found
           return false;
         }
         console.error('Error checking saved search:', error);

@@ -16,7 +16,15 @@ import { SubscriptionProvider } from '@/contexts/SubscriptionContext';
 import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
 import adjustService from '@/adjustService';
 import { Loading } from '@/components/loading';
-
+import { Mixpanel } from 'mixpanel-react-native';
+const trackAutomaticEvents = false;
+const useNative = false;
+export const mixpanel = new Mixpanel(
+  'c8c78a8c87fc7e5ee2dfc41334339458',
+  trackAutomaticEvents,
+  useNative
+);
+mixpanel.init();
 // Prevent the splash screen from auto-hiding
 //SplashScreen.preventAutoHideAsync();
 

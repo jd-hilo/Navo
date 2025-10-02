@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { Adjust, AdjustEvent } from 'react-native-adjust';
+import { mixpanel } from '../_layout';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -45,25 +46,30 @@ export default function ReferFriendScreen() {
 
     const event = new AdjustEvent('fe9jhz');
     event.addCallbackParameter('action', 'shared_referral_code');
-    console.log("adjust : event sent")
+    console.log('adjust : event sent');
     Adjust.trackEvent(event);
-    
+    mixpanel.track('Referral code shared');
     await Clipboard.setStringAsync(referralCode);
     await Share.share({
       message: `Download Navo and use my referral code ${referralCode} for 25 free searches ✨\n\nhttps://apps.apple.com/us/app/navo-magic-search/id6747410792`,
     });
+    mixpanel.track('Referral code shared');
   };
 
   const styles = createStyles(theme);
 
   return (
     <LinearGradient
-      colors={isDark
-        ? ['#0F0F0F', '#1A1A1A', '#0F0F0F']
-        : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
+      colors={
+        isDark
+          ? ['#0F0F0F', '#1A1A1A', '#0F0F0F']
+          : ['#F7F7F5', '#FFFFFF', '#F7F7F5']
+      }
       style={styles.container}
     >
-      <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: 'transparent' }]}
+      >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -84,7 +90,8 @@ export default function ReferFriendScreen() {
           <View style={styles.header}>
             <Text style={styles.title}>Invite Friends{'\n'}Get Credits</Text>
             <Text style={styles.subtitle}>
-              Share your referral code and you'll both get 25 free search credits
+              Share your referral code and you'll both get 25 free search
+              credits
             </Text>
           </View>
 
@@ -102,19 +109,25 @@ export default function ReferFriendScreen() {
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>1</Text>
                 </View>
-                <Text style={styles.stepText}>Share your referral code with friends</Text>
+                <Text style={styles.stepText}>
+                  Share your referral code with friends
+                </Text>
               </View>
               <View style={styles.step}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>2</Text>
                 </View>
-                <Text style={styles.stepText}>Friend creates account using your code</Text>
+                <Text style={styles.stepText}>
+                  Friend creates account using your code
+                </Text>
               </View>
               <View style={styles.step}>
                 <View style={styles.stepNumber}>
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
-                <Text style={styles.stepText}>You both receive 25 search credits!</Text>
+                <Text style={styles.stepText}>
+                  You both receive 25 search credits!
+                </Text>
               </View>
             </View>
           </View>
@@ -156,7 +169,8 @@ export default function ReferFriendScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any) =>
+  StyleSheet.create({
     container: {
       flex: 1,
     },
@@ -168,34 +182,34 @@ const createStyles = (theme: any) => StyleSheet.create({
       paddingHorizontal: 24,
       paddingVertical: 32,
     },
-  decorativeElement: {
-    position: 'absolute',
-    zIndex: 1,
-  },
-  blueStar: {
-    width: screenWidth * 0.15,
-    height: screenWidth * 0.15,
-    top: 20,
-    left: 20,
-    opacity: 0.8,
-  },
-  orangeStar: {
-    width: screenWidth * 0.12,
-    height: screenWidth * 0.12,
-    top: 40,
-    right: 30,
-    opacity: 0.8,
-  },
+    decorativeElement: {
+      position: 'absolute',
+      zIndex: 1,
+    },
+    blueStar: {
+      width: screenWidth * 0.15,
+      height: screenWidth * 0.15,
+      top: 20,
+      left: 20,
+      opacity: 0.8,
+    },
+    orangeStar: {
+      width: screenWidth * 0.12,
+      height: screenWidth * 0.12,
+      top: 40,
+      right: 30,
+      opacity: 0.8,
+    },
     header: {
       alignItems: 'center',
       marginBottom: 40,
-    marginTop: screenWidth * 0.15,
+      marginTop: screenWidth * 0.15,
     },
     title: {
       fontSize: 28,
       fontFamily: 'Inter-Bold',
       color: theme.colors.text,
-    marginBottom: 8,
+      marginBottom: 8,
       textAlign: 'center',
     },
     subtitle: {
@@ -203,20 +217,20 @@ const createStyles = (theme: any) => StyleSheet.create({
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
       textAlign: 'center',
-    lineHeight: 22,
+      lineHeight: 22,
     },
-  pricingContainer: {
+    pricingContainer: {
       backgroundColor: theme.colors.surface,
-    padding: 24,
+      padding: 24,
       borderRadius: 16,
       marginBottom: 32,
       shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 4,
     },
-  pricingTitle: {
+    pricingTitle: {
       fontSize: 18,
       fontFamily: 'Inter-SemiBold',
       color: theme.colors.text,
@@ -253,24 +267,24 @@ const createStyles = (theme: any) => StyleSheet.create({
       marginBottom: 24,
     },
     referButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  referButtonGradient: {
-    flex: 1,
+      width: '100%',
+      height: 56,
+      borderRadius: 16,
+      overflow: 'hidden',
+      marginBottom: 12,
+    },
+    referButtonGradient: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-    gap: 8,
+      gap: 8,
     },
     referButtonText: {
-    fontSize: 17,
-    fontFamily: 'Inter-Medium',
-    color: '#FFFFFF',
-    marginRight: 4,
+      fontSize: 17,
+      fontFamily: 'Inter-Medium',
+      color: '#FFFFFF',
+      marginRight: 4,
     },
     skipButton: {
       alignItems: 'center',
@@ -287,30 +301,30 @@ const createStyles = (theme: any) => StyleSheet.create({
       fontFamily: 'Inter-Regular',
       color: theme.colors.textSecondary,
       textAlign: 'center',
-    marginBottom: 24,
-  },
-  codeContainer: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    marginBottom: 32,
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  codeLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
-  },
-  code: {
-    fontSize: 32,
-    fontFamily: 'Inter-Bold',
-    color: theme.colors.primary,
-    letterSpacing: 4,
+      marginBottom: 24,
+    },
+    codeContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 24,
+      alignItems: 'center',
+      marginBottom: 32,
+      shadowColor: theme.colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    codeLabel: {
+      fontSize: 14,
+      fontFamily: 'Inter-Regular',
+      color: theme.colors.textSecondary,
+      marginBottom: 8,
+    },
+    code: {
+      fontSize: 32,
+      fontFamily: 'Inter-Bold',
+      color: theme.colors.primary,
+      letterSpacing: 4,
     },
   });
