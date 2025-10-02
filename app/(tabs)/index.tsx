@@ -485,6 +485,9 @@ export default function HomeScreen() {
 
   // Ensure header/logo reliably return when search is closed or cleared
   useEffect(() => {
+    if (user?.id) {
+      mixpanel.identify(user?.id);
+    }
     const noActiveQuery = !debouncedQuery || debouncedQuery.length === 0;
     if (!isSearchBarExpanded && noActiveQuery && !hasSearched) {
       // Stop any ongoing animations and reset to initial state
