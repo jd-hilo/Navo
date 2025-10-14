@@ -78,6 +78,13 @@ const AnimatedSearchBar = ({
     }
   }, [isExpanded, onExpandedChange]);
 
+  // Sync internal state with external value prop
+  useEffect(() => {
+    if (value !== undefined && value !== searchQuery) {
+      setSearchQuery(value);
+    }
+  }, [value]);
+
   // Auto-expand when a non-empty value is provided from parent (e.g., example click)
   useEffect(() => {
     const externalValue = value ?? searchQuery;
@@ -165,8 +172,9 @@ const AnimatedSearchBar = ({
   };
 
   const handleSubmit = () => {
-    if (onSearch && searchQuery.trim()) {
-      onSearch(searchQuery.trim());
+    const currentValue = value !== undefined ? value : searchQuery;
+    if (onSearch && currentValue.trim()) {
+      onSearch(currentValue.trim());
     }
   };
 
