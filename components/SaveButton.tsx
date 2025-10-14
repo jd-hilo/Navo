@@ -77,19 +77,19 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
 
   const getIconSize = () => {
     switch (size) {
-      case 'small': return 16;
-      case 'medium': return 20;
-      case 'large': return 24;
-      default: return 20;
+      case 'small': return 20;
+      case 'medium': return 24;
+      case 'large': return 28;
+      default: return 24;
     }
   };
 
   const getButtonSize = () => {
     switch (size) {
-      case 'small': return 32;
-      case 'medium': return 40;
-      case 'large': return 48;
-      default: return 40;
+      case 'small': return 44;
+      case 'medium': return 52;
+      case 'large': return 60;
+      default: return 52;
     }
   };
 

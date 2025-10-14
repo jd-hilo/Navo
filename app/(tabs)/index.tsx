@@ -653,32 +653,6 @@ export default function HomeScreen() {
           />
         )}
 
-        {/* Save Search Button - Above Search Bar */}
-        <Animated.View
-          style={[
-            styles.bookmarkContainer,
-            {
-              opacity: bookmarkOpacity,
-              transform: [{ scale: bookmarkScale }],
-              position: 'absolute',
-              bottom: 120, // Position above search bar
-              right: 20,
-              zIndex: 10,
-            },
-          ]}>
-          <TouchableOpacity
-            style={[styles.bookmarkButton, isBookmarkSaved && styles.bookmarkButtonSaved]}
-            onPress={saveBookmark}
-            activeOpacity={0.8}>
-            <Bookmark 
-              size={24} 
-              color={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : theme.colors.text} 
-              strokeWidth={2}
-              fill={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : 'none'}
-            />
-          </TouchableOpacity>
-        </Animated.View>
-
         {/* Bottom Center Search Bar */}
         <AnimatedSearchBar
           value={searchQuery}

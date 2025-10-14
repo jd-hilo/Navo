@@ -398,14 +398,16 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
             )}
           </View>
           
-          <SaveButton
-            contentType="gemini"
-            contentData={extractContentData('gemini', data)}
-            title={`AI Response: ${query}`}
-            description={summary}
-            size="small"
-            variant="icon"
-          />
+          <View style={styles.saveButtonContainer}>
+            <SaveButton
+              contentType="gemini"
+              contentData={extractContentData('gemini', data)}
+              title={`AI Response: ${query}`}
+              description={summary}
+              size="small"
+              variant="icon"
+            />
+          </View>
           
           <TouchableOpacity 
             style={styles.copyButton} 
@@ -677,6 +679,9 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     color: isDark ? '#000000' : '#FFFFFF',
     fontSize: 10,
     fontWeight: '500',
+  },
+  saveButtonContainer: {
+    marginRight: 8,
   },
   copyButton: {
     padding: 4,
