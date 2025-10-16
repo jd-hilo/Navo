@@ -39,6 +39,9 @@ export default function TabLayout() {
           name="saved"
           options={{
             title: 'Saved',
+            presentation: 'card',
+            animation: 'slide_from_left',
+            gestureEnabled: false,
           }}
         />
         <Stack.Screen

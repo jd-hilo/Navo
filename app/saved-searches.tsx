@@ -133,7 +133,14 @@ export default function SavedSearchesScreen() {
                     <View style={[styles.priorityIndicator, { backgroundColor: '#10B981' }]} />
                   </View>
                 </View>
-                <GeminiSection data={geminiData} query={item.query} isLoading={false} cached={true} />
+                <GeminiSection 
+                  data={geminiData} 
+                  query={item.query} 
+                  isLoading={false} 
+                  cached={true} 
+                  showSaveButton={false}
+                  showSonarBadge={false}
+                />
               </View>
             )}
             {tiktokData && (

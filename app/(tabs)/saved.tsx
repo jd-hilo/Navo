@@ -18,9 +18,9 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Folder, Plus, Trash2, Check } from 'lucide-react-native';
+import { Folder, Plus, Trash2, Check, X } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useTheme } from '../../contexts/ThemeContext';
 import { 
   getSavedContent, 
@@ -38,6 +38,7 @@ import { SavedContentCard } from '../../components/SavedContentCard';
 export default function SavedContentScreen() {
   const { theme, isDark } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -121,7 +122,13 @@ export default function SavedContentScreen() {
   useFocusEffect(
     useCallback(() => {
       loadFolders();
-    }, [])
+      // Check if we should open create modal from params
+      if (params.openCreate === 'true') {
+        setShowCreateModal(true);
+        // Clear the param to avoid reopening on future navigations
+        router.setParams({ openCreate: undefined } as any);
+      }
+    }, [params.openCreate])
   );
 
   const handleCreateFolder = async () => {
@@ -286,7 +293,7 @@ export default function SavedContentScreen() {
           <View style={styles.modalHeader}>
             <TouchableOpacity
               onPress={() => setShowCreateModal(false)}
-              style={styles.closeButton}
+              style={styles.modalCloseButton}
             >
               <Ionicons name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>
@@ -325,14 +332,6 @@ export default function SavedContentScreen() {
                     <Check size={20} color="white" strokeWidth={2} />
                   )}
                 </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.colorLabels}>
-              {colors.map((color) => (
-                <Text key={color.value} style={styles.colorLabel}>
-                  {color.name}
-                </Text>
               ))}
             </View>
           </ScrollView>
@@ -388,6 +387,15 @@ export default function SavedContentScreen() {
         ? ['#0F0F0F', '#1A1A1A', '#0F0F0F']
         : ['#F7F7F5', '#FFFFFF', '#F7F7F5']}
       style={styles.container}>
+      {/* Close button - absolute top right */}
+      <TouchableOpacity
+        style={styles.screenCloseButton}
+        onPress={() => router.back()}
+        activeOpacity={0.8}
+      >
+        <X size={24} color={theme.colors.text} strokeWidth={2} />
+      </TouchableOpacity>
+      
       <SafeAreaView style={[styles.safeArea, { backgroundColor: 'transparent' }]}>
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
@@ -520,6 +528,23 @@ const createStyles = (theme: any) => StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  screenCloseButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 100,
   },
   title: {
     fontSize: 28,
@@ -665,7 +690,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  closeButton: {
+  modalCloseButton: {
     padding: 8,
   },
   modalTitle: {
@@ -699,7 +724,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   colorOptions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 16,
+    marginBottom: 32,
   },
   colorOption: {
     width: 60,
@@ -712,17 +737,6 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   selectedColor: {
     borderColor: theme.colors.text,
-  },
-  colorLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  colorLabel: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    width: 60,
   },
   modalFooter: {
     flexDirection: 'row',

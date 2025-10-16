@@ -734,6 +734,9 @@ export default function DynamicLayoutEngine({
             query={query} 
             onRetry={onRetry}
             enableFollowUpChat={enableFollowUpChat}
+            tiktokData={searchResults.tiktok}
+            redditData={searchResults.reddit}
+            pinterestData={searchResults.pinterest}
           />
         </View>
       )}

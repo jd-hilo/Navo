@@ -17,14 +17,15 @@ interface FilterBarProps {
   onFilterChange: (filter: FilterType) => void;
   currentFilter: FilterType;
   visible: boolean;
+  topOffset?: number;
 }
 
-const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) => {
+const FilterBar = ({ onFilterChange, currentFilter, visible, topOffset = 70 }: FilterBarProps) => {
   const { theme, isDark } = useTheme();
 
   if (!visible) return null;
 
-  const styles = createStyles(theme, isDark);
+  const styles = createStyles(theme, isDark, topOffset);
 
   const filters = [
     { id: 'all' as FilterType, label: 'All', icon: null },
@@ -136,13 +137,13 @@ const FilterBar = ({ onFilterChange, currentFilter, visible }: FilterBarProps) =
   );
 };
 
-const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean, topOffset: number) => StyleSheet.create({
   container: {
     position: 'absolute',
     width: '100%',
     height: 60,
     left: 0,
-    top: 70,
+    top: topOffset,
     zIndex: 1000,
   },
   filterBar: {

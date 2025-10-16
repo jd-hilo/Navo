@@ -78,7 +78,14 @@ The detailed content should be:
 
 Absolute constraints:
 • Keep the entire response under 200 words
-• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words`
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+
+INLINE MEDIA EMBEDS (important):
+- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
+- Only include tokens that are relevant to the user's query. Use each token at most once.
+- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
+
+Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
         }
       ],
       max_tokens: 300,
@@ -117,7 +124,14 @@ The detailed content should be:
 
 Absolute constraints:
 • Keep the entire response under 200 words
-• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words`
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+
+INLINE MEDIA EMBEDS (important):
+- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
+- Only include tokens that are relevant to the user's query. Use each token at most once.
+- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
+
+Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
         }
       ],
       max_tokens: 300, // Complete response within token limit

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Alert, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, Text, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 import { saveContent, getUserFolders, createDefaultFolder, Folder } from '../services/api';
 import { FolderSelectionModal } from './FolderSelectionModal';
 
@@ -30,6 +32,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const { isDark } = useTheme();
 
   const handleSave = async () => {
     try {
@@ -103,23 +106,23 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   };
 
   if (variant === 'icon') {
+    const iconColor = isSaved ? '#10B981' : (isDark ? '#FFFFFF' : '#000000');
+    
     return (
       <View style={{ zIndex: 1000 }}>
         <TouchableOpacity
           onPress={handleSave}
           disabled={isLoading}
-          className={`rounded-full bg-gray-100 dark:bg-gray-800 items-center justify-center ${
-            isSaved ? 'bg-green-100 dark:bg-green-900' : ''
-          }`}
-          style={{ width: getButtonSize(), height: getButtonSize() }}
+          style={styles.iconButtonClean}
+          activeOpacity={0.8}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color="#6B7280" />
+            <ActivityIndicator size="small" color={iconColor} />
           ) : (
             <Ionicons
-              name={isSaved ? 'checkmark' : 'bookmark-outline'}
+              name={isSaved ? 'checkmark-circle' : 'bookmark'}
               size={getIconSize()}
-              color={isSaved ? '#10B981' : '#6B7280'}
+              color={iconColor}
             />
           )}
         </TouchableOpacity>
@@ -143,22 +146,27 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
       <TouchableOpacity
         onPress={handleSave}
         disabled={isLoading}
-        className={`flex-row items-center justify-center px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 ${
-          isSaved ? 'bg-green-100 dark:bg-green-900' : ''
-        }`}
-        style={{ minHeight: getButtonSize() }}
+        style={[
+          styles.buttonVariant,
+          { minHeight: getButtonSize() },
+          isSaved && styles.buttonVariantSaved
+        ]}
+        activeOpacity={0.8}
       >
         {isLoading ? (
-          <ActivityIndicator size="small" color="#6B7280" className="mr-2" />
+          <ActivityIndicator size="small" color="#3B82F6" style={{ marginRight: 8 }} />
         ) : (
           <Ionicons
-            name={isSaved ? 'checkmark' : 'bookmark-outline'}
+            name={isSaved ? 'checkmark-circle' : 'bookmark'}
             size={getIconSize()}
-            color={isSaved ? '#10B981' : '#6B7280'}
-            className="mr-2"
+            color={isSaved ? '#10B981' : '#3B82F6'}
+            style={{ marginRight: 8 }}
           />
         )}
-        <Text className={`text-gray-700 dark:text-gray-300 ${getTextSize()}`}>
+        <Text style={[
+          styles.buttonText,
+          isSaved && styles.buttonTextSaved
+        ]}>
           {isSaved ? 'Saved' : 'Save'}
         </Text>
       </TouchableOpacity>
@@ -176,3 +184,41 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  iconButtonClean: {
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+  },
+  buttonVariant: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  buttonVariantSaved: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#10B981',
+    shadowColor: '#10B981',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  buttonTextSaved: {
+    color: '#10B981',
+  },
+});

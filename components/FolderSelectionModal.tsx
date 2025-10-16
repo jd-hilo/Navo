@@ -11,6 +11,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useTheme } from '../contexts/ThemeContext';
 import { getUserFolders, createFolder, Folder } from '../services/api';
 
 interface FolderSelectionModalProps {
@@ -28,6 +30,8 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
   title = 'Choose Folder',
   description = 'Select a folder to save this content:',
 }) => {
+  const { theme, isDark } = useTheme();
+  const router = useRouter();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -115,6 +119,18 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
     onClose();
   };
 
+  const handleOpenCreateFolder = () => {
+    // Close this modal first
+    onClose();
+    // Navigate to saved folders screen and trigger create modal
+    router.push({
+      pathname: '/(tabs)/saved',
+      params: { openCreate: 'true' }
+    } as any);
+  };
+
+  const styles = createStyles(theme, isDark);
+
   const renderFolderItem = ({ item }: { item: Folder }) => (
     <TouchableOpacity
       style={styles.folderItem}
@@ -129,7 +145,7 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
           <Text style={styles.folderDescription}>{item.description}</Text>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
     </TouchableOpacity>
   );
 
@@ -140,6 +156,7 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
       <TextInput
         style={styles.input}
         placeholder="Folder name"
+        placeholderTextColor={theme.colors.textSecondary}
         value={newFolderName}
         onChangeText={setNewFolderName}
         maxLength={50}
@@ -148,6 +165,7 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
       <TextInput
         style={[styles.input, styles.textArea]}
         placeholder="Description (optional)"
+        placeholderTextColor={theme.colors.textSecondary}
         value={newFolderDescription}
         onChangeText={setNewFolderDescription}
         multiline
@@ -183,7 +201,7 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
             <Ionicons
               name={icon as any}
               size={20}
-              color={selectedIcon === icon ? '#3B82F6' : '#6B7280'}
+              color={selectedIcon === icon ? theme.colors.primary : theme.colors.textSecondary}
             />
           </TouchableOpacity>
         ))}
@@ -222,14 +240,14 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#374151" />
+            <Ionicons name="close" size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>{title}</Text>
           <TouchableOpacity
-            onPress={() => setShowCreateForm(!showCreateForm)}
+            onPress={handleOpenCreateFolder}
             style={styles.addButton}
           >
-            <Ionicons name="add" size={24} color="#3B82F6" />
+            <Ionicons name="add" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -241,19 +259,19 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
           <View style={styles.folderList}>
             {isLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#3B82F6" />
+                <ActivityIndicator size="large" color={theme.colors.primary} />
                 <Text style={styles.loadingText}>Loading folders...</Text>
               </View>
             ) : folders.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Ionicons name="folder-outline" size={64} color="#9CA3AF" />
+                <Ionicons name="folder-outline" size={64} color={theme.colors.textSecondary} />
                 <Text style={styles.emptyTitle}>No folders yet</Text>
                 <Text style={styles.emptyDescription}>
                   Create your first folder to organize your saved content
                 </Text>
                 <TouchableOpacity
                   style={styles.createFirstButton}
-                  onPress={() => setShowCreateForm(true)}
+                  onPress={handleOpenCreateFolder}
                 >
                   <Text style={styles.createFirstButtonText}>Create Folder</Text>
                 </TouchableOpacity>
@@ -273,10 +291,10 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background,
     zIndex: 9999,
     elevation: 9999,
   },
@@ -288,7 +306,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border,
   },
   closeButton: {
     padding: 8,
@@ -296,14 +314,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.text,
   },
   addButton: {
     padding: 8,
   },
   description: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     marginHorizontal: 20,
     marginBottom: 20,
@@ -317,7 +335,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginBottom: 8,
   },
@@ -335,12 +353,12 @@ const styles = StyleSheet.create({
   folderName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.text,
     marginBottom: 4,
   },
   folderDescription: {
     fontSize: 14,
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
   },
   loadingContainer: {
     flex: 1,
@@ -350,7 +368,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
   },
   emptyContainer: {
     flex: 1,
@@ -361,24 +379,24 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyDescription: {
     fontSize: 16,
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
   },
   createFirstButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   createFirstButtonText: {
-    color: 'white',
+    color: isDark ? theme.colors.text : 'white',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -389,18 +407,19 @@ const styles = StyleSheet.create({
   createFormTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.text,
     marginBottom: 20,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.border,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
+    color: theme.colors.text,
   },
   textArea: {
     height: 80,
@@ -409,7 +428,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    color: theme.colors.text,
     marginBottom: 12,
   },
   colorGrid: {
@@ -427,7 +446,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   selectedColor: {
-    borderColor: '#111827',
+    borderColor: theme.colors.text,
   },
   iconGrid: {
     flexDirection: 'row',
@@ -442,10 +461,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
     marginBottom: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.surface,
   },
   selectedIcon: {
-    backgroundColor: '#EBF4FF',
+    backgroundColor: isDark ? 'rgba(59, 130, 246, 0.2)' : '#EBF4FF',
   },
   createFormButtons: {
     flexDirection: 'row',
@@ -460,11 +479,11 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: theme.colors.border,
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#374151',
+    color: theme.colors.textSecondary,
   },
   createButton: {
     flex: 1,
@@ -472,11 +491,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
     borderRadius: 8,
-    backgroundColor: '#3B82F6',
+    backgroundColor: theme.colors.primary,
   },
   createButtonText: {
     fontSize: 16,
-    color: 'white',
+    color: isDark ? theme.colors.text : 'white',
     fontWeight: '600',
   },
 });

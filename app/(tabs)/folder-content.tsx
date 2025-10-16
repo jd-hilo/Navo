@@ -25,6 +25,12 @@ import {
   SavedContentWithFolder 
 } from '../../services/api';
 import { SavedContentCard } from '../../components/SavedContentCard';
+import FilterBar, { FilterType } from '../../components/FilterBar';
+import FolderContentItem from '../../components/FolderContentItem';
+import TikTokModal from '../../components/modals/TikTokModal';
+import RedditModal from '../../components/modals/RedditModal';
+import PinterestModal from '../../components/modals/PinterestModal';
+import GeminiSection from '../../components/GeminiSection';
 
 export default function FolderContentScreen() {
   const { theme, isDark } = useTheme();
@@ -32,8 +38,13 @@ export default function FolderContentScreen() {
   const { folderId, folderName, folderColor } = useLocalSearchParams();
   
   const [content, setContent] = useState<SavedContentWithFolder[]>([]);
+  const [filtered, setFiltered] = useState<SavedContentWithFolder[]>([]);
+  const [filter, setFilter] = useState<FilterType>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<SavedContentWithFolder | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [expandedAiId, setExpandedAiId] = useState<string | null>(null);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -83,6 +94,27 @@ export default function FolderContentScreen() {
     }, [folderId])
   );
 
+  // Apply filtering when content or filter changes
+  useEffect(() => {
+    if (!Array.isArray(content)) {
+      setFiltered([]);
+      return;
+    }
+    if (filter === 'all') {
+      setFiltered(content);
+      return;
+    }
+    const typeMap: Record<FilterType, string[]> = {
+      all: [],
+      ai: ['gemini'],
+      tiktok: ['tiktok'],
+      reddit: ['reddit'],
+      pinterest: ['pinterest'],
+    };
+    const allowed = new Set(typeMap[filter]);
+    setFiltered(content.filter((c) => allowed.has(c.content_type)));
+  }, [content, filter]);
+
   const handleDeleteContent = async (contentId: string) => {
     Alert.alert(
       'Delete Content',
@@ -124,9 +156,17 @@ export default function FolderContentScreen() {
         },
       ]}
     >
-      <SavedContentCard 
+      <FolderContentItem 
         content={item} 
         onDelete={() => handleDeleteContent(item.id)}
+        onPress={() => {
+          if (item.content_type === 'gemini') {
+            setExpandedAiId(prev => (prev === item.id ? null : item.id));
+            return;
+          }
+          setSelectedItem(item);
+          setShowModal(true);
+        }}
       />
     </Animated.View>
   );
@@ -206,18 +246,29 @@ export default function FolderContentScreen() {
               <View style={styles.folderDetails}>
                 <Text style={styles.folderName}>{folderName || 'Folder'}</Text>
                 <Text style={styles.contentCount}>
-                  {content.length} {content.length === 1 ? 'item' : 'items'}
+                  {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
                 </Text>
               </View>
             </View>
           </Animated.View>
 
+          {/* Filter Bar */}
+          <FilterBar
+            visible={true}
+            currentFilter={filter}
+            onFilterChange={setFilter}
+            topOffset={110}
+          />
+
+          {/* Spacer for filter bar - move lower to avoid covering header/icon */}
+          <View style={{ height: 140 }} />
+
           {/* Content */}
-          {content.length === 0 ? (
+          {filtered.length === 0 ? (
             renderEmptyState()
           ) : (
             <View style={styles.contentContainer}>
-              {content.map((item, index) => (
+              {filtered.map((item, index) => (
                 <Animated.View
                   key={item.id}
                   style={[
@@ -235,15 +286,124 @@ export default function FolderContentScreen() {
                     },
                   ]}
                 >
-                  <SavedContentCard 
-                    content={item} 
-                    onDelete={() => handleDeleteContent(item.id)}
-                  />
+                  {item.content_type === 'gemini' ? (
+                    <GeminiSection
+                      data={{
+                        response: item.content_data?.response || item.description || '',
+                        success: true,
+                        error: '',
+                        sources: item.content_data?.sources || [],
+                        usage: item.content_data?.usage,
+                        hasWebSearch: item.content_data?.hasWebSearch,
+                      }}
+                      query={item.title || ''}
+                      onRetry={() => {}}
+                      isLoading={false}
+                      cached={true}
+                      enableFollowUpChat={false}
+                      showSaveButton={false}
+                      showSonarBadge={false}
+                      onDelete={() => handleDeleteContent(item.id)}
+                    />
+                  ) : (
+                    <FolderContentItem 
+                      content={item} 
+                      onDelete={() => handleDeleteContent(item.id)}
+                      onPress={() => {
+                        setSelectedItem(item);
+                        setShowModal(true);
+                      }}
+                    />
+                  )}
                 </Animated.View>
               ))}
             </View>
           )}
         </ScrollView>
+        {/* Modal/Player for selected non-AI items */}
+        {showModal && selectedItem && (
+          <>
+            {selectedItem.content_type === 'tiktok' ? (
+              <TikTokModal
+                videos={[{
+                  id: selectedItem.content_data?.id || selectedItem.id,
+                  title: selectedItem.title,
+                  thumbnail: selectedItem.thumbnail_url || selectedItem.content_data?.thumbnail,
+                  author: selectedItem.content_data?.author || '',
+                  views: selectedItem.content_data?.views || '',
+                  url: selectedItem.content_data?.url || selectedItem.source_url || ''
+                }]}
+                isVisible={true}
+                onClose={() => { setShowModal(false); setSelectedItem(null); }}
+              />
+            ) : selectedItem.content_type === 'reddit' ? (
+              <RedditModal
+                post={{
+                  id: selectedItem.content_data?.id || selectedItem.id,
+                  title: selectedItem.title,
+                  subreddit: selectedItem.content_data?.subreddit || 'reddit',
+                  upvotes: selectedItem.content_data?.upvotes || 0,
+                  comments: (selectedItem.content_data?.comments || 0),
+                  preview: selectedItem.description || '',
+                  text: selectedItem.description || '',
+                  url: selectedItem.content_data?.url || selectedItem.source_url || '',
+                  created: selectedItem.created_at,
+                  media: selectedItem.thumbnail_url || selectedItem.content_data?.media || null,
+                  thumbnail: selectedItem.thumbnail_url || selectedItem.content_data?.thumbnail || null,
+                }}
+                isVisible={true}
+                onClose={() => { setShowModal(false); setSelectedItem(null); }}
+              />
+            ) : selectedItem.content_type === 'pinterest' ? (
+              <PinterestModal
+                pin={{
+                  id: selectedItem.content_data?.id || selectedItem.id,
+                  title: selectedItem.title || 'Pinterest Pin',
+                  description: selectedItem.description || '',
+                  image_url: selectedItem.thumbnail_url || selectedItem.content_data?.image_url || '',
+                  link: selectedItem.content_data?.link || selectedItem.source_url || '',
+                  created_at: selectedItem.created_at,
+                  user_name: selectedItem.content_data?.user_name,
+                }}
+                isVisible={true}
+                onClose={() => { setShowModal(false); setSelectedItem(null); }}
+              />
+            ) : (
+              // Gemini/Perplexity: render the GeminiSection exactly with show more button behavior
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, padding: 16 }}>
+                <ScrollView contentContainerStyle={{ paddingVertical: 24 }}>
+                  <GeminiSection
+                    data={{
+                      response: selectedItem.content_data?.response || selectedItem.description || '',
+                      success: true,
+                      error: '',
+                      sources: selectedItem.content_data?.sources || [],
+                      usage: selectedItem.content_data?.usage,
+                      hasWebSearch: selectedItem.content_data?.hasWebSearch,
+                    }}
+                    query={selectedItem.title || ''}
+                    onRetry={() => {}}
+                    isLoading={false}
+                    cached={true}
+                    enableFollowUpChat={false}
+                  />
+                </ScrollView>
+              </View>
+            )}
+            {/* Close overlay for AI view only */}
+            {selectedItem.content_type !== 'tiktok' && selectedItem.content_type !== 'reddit' && selectedItem.content_type !== 'pinterest' && (
+              <TouchableOpacity
+                style={{ position: 'absolute', top: 40, right: 20, padding: 10, backgroundColor: 'rgba(0,0,0,0.4)', borderRadius: 20 }}
+                onPress={() => { setShowModal(false); setSelectedItem(null); }}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: '#FFFFFF' }}>Close</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+
+        {/* Inline AI/Perplexity section removed; handled inline per-item above */}
       </SafeAreaView>
     </LinearGradient>
   );

@@ -214,14 +214,6 @@ export default function SavedContentScreen() {
               </TouchableOpacity>
             ))}
           </View>
-
-          <View style={styles.colorLabels}>
-            {colors.map((color) => (
-              <Text key={color.value} style={styles.colorLabel}>
-                {color.name}
-              </Text>
-            ))}
-          </View>
         </View>
 
         <View style={styles.modalFooter}>
@@ -461,7 +453,7 @@ const styles = StyleSheet.create({
   colorOptions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 16,
+    marginBottom: 32,
   },
   colorOption: {
     width: 60,
@@ -474,16 +466,6 @@ const styles = StyleSheet.create({
   },
   selectedColor: {
     borderColor: '#111827',
-  },
-  colorLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  colorLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-    width: 60,
   },
   modalFooter: {
     flexDirection: 'row',
