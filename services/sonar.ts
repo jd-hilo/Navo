@@ -57,23 +57,33 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
       messages: [
         {
           role: 'user',
-          content: `Answer this question concisely: ${query}
+          content: `Provide a complete answer about: ${query} within 300 tokens.
 
-FORMAT REQUIREMENT - You MUST follow this exact format:
-^^[Write a clean 1-2 sentence summary here without any formatting or special characters]^^[Now write the detailed explanation here with proper markdown formatting including **bold** for key terms, bullet points using • or -, and clear structure]
+CRITICAL: You must return the FULL response within the token limit. Format exactly like this:
+^^ [1-2 sentence summary - NO bold formatting, bullet points, or dashes] ^^ [detailed explanation with proper formatting, bullet points, and structure]
 
-RULES FOR SUMMARY (between first ^^):
-- Plain text only, no formatting whatsoever
-- 1-2 complete sentences maximum
-- Around 100-150 characters total
-- Capture the core answer clearly
+The summary should be:
+• Clean 1-2 sentence summary only
+• NO bold formatting, bullet points, dashes, or list formatting
+• Be concise but informative
+• Capture the main points clearly
+• MAXIMUM 150 CHARACTERS for the summary part only
 
-RULES FOR DETAILS (after second ^^):
-- Use **bold** for important terms
-- Use bullet points (• or -) for lists
-- Well-structured paragraphs
-- Include key information
-- Stay under 200 words total for entire response
+The detailed content should be:
+• Well-structured with bullet points
+• Use **bold** for key terms and concepts
+• Include proper spacing and formatting
+• Be comprehensive but concise
+• Complete the full response within token limit
+
+Absolute constraints:
+• Keep the entire response under 200 words
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+
+INLINE MEDIA EMBEDS (important):
+- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
+- Only include tokens that are relevant to the user's query. Use each token at most once.
+- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
 
 Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
         }
@@ -93,23 +103,33 @@ Remember: You MUST use exactly two ^^ markers to separate summary from details. 
       messages: [
         {
           role: 'user',
-          content: `Answer this question concisely: ${query}
+          content: `Provide a complete answer about: ${query} within 300 tokens.
 
-FORMAT REQUIREMENT - You MUST follow this exact format:
-^^[Write a clean 1-2 sentence summary here without any formatting or special characters]^^[Now write the detailed explanation here with proper markdown formatting including **bold** for key terms, bullet points using • or -, and clear structure]
+CRITICAL: You must return the FULL response within the token limit. Format exactly like this:
+^^ [1-2 sentence summary - NO bold formatting, bullet points, or dashes] ^^ [detailed explanation with proper formatting, bullet points, and structure]
 
-RULES FOR SUMMARY (between first ^^):
-- Plain text only, no formatting whatsoever
-- 1-2 complete sentences maximum
-- Around 100-150 characters total
-- Capture the core answer clearly
+The summary should be:
+• Clean 1-2 sentence summary only
+• NO bold formatting, bullet points, dashes, or list formatting
+• Be concise but informative
+• Capture the main points clearly
+• MAXIMUM 150 CHARACTERS for the summary part only
 
-RULES FOR DETAILS (after second ^^):
-- Use **bold** for important terms
-- Use bullet points (• or -) for lists
-- Well-structured paragraphs
-- Include key information
-- Stay under 200 words total for entire response
+The detailed content should be:
+• Well-structured with bullet points
+• Use **bold** for key terms and concepts
+• Include proper spacing and formatting
+• Be comprehensive but concise
+• Complete the full response within token limit
+
+Absolute constraints:
+• Keep the entire response under 200 words
+• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+
+INLINE MEDIA EMBEDS (important):
+- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
+- Only include tokens that are relevant to the user's query. Use each token at most once.
+- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
 
 Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
         }

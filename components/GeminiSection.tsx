@@ -15,12 +15,17 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Search, ExternalLink, Database } from 'lucide-react-native';
+import { Sparkles, Copy, ChevronDown, ChevronUp, RefreshCw, Search, ExternalLink, Database, Trash2 } from 'lucide-react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
 import MarkdownDisplay from 'react-native-markdown-display';
 import { useTheme } from '@/contexts/ThemeContext';
 import { quickFollowUp } from '@/services/sonar';
 import { getFaviconUrlSync } from '@/utils/faviconUtils';
+import TikTokSection from './TikTokSection';
+import RedditSection from './RedditSection';
+import PinterestSection from './PinterestSection';
+import { extractContentData } from '@/services/api';
+import { SaveButton } from './SaveButton';
 
 interface GeminiSectionProps {
   data: {
@@ -46,9 +51,15 @@ interface GeminiSectionProps {
   cached?: boolean;
   cacheAge?: number;
   enableFollowUpChat?: boolean;
+  tiktokData?: any;
+  redditData?: any;
+  pinterestData?: any;
+  showSaveButton?: boolean;
+  showSonarBadge?: boolean;
+  onDelete?: () => void;
 }
 
-export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge, enableFollowUpChat = false }: GeminiSectionProps) {
+export default function GeminiSection({ data, query, onRetry, isLoading, cached, cacheAge, enableFollowUpChat = false, tiktokData, redditData, pinterestData, showSaveButton = true, showSonarBadge = true, onDelete }: GeminiSectionProps) {
   const { theme, isDark } = useTheme();
   const [copyLoading, setCopyLoading] = useState(false);
   const styles = createStyles(theme, isDark);
@@ -221,6 +232,41 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
   };
 
   const { summary, details } = parseResponse(data.response || '');
+
+  // Split details by inline media tokens and render sections accordingly
+  const renderDetailsWithMedia = () => {
+    const parts = (details || '').split(/(\{\{tiktok\}\}|\{\{reddit\}\}|\{\{pinterest\}\})/i);
+    return parts.map((part, idx) => {
+      const token = part?.toLowerCase?.() || '';
+      if (token === '{{tiktok}}' && tiktokData?.success && (tiktokData.videos?.length || 0) > 0) {
+        return (
+          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+            <TikTokSection data={tiktokData} query={query} onRetry={onRetry} enableSuggestions={false} />
+          </View>
+        );
+      }
+      if (token === '{{reddit}}' && redditData?.success && (redditData.posts?.length || 0) > 0) {
+        return (
+          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+            <RedditSection data={redditData} query={query} onRetry={onRetry} enableSuggestions={false} />
+          </View>
+        );
+      }
+      if (token === '{{pinterest}}' && pinterestData?.success && (pinterestData.pins?.length || 0) > 0) {
+        return (
+          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+            <PinterestSection data={pinterestData} query={query} onRetry={onRetry} />
+          </View>
+        );
+      }
+      // Default: render as markdown text
+      return (
+        <MarkdownDisplay key={`md-${idx}`} style={contentMarkdownStyles}>
+          {part}
+        </MarkdownDisplay>
+      );
+    });
+  };
 
   // Generate favicon URLs when sources change
   useEffect(() => {
@@ -395,6 +441,29 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               </View>
             )}
           </View>
+          
+          {showSaveButton && (
+            <View style={styles.saveButtonContainer}>
+              <SaveButton
+                contentType="gemini"
+                contentData={extractContentData('gemini', data)}
+                title={`AI Response: ${query}`}
+                description={summary}
+                size="small"
+                variant="icon"
+              />
+            </View>
+          )}
+          
+          {onDelete && (
+            <TouchableOpacity 
+              style={styles.deleteButton} 
+              onPress={onDelete}
+              activeOpacity={0.8}>
+              <Trash2 size={16} color="#EF4444" strokeWidth={2} />
+            </TouchableOpacity>
+          )}
+          
           <TouchableOpacity 
             style={styles.copyButton} 
             onPress={handleCopy}
@@ -429,9 +498,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
         {/* Expanded content - shows directly under the summary */}
         {isExpanded && (
           <View style={styles.expandedContent}>
-            <MarkdownDisplay style={contentMarkdownStyles}>
-              {details}
-            </MarkdownDisplay>
+            {renderDetailsWithMedia()}
             {data.sources && data.sources.length > 0 && (
               <View style={styles.sourcesContainer}>
                 <TouchableOpacity 
@@ -574,9 +641,11 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
             {data.usage.totalTokenCount} tokens • Perplexity Search enabled
             {cached && ' • From cache'}
           </Text>
-          <View style={styles.modelBadge}>
-            <Text style={styles.modelText}>Sonar</Text>
-          </View>
+          {showSonarBadge && (
+            <View style={styles.modelBadge}>
+              <Text style={styles.modelText}>Sonar</Text>
+            </View>
+          )}
         </View>
       )}
     </Animated.View>
@@ -665,6 +734,13 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     color: isDark ? '#000000' : '#FFFFFF',
     fontSize: 10,
     fontWeight: '500',
+  },
+  saveButtonContainer: {
+    marginRight: 8,
+  },
+  deleteButton: {
+    padding: 4,
+    marginRight: 8,
   },
   copyButton: {
     padding: 4,

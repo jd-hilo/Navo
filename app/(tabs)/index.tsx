@@ -768,7 +768,7 @@ export default function HomeScreen() {
           {/* Bookmark Icon - Bottom Left */}
           <TouchableOpacity
             style={styles.bottomIcon}
-            onPress={() => router.push('/saved-searches' as any)}
+            onPress={() => router.push('/saved' as any)}
             activeOpacity={0.7}
           >
             <Bookmark

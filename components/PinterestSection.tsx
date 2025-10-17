@@ -14,6 +14,8 @@ import {
 import { Heart, ExternalLink, RefreshCw } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
+import { extractContentData } from '@/services/api';
+import { SaveButton } from './SaveButton';
 
 interface PinterestPin {
   id: string;
@@ -257,6 +259,20 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                       resizeMode="cover"
                     />
                   )}
+                  
+                  {/* Save Button Overlay */}
+                  <View style={styles.saveButtonOverlay}>
+                    <SaveButton
+                      contentType="pinterest"
+                      contentData={extractContentData('pinterest', pin)}
+                      title={pin.title}
+                      description={pin.description}
+                      sourceUrl={pin.link}
+                      thumbnailUrl={pin.image_url}
+                      size="small"
+                      variant="icon"
+                    />
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -289,6 +305,20 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                       resizeMode="cover"
                     />
                   )}
+                  
+                  {/* Save Button Overlay */}
+                  <View style={styles.saveButtonOverlay}>
+                    <SaveButton
+                      contentType="pinterest"
+                      contentData={extractContentData('pinterest', pin)}
+                      title={pin.title}
+                      description={pin.description}
+                      sourceUrl={pin.link}
+                      thumbnailUrl={pin.image_url}
+                      size="small"
+                      variant="icon"
+                    />
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -528,6 +558,13 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     borderRadius: 16,
     backgroundColor: 'transparent',
     overflow: 'hidden',
+    position: 'relative',
+  },
+  saveButtonOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 1,
   },
   pinImage: {
     width: '100%',

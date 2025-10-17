@@ -220,6 +220,8 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
                   query={item.query}
                   isLoading={false}
                   cached={true}
+                  showSaveButton={false}
+                  showSonarBadge={false}
                 />
               </View>
             )}

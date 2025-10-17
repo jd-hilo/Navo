@@ -129,7 +129,7 @@ export default function RootLayout() {
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="saved-searches" options={{ headerShown: false, presentation: 'card', animation: 'slide_from_left' }} />
+              <Stack.Screen name="saved-searches" options={{ headerShown: false, presentation: 'card', animation: 'slide_from_left', gestureDirection: 'horizontal-inverted' }} />
               <Stack.Screen name="+not-found" />
             </Stack>
           </QueryClientProvider>
