@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { saveContent, getUserFolders, createDefaultFolder, Folder } from '../services/api';
 import { FolderSelectionModal } from './FolderSelectionModal';
+import SavedSuccessModal from './SavedSuccessModal';
 
 interface SaveButtonProps {
   contentType: 'tiktok' | 'reddit' | 'pinterest' | 'gemini';
@@ -32,6 +33,8 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [savedFolderName, setSavedFolderName] = useState('');
   const { isDark } = useTheme();
 
   const handleSave = async () => {
@@ -67,8 +70,10 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
         thumbnailUrl
       );
       setIsSaved(true);
+      setSavedFolderName(folderName);
       onSaved?.();
-      Alert.alert('Saved!', `"${title}" has been saved to ${folderName}`);
+      // Show success modal instead of alert
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error saving content:', error);
       Alert.alert('Error', 'Failed to save content. Please try again.');
@@ -137,6 +142,13 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
           title="Save Content"
           description={`Choose a folder to save "${title}":`}
         />
+        
+        <SavedSuccessModal
+          visible={showSuccessModal}
+          onClose={() => setShowSuccessModal(false)}
+          title={title}
+          folderName={savedFolderName}
+        />
       </View>
     );
   }
@@ -180,6 +192,13 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
         onSelectFolder={handleFolderSelect}
         title="Save Content"
         description={`Choose a folder to save "${title}":`}
+      />
+      
+      <SavedSuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={title}
+        folderName={savedFolderName}
       />
     </View>
   );
