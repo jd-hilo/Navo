@@ -140,9 +140,9 @@ const FilterBar = ({ onFilterChange, currentFilter, visible, topOffset = 70 }: F
 const createStyles = (theme: any, isDark: boolean, topOffset: number) => StyleSheet.create({
   container: {
     position: 'absolute',
-    width: '100%',
     height: 60,
     left: 0,
+    right: -10,
     top: topOffset,
     zIndex: 1000,
   },

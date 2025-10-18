@@ -260,8 +260,8 @@ export default function FolderContentScreen() {
             topOffset={110}
           />
 
-          {/* Spacer for filter bar - move lower to avoid covering header/icon */}
-          <View style={{ height: 140 }} />
+          {/* Spacer: topOffset (110) + filterBar height (60) + desired spacing (20) = 190 */}
+          <View style={{ height: 60 }} />
 
           {/* Content */}
           {filtered.length === 0 ? (
