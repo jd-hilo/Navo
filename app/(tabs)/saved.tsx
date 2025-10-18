@@ -223,7 +223,7 @@ export default function SavedContentScreen() {
             onPress={() => handleDeleteFolder(item)}
             activeOpacity={0.7}
           >
-            <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+            <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -486,7 +486,7 @@ export default function SavedContentScreen() {
                         onPress={() => handleDeleteFolder(folder)}
                         activeOpacity={0.7}
                       >
-                        <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+                        <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

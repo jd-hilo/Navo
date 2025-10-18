@@ -180,7 +180,7 @@ export default function SavedSearchesModal({ visible, onClose }: SavedSearchesMo
                 handleDelete(item.id);
               }}
             >
-              <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+              <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.expandButton}

@@ -85,7 +85,7 @@ export default function FolderContentItem({ content, onDelete, onPress }: Folder
             </View>
             {onDelete && (
               <TouchableOpacity onPress={onDelete} style={[styles.iconBtnLight, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F9FAFB' }]} activeOpacity={0.8}>
-                <Trash2 size={16} color="#EF4444" strokeWidth={2} />
+                <Trash2 size={16} color="#FFFFFF" strokeWidth={2} />
               </TouchableOpacity>
             )}
           </View>
@@ -109,7 +109,7 @@ export default function FolderContentItem({ content, onDelete, onPress }: Folder
         </View>
         {onDelete && (
           <TouchableOpacity onPress={onDelete} style={[styles.iconBtnLight, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F9FAFB' }]} activeOpacity={0.8}>
-            <Trash2 size={16} color="#EF4444" strokeWidth={2} />
+            <Trash2 size={16} color="#FFFFFF" strokeWidth={2} />
           </TouchableOpacity>
         )}
       </View>

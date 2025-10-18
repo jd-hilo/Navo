@@ -105,7 +105,7 @@ export default function SavedSearchesScreen() {
               <Bookmark size={20} color="#5EEAD4" strokeWidth={2} fill="#5EEAD4" />
             </View>
             <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item.id)}>
-              <Trash2 size={20} color={theme.colors.error} strokeWidth={2} />
+              <Trash2 size={20} color="#FFFFFF" strokeWidth={2} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.expandButton} onPress={() => toggleExpanded(item.id)}>
               {isExpanded ? (
@@ -375,7 +375,8 @@ const createStyles = (theme: any, isDark: boolean) => StyleSheet.create({
     lineHeight: 24,
   },
   listContainer: {
-    paddingVertical: 8,
+    paddingTop: 18,
+    paddingBottom: 8,
   },
 });
 

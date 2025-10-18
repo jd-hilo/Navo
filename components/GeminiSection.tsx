@@ -460,7 +460,7 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               style={styles.deleteButton} 
               onPress={onDelete}
               activeOpacity={0.8}>
-              <Trash2 size={16} color="#EF4444" strokeWidth={2} />
+              <Trash2 size={16} color="#FFFFFF" strokeWidth={2} />
             </TouchableOpacity>
           )}
           
