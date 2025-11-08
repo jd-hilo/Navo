@@ -1,9 +1,14 @@
 import { Adjust, AdjustConfig, AdjustEvent } from 'react-native-adjust';
+import { Platform } from 'react-native';
+
 const adjustEvent = new AdjustEvent('27gu4x');
 class AdjustService {
   isInitialized = false;
+  eventQueue: Array<AdjustEvent> = [];
+  
   constructor() {
     this.isInitialized = false;
+    this.eventQueue = [];
   }
 
   initialize() {
@@ -44,7 +49,7 @@ class AdjustService {
       // Send the event
       event.addCallbackParameter('attribution', JSON.stringify(attribution));
 
-      Adjust.trackEvent(event);
+      this.trackEvent(event);
       console.log("adjust: attribution :",attribution)
 
       // Handle referral logic here
@@ -59,6 +64,32 @@ class AdjustService {
     adjustConfig.setLogLevel(AdjustConfig.LogLevelVerbose);
     Adjust.initSdk(adjustConfig);
     this.isInitialized = true;
+    
+    // Process any queued events
+    console.log(`Processing ${this.eventQueue.length} queued Adjust events`);
+    this.eventQueue.forEach(event => {
+      try {
+        Adjust.trackEvent(event);
+      } catch (error) {
+        console.error('Error tracking queued event:', error);
+      }
+    });
+    this.eventQueue = [];
+  }
+
+  // Safe method to track events - queues if not initialized
+  trackEvent(event: AdjustEvent) {
+    if (!this.isInitialized) {
+      console.warn('Adjust not initialized yet, queuing event');
+      this.eventQueue.push(event);
+      return;
+    }
+    
+    try {
+      Adjust.trackEvent(event);
+    } catch (error) {
+      console.error('Error tracking Adjust event:', error);
+    }
   }
 
   handleReferral(attribution: any) {

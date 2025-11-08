@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 const GEMINI_API_CONFIG = {
   baseURL: 'https://generativelanguage.googleapis.com/v1beta',
   model: 'gemini-1.5-flash',
-  maxTokens: 200, // Increased to allow full responses without cutoff
+  maxTokens: 700, // Increased to allow full responses without cutoff
   temperature: 0.3, // Lower temperature for faster, more focused responses
 };
 

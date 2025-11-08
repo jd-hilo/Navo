@@ -52,11 +52,29 @@ export default function RootLayout() {
 
   useEffect(() => {
     (async () => {
-      const { status } = await requestTrackingPermissionsAsync();
-      if (status === 'granted') {
-        console.log('Yay! I have user permission to track data');
+      try {
+        // Request tracking permissions
+        const { status } = await requestTrackingPermissionsAsync();
+        console.log('Tracking permission status:', status);
+        
+        // Initialize Adjust regardless of permission status
+        // The SDK can still track basic events without ATT permission
         adjustService.initialize();
-        console.log('adjust service has been initialized');
+        console.log('Adjust service has been initialized');
+        
+        if (status === 'granted') {
+          console.log('Full tracking permission granted');
+        } else {
+          console.log('Limited tracking - Adjust will use privacy-safe methods');
+        }
+      } catch (error) {
+        console.error('Error initializing tracking:', error);
+        // Still try to initialize Adjust even if permission request fails
+        try {
+          adjustService.initialize();
+        } catch (adjustError) {
+          console.error('Failed to initialize Adjust:', adjustError);
+        }
       }
     })();
     const initializeRevenueCat = async () => {

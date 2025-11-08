@@ -433,6 +433,7 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                       }} 
                       style={styles.postImage}
                       resizeMode="cover"
+                      defaultSource={require('@/assets/images/icon.png')}
                       onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
                     />
                   </View>
@@ -551,6 +552,7 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                             }} 
                             style={styles.postImage}
                             resizeMode="cover"
+                            defaultSource={require('@/assets/images/icon.png')}
                             onError={() => console.log('Failed to load image:', post.media || post.thumbnail)}
                           />
                         </View>
@@ -616,6 +618,7 @@ export default function RedditSection({ data, query, onRetry, isLoading, enableS
                         }} 
                         style={styles.modalPostImage}
                         resizeMode="contain"
+                        defaultSource={require('@/assets/images/icon.png')}
                         onError={() => console.log('Failed to load image:', selectedPost.media || selectedPost.thumbnail)}
                         onLoad={(event) => {
                           console.log('Image loaded successfully:', selectedPost.media || selectedPost.thumbnail);

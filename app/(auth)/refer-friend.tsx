@@ -17,7 +17,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import { useAuth } from '@/contexts/AuthContext';
-import { Adjust, AdjustEvent } from 'react-native-adjust';
+import { AdjustEvent } from 'react-native-adjust';
+import adjustService from '@/adjustService';
 import { mixpanel } from '../_layout';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -47,7 +48,7 @@ export default function ReferFriendScreen() {
     const event = new AdjustEvent('fe9jhz');
     event.addCallbackParameter('action', 'shared_referral_code');
     console.log('adjust : event sent');
-    Adjust.trackEvent(event);
+    adjustService.trackEvent(event);
     mixpanel.track('Referral code shared');
     await Clipboard.setStringAsync(referralCode);
     await Share.share({

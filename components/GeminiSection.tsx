@@ -136,9 +136,12 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       // Standard format: ^^ summary ^^ details
       let summary = unescapedResponse.substring(firstCaretIndex + 2, secondCaretIndex).trim();
       
-      // Clean up the summary - remove citation numbers
+      // Clean up the summary - remove citation numbers and media tokens
       summary = summary
         .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
+        .replace(/\{\{tiktok\}\}/gi, '') // Remove {{tiktok}} tokens
+        .replace(/\{\{reddit\}\}/gi, '') // Remove {{reddit}} tokens
+        .replace(/\{\{pinterest\}\}/gi, '') // Remove {{pinterest}} tokens
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .trim();
       
@@ -170,9 +173,12 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
       // Only one set of carets at the beginning: ^^ content...
       let content = unescapedResponse.substring(firstCaretIndex + 2).trim();
       
-      // Clean up the content - remove citation numbers
+      // Clean up the content - remove citation numbers and media tokens
       content = content
         .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
+        .replace(/\{\{tiktok\}\}/gi, '') // Remove {{tiktok}} tokens
+        .replace(/\{\{reddit\}\}/gi, '') // Remove {{reddit}} tokens
+        .replace(/\{\{pinterest\}\}/gi, '') // Remove {{pinterest}} tokens
         .replace(/\s+/g, ' ') // Replace multiple spaces with single space
         .trim();
       
@@ -202,9 +208,12 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     // Fallback if no carets found
     console.log('🔍 No carets found, using fallback');
     
-    // Clean up the response - remove citation numbers and extra spaces
+    // Clean up the response - remove citation numbers, media tokens, and extra spaces
     const cleanedResponse = unescapedResponse
       .replace(/\[\d+\]/g, '') // Remove citation numbers like [1], [2], etc.
+      .replace(/\{\{tiktok\}\}/gi, '') // Remove {{tiktok}} tokens
+      .replace(/\{\{reddit\}\}/gi, '') // Remove {{reddit}} tokens
+      .replace(/\{\{pinterest\}\}/gi, '') // Remove {{pinterest}} tokens
       .replace(/\s+/g, ' ') // Replace multiple spaces with single space
       .trim();
     
@@ -238,33 +247,57 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
     const parts = (details || '').split(/(\{\{tiktok\}\}|\{\{reddit\}\}|\{\{pinterest\}\})/i);
     return parts.map((part, idx) => {
       const token = part?.toLowerCase?.() || '';
-      if (token === '{{tiktok}}' && tiktokData?.success && (tiktokData.videos?.length || 0) > 0) {
+      
+      // Check if this is a media token
+      if (token === '{{tiktok}}') {
+        // Only render if we have valid TikTok data
+        if (tiktokData?.success && (tiktokData.videos?.length || 0) > 0) {
+          return (
+            <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+              <TikTokSection data={tiktokData} query={query} onRetry={onRetry} enableSuggestions={false} />
+            </View>
+          );
+        }
+        // Don't render anything if data doesn't exist (hide the token)
+        return null;
+      }
+      
+      if (token === '{{reddit}}') {
+        // Only render if we have valid Reddit data
+        if (redditData?.success && (redditData.posts?.length || 0) > 0) {
+          return (
+            <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+              <RedditSection data={redditData} query={query} onRetry={onRetry} enableSuggestions={false} />
+            </View>
+          );
+        }
+        // Don't render anything if data doesn't exist (hide the token)
+        return null;
+      }
+      
+      if (token === '{{pinterest}}') {
+        // Only render if we have valid Pinterest data
+        if (pinterestData?.success && (pinterestData.pins?.length || 0) > 0) {
+          return (
+            <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
+              <PinterestSection data={pinterestData} query={query} onRetry={onRetry} />
+            </View>
+          );
+        }
+        // Don't render anything if data doesn't exist (hide the token)
+        return null;
+      }
+      
+      // Only render non-empty text parts as markdown
+      if (part && part.trim()) {
         return (
-          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
-            <TikTokSection data={tiktokData} query={query} onRetry={onRetry} enableSuggestions={false} />
-          </View>
+          <MarkdownDisplay key={`md-${idx}`} style={contentMarkdownStyles}>
+            {part}
+          </MarkdownDisplay>
         );
       }
-      if (token === '{{reddit}}' && redditData?.success && (redditData.posts?.length || 0) > 0) {
-        return (
-          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
-            <RedditSection data={redditData} query={query} onRetry={onRetry} enableSuggestions={false} />
-          </View>
-        );
-      }
-      if (token === '{{pinterest}}' && pinterestData?.success && (pinterestData.pins?.length || 0) > 0) {
-        return (
-          <View key={`media-${idx}`} style={{ marginVertical: 8 }}>
-            <PinterestSection data={pinterestData} query={query} onRetry={onRetry} />
-          </View>
-        );
-      }
-      // Default: render as markdown text
-      return (
-        <MarkdownDisplay key={`md-${idx}`} style={contentMarkdownStyles}>
-          {part}
-        </MarkdownDisplay>
-      );
+      
+      return null;
     });
   };
 
@@ -483,6 +516,74 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
           {summary}
         </MarkdownDisplay>
         
+        {/* Expanded content - pre-rendered but hidden when collapsed */}
+        <View style={[
+          styles.expandedContent,
+          !isExpanded && { display: 'none' }
+        ]}>
+          {renderDetailsWithMedia()}
+          {data.sources && data.sources.length > 0 && (
+            <View style={styles.sourcesContainer}>
+              <TouchableOpacity 
+                style={styles.sourcesHeader} 
+                onPress={toggleSourcesExpanded}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.sourcesTitle}>Sources ({data.sources.length})</Text>
+                {isSourcesExpanded ? (
+                  <ChevronUp size={16} color="#9CA3AF" strokeWidth={2} />
+                ) : (
+                  <ChevronDown size={16} color="#9CA3AF" strokeWidth={2} />
+                )}
+              </TouchableOpacity>
+              {isSourcesExpanded && (
+                <View style={styles.sourcesList}>
+                  {Array.isArray(data.sources) && data.sources.map((src: any, index: number) => {
+                    const domain = getSafeDomain(src);
+                    if (!domain) return null;
+                    const key = domain.toLowerCase();
+                    const favicon = faviconUrls[key];
+                    return (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.sourceItem}
+                        onPress={() => src.url && handleSourcePress(src.url)}
+                      >
+                        <View style={[styles.sourceIconNew, favicon && { backgroundColor: 'transparent' }]}>
+                          {favicon ? (
+                            <Image 
+                              source={{ uri: favicon }} 
+                              style={styles.faviconImage}
+                              resizeMode="contain"
+                            />
+                          ) : (
+                            <Text style={styles.sourceDomain}>{domain.charAt(0).toUpperCase()}</Text>
+                          )}
+                        </View>
+                        <View style={styles.sourceContent}>
+                          <Text style={styles.sourceTitle} numberOfLines={2}>
+                            {src.title || domain}
+                          </Text>
+                          <Text style={styles.sourceUrl}>{domain}</Text>
+                        </View>
+                        <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+          )}
+          <TouchableOpacity style={styles.showMoreButton} onPress={toggleExpanded}>
+            <View style={styles.showMoreContent}>
+              <View style={styles.showMoreTextContainer}>
+                <Text style={styles.showMoreText}>Show less</Text>
+                <ChevronUp size={16} color="#5F9CEB" strokeWidth={1.44} />
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+        
         {/* Show more button - only show when not expanded */}
         {!isExpanded && (
           <TouchableOpacity style={styles.showMoreButton} onPress={toggleExpanded}>
@@ -493,73 +594,6 @@ export default function GeminiSection({ data, query, onRetry, isLoading, cached,
               </View>
             </View>
           </TouchableOpacity>
-        )}
-        
-        {/* Expanded content - shows directly under the summary */}
-        {isExpanded && (
-          <View style={styles.expandedContent}>
-            {renderDetailsWithMedia()}
-            {data.sources && data.sources.length > 0 && (
-              <View style={styles.sourcesContainer}>
-                <TouchableOpacity 
-                  style={styles.sourcesHeader} 
-                  onPress={toggleSourcesExpanded}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.sourcesTitle}>Sources ({data.sources.length})</Text>
-                  {isSourcesExpanded ? (
-                    <ChevronUp size={16} color="#9CA3AF" strokeWidth={2} />
-                  ) : (
-                    <ChevronDown size={16} color="#9CA3AF" strokeWidth={2} />
-                  )}
-                </TouchableOpacity>
-                {isSourcesExpanded && (
-                  <View style={styles.sourcesList}>
-                    {Array.isArray(data.sources) && data.sources.map((src: any, index: number) => {
-                      const domain = getSafeDomain(src);
-                      if (!domain) return null;
-                      const key = domain.toLowerCase();
-                      const favicon = faviconUrls[key];
-                      return (
-                        <TouchableOpacity
-                          key={index}
-                          style={styles.sourceItem}
-                          onPress={() => src.url && handleSourcePress(src.url)}
-                        >
-                          <View style={[styles.sourceIconNew, favicon && { backgroundColor: 'transparent' }]}>
-                            {favicon ? (
-                              <Image 
-                                source={{ uri: favicon }} 
-                                style={styles.faviconImage}
-                                resizeMode="contain"
-                              />
-                            ) : (
-                              <Text style={styles.sourceDomain}>{domain.charAt(0).toUpperCase()}</Text>
-                            )}
-                          </View>
-                          <View style={styles.sourceContent}>
-                            <Text style={styles.sourceTitle} numberOfLines={2}>
-                              {src.title || domain}
-                            </Text>
-                            <Text style={styles.sourceUrl}>{domain}</Text>
-                          </View>
-                          <ExternalLink size={12} color="#9CA3AF" strokeWidth={2} />
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                )}
-              </View>
-            )}
-            <TouchableOpacity style={styles.showMoreButton} onPress={toggleExpanded}>
-              <View style={styles.showMoreContent}>
-                <View style={styles.showMoreTextContainer}>
-                  <Text style={styles.showMoreText}>Show less</Text>
-                  <ChevronUp size={16} color="#5F9CEB" strokeWidth={1.44} />
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
         )}
 
         {/* Follow-up mini chat placed under Gemini section regardless of expansion */}

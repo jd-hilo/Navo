@@ -251,12 +251,16 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                   
                   {pin.image_url && (
                     <Image 
-                      source={{ uri: pin.image_url }} 
+                      source={{ 
+                        uri: pin.image_url,
+                        cache: 'force-cache'
+                      }} 
                       style={[
                         styles.pinImage,
                         { height: Math.max(120, Math.min(400, calculatedHeight)) } // Min 120, Max 400
                       ]}
                       resizeMode="cover"
+                      defaultSource={require('@/assets/images/icon.png')}
                     />
                   )}
                   
@@ -297,12 +301,16 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                   
                   {pin.image_url && (
                     <Image 
-                      source={{ uri: pin.image_url }} 
+                      source={{ 
+                        uri: pin.image_url,
+                        cache: 'force-cache'
+                      }} 
                       style={[
                         styles.pinImage,
                         { height: Math.max(120, Math.min(400, calculatedHeight)) } // Min 120, Max 400
                       ]}
                       resizeMode="cover"
+                      defaultSource={require('@/assets/images/icon.png')}
                     />
                   )}
                   
@@ -360,9 +368,13 @@ export default function PinterestSection({ data, query, onRetry, isLoading }: Pi
                     {selectedPin.image_url && (
                       <View style={styles.modalImageContainer}>
                         <Image 
-                          source={{ uri: selectedPin.image_url }} 
+                          source={{ 
+                            uri: selectedPin.image_url,
+                            cache: 'force-cache'
+                          }} 
                           style={styles.modalImage}
                           resizeMode="cover"
+                          defaultSource={require('@/assets/images/icon.png')}
                         />
                       </View>
                     )}

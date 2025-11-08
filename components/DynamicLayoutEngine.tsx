@@ -33,6 +33,7 @@ import {
   getDisplayOrder
 } from '@/utils/layoutEngine';
 
+
 interface DynamicLayoutEngineProps {
   searchResults: {
     gemini: any;
@@ -695,21 +696,8 @@ export default function DynamicLayoutEngine({
 
   const styles = createStyles(theme);
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>AI is analyzing your search and optimizing the layout...</Text>
-      </View>
-    );
-  }
-
   if (!layoutConfig) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Enter a search query to see AI-optimized results</Text>
-      </View>
-    );
+    return null;
   }
 
   return (
@@ -742,7 +730,12 @@ export default function DynamicLayoutEngine({
       )}
 
       {/* Dynamic Results */}
-      <ScrollView style={styles.resultsContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.resultsContainer} 
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        scrollEventThrottle={16}
+      >
         {showAIOptimizedLayout ? (
           // AI optimized layout - use ordered modules
           orderedModules.map((moduleConfig, index) => {
@@ -790,19 +783,6 @@ export default function DynamicLayoutEngine({
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Regular',
-    color: theme.colors.textSecondary,
-    marginTop: 12,
-    textAlign: 'center',
   },
   emptyContainer: {
     flex: 1,

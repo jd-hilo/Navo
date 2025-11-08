@@ -40,6 +40,7 @@ import { useRouter } from 'expo-router';
 import PremiumModal from '@/components/PremiumModal';
 import SavedSearchesModal from '@/components/SavedSearchesModal';
 import { mixpanel } from '../_layout';
+import { preloadSearchResultImages } from '@/utils/imagePreloader';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
@@ -85,6 +86,10 @@ export default function HomeScreen() {
   const [scanTikTokCount, setScanTikTokCount] = useState(0);
   const [scanRedditCount, setScanRedditCount] = useState(0);
   const [scanWebPercent, setScanWebPercent] = useState(0);
+  const [isPreloadingImages, setIsPreloadingImages] = useState(false);
+  const [imagesReady, setImagesReady] = useState(false);
+  const [showLoadingCard, setShowLoadingCard] = useState(false);
+  const loadingStartTimeRef = useRef<number | null>(null);
 
   // Animation values
   const headerOpacity = useRef(new Animated.Value(1)).current;
@@ -108,7 +113,7 @@ export default function HomeScreen() {
   // IMPORTANT: Move useQuery hook to the top, before any useEffect that uses searchResults
   const {
     data: searchResults,
-    isLoading,
+    isLoading: isApiLoading,
     error,
     refetch,
   } = useQuery({
@@ -124,6 +129,54 @@ export default function HomeScreen() {
     },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+
+  // Combined loading state: API loading OR image preloading
+  const isLoading = isApiLoading || isPreloadingImages;
+
+  // Preload images when search results arrive
+  useEffect(() => {
+    let mounted = true;
+
+    const preloadImages = async () => {
+      if (!searchResults || isApiLoading) {
+        setImagesReady(false);
+        return;
+      }
+
+      setIsPreloadingImages(true);
+      setImagesReady(false);
+
+      try {
+        console.log('🔄 Starting image preload...');
+        
+        await preloadSearchResultImages(searchResults, {
+          onProgress: (progress) => {
+            console.log(`📊 Preload progress: ${progress.percentage}%`);
+          },
+        });
+
+        console.log('✅ Image preload complete!');
+        
+        if (mounted) {
+          setImagesReady(true);
+          setIsPreloadingImages(false);
+        }
+      } catch (error) {
+        console.error('❌ Error preloading images:', error);
+        // Still show content even if preload fails
+        if (mounted) {
+          setImagesReady(true);
+          setIsPreloadingImages(false);
+        }
+      }
+    };
+
+    preloadImages();
+
+    return () => {
+      mounted = false;
+    };
+  }, [searchResults, isApiLoading]);
 
   // Handle search results and increment count
   useEffect(() => {
@@ -471,6 +524,11 @@ export default function HomeScreen() {
         setHasSearched(true);
       }
       animateToSearchMode();
+      // Keep the single loading card visible across API + preload phases
+      setShowLoadingCard(true);
+      loadingStartTimeRef.current = Date.now();
+      setImagesReady(false);
+      setIsPreloadingImages(false);
     }
   };
 
@@ -567,9 +625,14 @@ export default function HomeScreen() {
 
   // Start loading animations
   useEffect(() => {
-    if (isLoading) {
-      // Loading bar animation
-      const barAnimation = Animated.loop(
+    let barAnimation: any | null = null;
+    let tiktokInterval: any | null = null;
+    let redditInterval: any | null = null;
+    let webInterval: any | null = null;
+
+    if (isApiLoading) {
+      // Looping loading bar while fetching sources
+      barAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(loadingProgress, {
             toValue: 1,
@@ -589,27 +652,53 @@ export default function HomeScreen() {
       setScanRedditCount(Math.floor(Math.random() * 10) + 6); // 6-15
       setScanWebPercent(Math.floor(Math.random() * 15) + 10); // 10-24
 
-      const tiktokInterval = setInterval(() => {
+      tiktokInterval = setInterval(() => {
         setScanTikTokCount((v) => (v < 100 ? v + 1 : 100));
       }, 60);
-      const redditInterval = setInterval(() => {
+      redditInterval = setInterval(() => {
         setScanRedditCount((v) => (v < 100 ? v + 1 : 100));
       }, 75);
-      const webInterval = setInterval(() => {
+      webInterval = setInterval(() => {
         setScanWebPercent((v) => (v < 100 ? v + 1 : 100));
       }, 50);
 
-      // Start animations
       barAnimation.start();
-
-      return () => {
-        barAnimation.stop();
-        clearInterval(tiktokInterval);
-        clearInterval(redditInterval);
-        clearInterval(webInterval);
-      };
+    } else if (isPreloadingImages) {
+      // Freeze the UI at 100% while images are preloading
+      try {
+        // Stop any running animation and set to full
+        // @ts-ignore - stopAnimation exists on Animated.Value
+        loadingProgress.stopAnimation && loadingProgress.stopAnimation();
+      } catch {}
+      loadingProgress.setValue(1);
+      setScanTikTokCount(100);
+      setScanRedditCount(100);
+      setScanWebPercent(100);
     }
-  }, [isLoading]);
+
+    return () => {
+      if (barAnimation) barAnimation.stop();
+      if (tiktokInterval) clearInterval(tiktokInterval);
+      if (redditInterval) clearInterval(redditInterval);
+      if (webInterval) clearInterval(webInterval);
+    };
+  }, [isApiLoading, isPreloadingImages]);
+
+  // Keep the single loading card visible until both API and image preload are done
+  useEffect(() => {
+    const apiDone = !isApiLoading;
+    const preloadDone = imagesReady && !isPreloadingImages;
+    if (apiDone && preloadDone && searchResults) {
+      setShowLoadingCard(false);
+    }
+  }, [isApiLoading, isPreloadingImages, imagesReady, searchResults]);
+
+  // Hide loading card when clearing query
+  useEffect(() => {
+    if (searchQuery.trim().length === 0) {
+      setShowLoadingCard(false);
+    }
+  }, [searchQuery]);
 
   const styles = createStyles(theme);
 
@@ -710,42 +799,7 @@ export default function HomeScreen() {
           <AnimatedExampleQueries onQueryPress={handleSuggestionPress} />
         )}
 
-        {/* Save Search Button - Above Search Bar */}
-        <Animated.View
-          style={[
-            styles.bookmarkContainer,
-            {
-              opacity: bookmarkOpacity,
-              transform: [{ scale: bookmarkScale }],
-              position: 'absolute',
-              bottom: 120, // Position above search bar
-              right: 20,
-              zIndex: 10,
-            },
-          ]}
-        >
-          <TouchableOpacity
-            style={[
-              styles.bookmarkButton,
-              isBookmarkSaved && styles.bookmarkButtonSaved,
-            ]}
-            onPress={saveBookmark}
-            activeOpacity={0.8}
-          >
-            <Bookmark
-              size={24}
-              color={
-                isBookmarkSaved
-                  ? isDark
-                    ? '#000000'
-                    : '#FFFFFF'
-                  : theme.colors.text
-              }
-              strokeWidth={2}
-              fill={isBookmarkSaved ? (isDark ? '#000000' : '#FFFFFF') : 'none'}
-            />
-          </TouchableOpacity>
-        </Animated.View>
+        {/* Save Search Button removed per request */}
 
         {/* Bottom Center Search Bar */}
         <AnimatedSearchBar
@@ -813,6 +867,8 @@ export default function HomeScreen() {
                 styles.scrollContent,
                 { paddingBottom: 120, alignItems: 'center' }, // Reduced padding since no tab bar
               ]}
+              removeClippedSubviews={true}
+              scrollEventThrottle={16}
             >
               <View
                 style={{
@@ -820,7 +876,7 @@ export default function HomeScreen() {
                   marginTop: currentFilter === 'all' ? 35 : 15,
                 }}
               >
-                {isLoading ? (
+                {showLoadingCard ? (
                   <View style={styles.loadingScreenContainer}>
                     <View style={styles.loadingContent}>
                       <View style={styles.loadingCard}>
@@ -908,7 +964,7 @@ export default function HomeScreen() {
                     message={error.message}
                     onRetry={handleRetry}
                   />
-                ) : searchResults ? (
+                ) : searchResults && imagesReady && !showLoadingCard ? (
                   <DynamicLayoutEngine
                     searchResults={getFilteredResults()}
                     query={debouncedQuery}

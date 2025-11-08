@@ -190,7 +190,10 @@ function TikTokVideoModal({
                           ) : (
                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#000000' }}>
                               <Image 
-                                source={{ uri: item.thumbnail || 'https://via.placeholder.com/400x600/000000/FFFFFF?text=TikTok' }} 
+                                source={{ 
+                                  uri: item.thumbnail || 'https://via.placeholder.com/400x600/000000/FFFFFF?text=TikTok',
+                                  cache: 'force-cache'
+                                }} 
                                 style={{ width: '100%', height: '100%' }}
                                 resizeMode="cover"
                               />
@@ -274,7 +277,10 @@ function TikTokVideoCard({
       <View style={{ flex: 1, position: 'relative' }}>
         {/* Always show thumbnail as background */}
         <Image 
-          source={{ uri: video.thumbnail || 'https://via.placeholder.com/320x500/000000/FFFFFF?text=TikTok' }} 
+          source={{ 
+            uri: video.thumbnail || 'https://via.placeholder.com/320x500/000000/FFFFFF?text=TikTok',
+            cache: 'force-cache'
+          }} 
           style={{ flex: 1 }}
           resizeMode="cover"
         />
@@ -577,6 +583,8 @@ export default function TikTokSection({ data, query, onRetry, enableSuggestions 
             alignItems: 'flex-start'
           }}
           nestedScrollEnabled={true}
+          removeClippedSubviews={true}
+          scrollEventThrottle={16}
         >
           {data.videos.map((video, idx) => (
             <View 

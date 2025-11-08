@@ -5,7 +5,7 @@ import { extractDomain } from '@/utils/faviconUtils';
 const SONAR_API_CONFIG = {
   baseURL: 'https://api.perplexity.ai/chat/completions',
   model: 'sonar', // Use sonar-medium-online model for web search
-  maxTokens: 300, // Cap total tokens to 300
+  maxTokens: 700, // Cap total tokens to 700
   temperature: 0.1, // Lower temperature for faster, more focused responses
 };
 
@@ -57,38 +57,46 @@ export const searchSonar = async (query: string): Promise<SonarResponse> => {
       messages: [
         {
           role: 'user',
-          content: `Provide a complete answer about: ${query} within 300 tokens.
+          content: `Provide a complete answer about: ${query} within 700 tokens.
 
-CRITICAL: You must return the FULL response within the token limit. Format exactly like this:
-^^ [1-2 sentence summary - NO bold formatting, bullet points, or dashes] ^^ [detailed explanation with proper formatting, bullet points, and structure]
+===CRITICAL FORMAT REQUIREMENT===
+Your response MUST start with ^^ and follow this EXACT structure with NO deviations:
 
-The summary should be:
-• Clean 1-2 sentence summary only
-• NO bold formatting, bullet points, dashes, or list formatting
-• Be concise but informative
-• Capture the main points clearly
-• MAXIMUM 150 CHARACTERS for the summary part only
+^^ [Your 1-2 sentence plain text summary here] ^^ [Your detailed explanation with formatting here]
 
-The detailed content should be:
+CORRECT EXAMPLE:
+^^ The Ohio State University is a major public research university in Columbus, Ohio with over 60,000 students and strong academics. ^^ - **The Ohio State University (OSU)** is a public land-grant research university established in 1870...
+
+RULES:
+1. START your response immediately with ^^ (no text before it)
+2. Write your summary immediately after the first ^^
+3. Place the second ^^ immediately after your summary (no line breaks)
+4. Write your detailed content after the second ^^
+5. Summary must be plain text (NO bold, bullets, or dashes)
+6. Details can use bullets and **bold** formatting
+
+SUMMARY REQUIREMENTS:
+• Plain text only - no formatting whatsoever
+• 1-2 sentences maximum
+• Concise but informative
+• Under 150 characters
+
+DETAILED CONTENT REQUIREMENTS:
 • Well-structured with bullet points
-• Use **bold** for key terms and concepts
-• Include proper spacing and formatting
-• Be comprehensive but concise
-• Complete the full response within token limit
+• Use **bold** for key terms
+• Include proper spacing
+• Comprehensive but concise
+• Under 400 words total
 
-Absolute constraints:
-• Keep the entire response under 200 words
-• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+INLINE MEDIA EMBEDS:
+- Insert {{tiktok}}, {{reddit}}, or {{pinterest}} tokens in the DETAILS section where relevant
+- Use each token at most once
+- Place tokens on their own line
 
-INLINE MEDIA EMBEDS (important):
-- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
-- Only include tokens that are relevant to the user's query. Use each token at most once.
-- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
-
-Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
+Token limit: 700 tokens maximum`
         }
       ],
-      max_tokens: 300,
+      max_tokens: 700,
       temperature: 0.05,
       top_p: 0.05,
       stream: false,
@@ -103,38 +111,46 @@ Remember: You MUST use exactly two ^^ markers to separate summary from details. 
       messages: [
         {
           role: 'user',
-          content: `Provide a complete answer about: ${query} within 300 tokens.
+          content: `Provide a complete answer about: ${query} within 700 tokens.
 
-CRITICAL: You must return the FULL response within the token limit. Format exactly like this:
-^^ [1-2 sentence summary - NO bold formatting, bullet points, or dashes] ^^ [detailed explanation with proper formatting, bullet points, and structure]
+===CRITICAL FORMAT REQUIREMENT===
+Your response MUST start with ^^ and follow this EXACT structure with NO deviations:
 
-The summary should be:
-• Clean 1-2 sentence summary only
-• NO bold formatting, bullet points, dashes, or list formatting
-• Be concise but informative
-• Capture the main points clearly
-• MAXIMUM 150 CHARACTERS for the summary part only
+^^ [Your 1-2 sentence plain text summary here] ^^ [Your detailed explanation with formatting here]
 
-The detailed content should be:
+CORRECT EXAMPLE:
+^^ The Ohio State University is a major public research university in Columbus, Ohio with over 60,000 students and strong academics. ^^ - **The Ohio State University (OSU)** is a public land-grant research university established in 1870...
+
+RULES:
+1. START your response immediately with ^^ (no text before it)
+2. Write your summary immediately after the first ^^
+3. Place the second ^^ immediately after your summary (no line breaks)
+4. Write your detailed content after the second ^^
+5. Summary must be plain text (NO bold, bullets, or dashes)
+6. Details can use bullets and **bold** formatting
+
+SUMMARY REQUIREMENTS:
+• Plain text only - no formatting whatsoever
+• 1-2 sentences maximum
+• Concise but informative
+• Under 150 characters
+
+DETAILED CONTENT REQUIREMENTS:
 • Well-structured with bullet points
-• Use **bold** for key terms and concepts
-• Include proper spacing and formatting
-• Be comprehensive but concise
-• Complete the full response within token limit
+• Use **bold** for key terms
+• Include proper spacing
+• Comprehensive but concise
+• Under 400 words total
 
-Absolute constraints:
-• Keep the entire response under 200 words
-• Do not exceed 300 tokens total. If you would exceed, summarize to stay under 200 words
+INLINE MEDIA EMBEDS:
+- Insert {{tiktok}}, {{reddit}}, or {{pinterest}} tokens in the DETAILS section where relevant
+- Use each token at most once
+- Place tokens on their own line
 
-INLINE MEDIA EMBEDS (important):
-- When relevant, insert the exact tokens {{tiktok}}, {{reddit}}, and/or {{pinterest}} at natural points in the DETAILS section where those media sections should appear.
-- Only include tokens that are relevant to the user's query. Use each token at most once.
-- Do not wrap the tokens with any other text or formatting; they must appear exactly as {{tiktok}}, {{reddit}}, {{pinterest}} on their own line or surrounded by blank lines.
-
-Remember: You MUST use exactly two ^^ markers to separate summary from details. Do not use ^^ anywhere else in your response.`
+Token limit: 700 tokens maximum`
         }
       ],
-      max_tokens: 300, // Complete response within token limit
+      max_tokens: 700, // Complete response within token limit
       temperature: 0.05, // Very low temperature for fastest responses
       top_p: 0.05, // Minimal for fastest responses
       stream: false, // Ensure no streaming for faster response
